@@ -1,0 +1,57 @@
+x-dev-app: &dev-app
+  environment:
+    COMPOSER_HOME: /tmp/salesflow-composer
+    GIT_CONFIG_COUNT: 1
+    GIT_CONFIG_KEY_0: safe.directory
+    GIT_CONFIG_VALUE_0: /var/www/html
+  volumes:
+    - ./:/var/www/html
+    - salesflow-vendor:/var/www/html/vendor
+    - salesflow-storage:/var/www/html/storage
+    - ./docker/php/local.ini:/usr/local/etc/php/conf.d/zz-local.ini:ro
+
+services:
+  app:
+    <<: *dev-app
+
+  horizon:
+    <<: *dev-app
+
+  scheduler:
+    <<: *dev-app
+
+  reverb:
+    <<: *dev-app
+
+  nginx:
+    volumes:
+      - ./public:/var/www/html/public:ro
+      - salesflow-storage:/var/www/html/storage:ro
+
+  vite:
+    image: node:22-alpine
+    working_dir: /var/www/html
+    command: ["sh", "docker/node/dev-entrypoint.sh"]
+    environment:
+      VITE_HMR_HOST: ${VITE_HMR_HOST:-localhost}
+      VITE_HMR_CLIENT_PORT: ${VITE_HMR_CLIENT_PORT:-5173}
+      VITE_USE_POLLING: ${VITE_USE_POLLING:-false}
+    ports:
+      - "${VITE_PORT:-5173}:5173"
+    volumes:
+      - ./:/var/www/html
+      - salesflow-vendor:/var/www/html/vendor:ro
+      - salesflow-node-modules:/var/www/html/node_modules
+    depends_on:
+      app:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:5173/@vite/client"]
+      interval: 10s
+      timeout: 5s
+      retries: 8
+
+volumes:
+  salesflow-vendor:
+  salesflow-node-modules:

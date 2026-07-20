@@ -30,3 +30,17 @@
         @apply rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300;
     }
 }
+
+main {
+    transition: opacity 100ms ease-out;
+}
+
+.is-navigating main {
+    opacity: 0.72;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    main {
+        transition: none;
+    }
+}
