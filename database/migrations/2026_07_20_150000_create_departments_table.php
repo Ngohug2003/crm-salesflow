@@ -9,8 +9,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('departments', function (Blueprint $table): void {
-            $table->ulid('id')->primary();
-            $table->ulid('parent_id')->nullable();
+            $table->id();
+            $table->foreignId('parent_id')->nullable();
             $table->string('name', 150);
             $table->string('code', 50)->unique();
             $table->text('description')->nullable();

@@ -4,17 +4,16 @@ use App\Models\Department;
 use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Str;
 
 uses(RefreshDatabase::class);
 
-it('creates departments with ULID identifiers and typed state', function (): void {
+it('creates departments with auto-incrementing identifiers and typed state', function (): void {
     $department = Department::factory()->create([
         'is_active' => true,
         'sort_order' => 15,
     ]);
 
-    expect(Str::isUlid($department->getKey()))->toBeTrue()
+    expect($department->getKey())->toBeInt()->toBeGreaterThan(0)
         ->and($department->is_active)->toBeTrue()
         ->and($department->sort_order)->toBe(15);
 });

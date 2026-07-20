@@ -14,7 +14,7 @@ Tài liệu này là checkpoint chính của dự án. Quy ước làm việc t�
 |---|---|---|---|
 | 0 | Phân tích kiến trúc và dữ liệu | Hoàn tất tài liệu ban đầu | Chưa xác nhận |
 | 1 | Khởi tạo nền tảng và Docker | Hoàn tất triển khai | Chờ chủ dự án kiểm thử |
-| 2 | Users, Departments, Roles, Permissions | Chưa bắt đầu | — |
+| 2 | Users, Departments, Roles, Permissions | Đang làm — P2-01 hoàn tất | Chờ kiểm thử P2-01 |
 | 3 | Leads | Chưa bắt đầu | — |
 | 4 | Companies và Contacts | Chưa bắt đầu | — |
 | 5 | Pipelines và Opportunities | Chưa bắt đầu | — |
@@ -37,7 +37,7 @@ Tài liệu này là checkpoint chính của dự án. Quy ước làm việc t�
 
 - `docs/architecture.md`: business analysis, module map, business flow, ERD, estimate 90 man-day, risk và MVP criteria.
 - `docs/permissions.md`: ma trận quyền cho 5 role mặc định.
-- `docs/database.md`: định hướng PostgreSQL và ULID.
+- `docs/database.md`: định hướng PostgreSQL và khóa chính `BIGINT` tự tăng.
 - `docs/api.md`: định hướng API v1/Sanctum.
 - `docs/deployment.md`: topology Docker/production ban đầu.
 
@@ -324,7 +324,7 @@ Mục tiêu: hoàn thiện tổ chức người dùng và ranh giới phân quy�
 
 | Mã | Feature | Branch đề xuất | Phụ thuộc | Kết quả cần đạt |
 |---|---|---|---|---|
-| P2-01 | Department schema và domain | `feature/p2-01-department-schema` | P1 | Migration/model/factory/seed phòng ban, quan hệ cha-con và trạng thái hoạt động |
+| P2-01 | ✅ Department schema và domain | `feature/p2-01-department-schema` | P1 | Migration/model/factory/seed phòng ban, quan hệ cha-con và trạng thái hoạt động |
 | P2-02 | Quản lý phòng ban | `feature/p2-02-department-management` | P2-01 | Livewire list/create/edit/disable phòng ban, validation và test |
 | P2-03 | Danh mục quyền và role seeder | `feature/p2-03-rbac-catalog-seeder` | P2-01 | `config/crm.php`, 5 role mặc định, permission idempotent và super-admin bypass |
 | P2-04 | Data scope và policies nền tảng | `feature/p2-04-data-scope-policies` | P2-03 | Scope all/department/owned/read-only được cưỡng chế ở backend |
@@ -332,6 +332,49 @@ Mục tiêu: hoàn thiện tổ chức người dùng và ranh giới phân quy�
 | P2-06 | Tạo và chỉnh sửa người dùng | `feature/p2-06-user-form` | P2-05 | Form tạo/sửa, active/locked state, email uniqueness và password rule |
 | P2-07 | Gán phòng ban và role | `feature/p2-07-user-role-assignment` | P2-03, P2-06 | UI gán role/phòng ban, chống tự khóa admin cuối cùng, audit thay đổi |
 | P2-08 | Authorization test và checkpoint | `feature/p2-08-authorization-checkpoint` | P2-02..P2-07 | Test đủ 5 role, navigation theo quyền, seed demo và checklist nghiệm thu |
+
+### Nhật ký feature P2-01 — Department schema và domain
+
+Trạng thái: **hoàn tất triển khai, chờ chủ dự án kiểm thử**.
+
+Đã triển khai:
+
+- `departments` dùng khóa chính PostgreSQL `BIGINT` tự tăng; quyết định này thay thế định hướng ULID cũ cho toàn bộ application domain table.
+- Cây phòng ban qua `parent_id`, trạng thái `is_active`, thứ tự `sort_order`, `code` duy nhất và các index phục vụ truy vấn.
+- Model `Department` với `parent`, `children`, `users`, active scope và typed casts.
+- `users.department_id` nullable, quan hệ hai chiều User–Department và `nullOnDelete`.
+- Factory có state inactive/child; seeder idempotent tạo `MANAGEMENT`, `SALES`, `MARKETING` và gán admin demo vào `MANAGEMENT`.
+- 6 test riêng cho ID tự tăng, cây cha-con, active scope, User relation, seeder idempotent và foreign-key behavior.
+
+File chính:
+
+- `app/Models/Department.php`, `app/Models/User.php`
+- `database/factories/DepartmentFactory.php`, `database/factories/UserFactory.php`
+- `database/migrations/2026_07_20_150000_create_departments_table.php`
+- `database/migrations/2026_07_20_150001_add_department_id_to_users_table.php`
+- `database/seeders/DepartmentSeeder.php`, `database/seeders/DatabaseSeeder.php`
+- `tests/Feature/DepartmentDomainTest.php`
+- `docs/database.md`, `docs/architecture.md`
+
+Lệnh kiểm chứng:
+
+```bash
+docker compose build app
+docker compose up -d --force-recreate app
+docker compose exec app php artisan migrate --seed --force
+docker compose exec app php artisan test
+docker compose exec app ./vendor/bin/pint --test
+docker compose exec app ./vendor/bin/phpstan analyse --no-progress
+docker compose exec app php artisan migrate:status
+```
+
+Kết quả cuối:
+
+- PostgreSQL: 2 migration P2-01 ở batch 2, trạng thái `Ran`.
+- Seed: ID `1 MANAGEMENT`, `2 SALES`, `3 MARKETING`; SALES và MARKETING có `parent_id=1`.
+- Pest: 13 test đạt, 33 assertions; riêng P2-01 có 6 test/15 assertions.
+- Pint: 55 file đạt; PHPStan/Larastan level 5 không có lỗi.
+- Lần migration ULID đầu tiên lỗi self-referencing foreign key trên PostgreSQL và đã rollback toàn bộ. Sau yêu cầu của chủ dự án, schema được đổi sang `BIGINT` tự tăng và migrate thành công; không có bảng ULID dở dang.
 
 Checkpoint: dừng để kiểm thử đăng nhập, quản lý user/department và toàn bộ ma trận quyền trước P3.
 
@@ -342,7 +385,7 @@ Mục tiêu: hoàn thiện vòng đời Lead từ tiếp nhận đến chuyển 
 | Mã | Feature | Branch đề xuất | Phụ thuộc | Kết quả cần đạt |
 |---|---|---|---|---|
 | P3-01 | Lead sources và tags | `feature/p3-01-lead-taxonomy` | P2-08 | Schema/model/seed nguồn lead, tag và quan hệ many-to-many |
-| P3-02 | Lead schema và domain | `feature/p3-02-lead-domain` | P3-01 | ULID, owner, department, trạng thái, contact fields, indexes và factory |
+| P3-02 | Lead schema và domain | `feature/p3-02-lead-domain` | P3-01 | BIGINT tự tăng, owner, department, trạng thái, contact fields, indexes và factory |
 | P3-03 | Repository và bộ lọc Lead | `feature/p3-03-lead-query-filters` | P3-02 | Search, filter, sort, pagination và reusable data-scope query |
 | P3-04 | Lead policy và visibility | `feature/p3-04-lead-authorization` | P2-04, P3-03 | Policy CRUD/assign/convert/restore đúng permission matrix |
 | P3-05 | Danh sách Lead | `feature/p3-05-lead-list` | P3-03, P3-04 | Livewire table responsive, URL filters, bulk selection foundation và empty states |
