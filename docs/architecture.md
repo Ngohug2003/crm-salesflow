@@ -64,7 +64,7 @@ erDiagram
     OPPORTUNITIES ||--o{ ACTIVITIES : subject
 ```
 
-Core keys use ULIDs, foreign keys are indexed, customer-facing records use soft deletes, and monetary fields use fixed precision decimals. `activities`, `tasks`, and `attachments` use polymorphic subjects.
+Application domain keys use auto-incrementing `BIGINT` values, foreign keys are indexed, customer-facing records use soft deletes, and monetary fields use fixed precision decimals. `activities`, `tasks`, and `attachments` use polymorphic subjects.
 
 ## 4. Delivery plan and estimate
 
@@ -93,4 +93,3 @@ Core keys use ULIDs, foreign keys are indexed, customer-facing records use soft 
 ## 6. MVP completion criteria
 
 Docker starts healthy; a seeded user can log in; backend permissions are enforced; dashboard reads real data; leads can be searched, created, edited, assigned and safely deleted; companies/contacts/opportunities are persisted and related; opportunity weighted value is calculated server-side; stages render as a pipeline board; audit entries are generated; core feature tests, formatting and frontend production build pass.
-
