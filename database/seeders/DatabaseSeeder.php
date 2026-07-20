@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Department;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -16,7 +17,12 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        $this->call(DepartmentSeeder::class);
+
+        $managementDepartment = Department::query()->where('code', 'MANAGEMENT')->firstOrFail();
+
         User::query()->updateOrCreate(['email' => 'admin@salesflow.test'], [
+            'department_id' => $managementDepartment->getKey(),
             'name' => 'SalesFlow Admin',
             'email_verified_at' => now(),
             'password' => Hash::make('SalesFlow@123'),
