@@ -309,34 +309,144 @@ Sau đó kiểm tra `http://localhost`, `/login`, `/dashboard`, `/up`, Mailpit, 
 
 ---
 
+## Quy ước triển khai feature từ Giai đoạn 2
+
+- Mỗi mã feature tương ứng một branch độc lập; mẫu branch: `feature/p2-01-department-schema`.
+- Chỉ bắt đầu feature khi các mã trong cột **Phụ thuộc** đã hoàn tất.
+- Mỗi branch phải có migration/code/test/tài liệu đúng phạm vi, chạy đạt Pest liên quan, Pint và PHPStan.
+- Feature có chữ **Checkpoint** là điểm dừng bắt buộc để chủ dự án kiểm thử trước khi chuyển giai đoạn.
+- Danh sách chi tiết để lọc, giao việc và theo dõi nằm trong `SALESFLOW_FEATURE_PLAN.xlsx`.
+- Workbook có 3 sheet: `Features`, `Tổng quan giai đoạn`, `Hướng dẫn branch`; có thể tạo lại sau khi sửa file này bằng `python3 scripts/generate_feature_plan.py`.
+
 ## Giai đoạn 2 — Users, Departments, Roles, Permissions
 
-Mục tiêu: schema department/user-active-state, role/permission seeder, policies, quản lý user/role bằng Livewire và test authorization. Dừng để test mọi role trước khi sang Leads.
+Mục tiêu: hoàn thiện tổ chức người dùng và ranh giới phân quyền trước khi tạo dữ liệu CRM.
+
+| Mã | Feature | Branch đề xuất | Phụ thuộc | Kết quả cần đạt |
+|---|---|---|---|---|
+| P2-01 | Department schema và domain | `feature/p2-01-department-schema` | P1 | Migration/model/factory/seed phòng ban, quan hệ cha-con và trạng thái hoạt động |
+| P2-02 | Quản lý phòng ban | `feature/p2-02-department-management` | P2-01 | Livewire list/create/edit/disable phòng ban, validation và test |
+| P2-03 | Danh mục quyền và role seeder | `feature/p2-03-rbac-catalog-seeder` | P2-01 | `config/crm.php`, 5 role mặc định, permission idempotent và super-admin bypass |
+| P2-04 | Data scope và policies nền tảng | `feature/p2-04-data-scope-policies` | P2-03 | Scope all/department/owned/read-only được cưỡng chế ở backend |
+| P2-05 | Danh sách người dùng | `feature/p2-05-user-list` | P2-01, P2-04 | Tìm kiếm, lọc phòng ban/role/trạng thái, phân trang và URL state |
+| P2-06 | Tạo và chỉnh sửa người dùng | `feature/p2-06-user-form` | P2-05 | Form tạo/sửa, active/locked state, email uniqueness và password rule |
+| P2-07 | Gán phòng ban và role | `feature/p2-07-user-role-assignment` | P2-03, P2-06 | UI gán role/phòng ban, chống tự khóa admin cuối cùng, audit thay đổi |
+| P2-08 | Authorization test và checkpoint | `feature/p2-08-authorization-checkpoint` | P2-02..P2-07 | Test đủ 5 role, navigation theo quyền, seed demo và checklist nghiệm thu |
+
+Checkpoint: dừng để kiểm thử đăng nhập, quản lý user/department và toàn bộ ma trận quyền trước P3.
 
 ## Giai đoạn 3 — Leads
 
-Mục tiêu: lead schema/model/repository/service/policy, Livewire list/form/detail, filter URL, assignment, status history, soft delete/restore, duplicate detection, conversion transaction và test. Import/export chỉ làm ở Giai đoạn 8.
+Mục tiêu: hoàn thiện vòng đời Lead từ tiếp nhận đến chuyển đổi; import/export để lại P8.
+
+| Mã | Feature | Branch đề xuất | Phụ thuộc | Kết quả cần đạt |
+|---|---|---|---|---|
+| P3-01 | Lead sources và tags | `feature/p3-01-lead-taxonomy` | P2-08 | Schema/model/seed nguồn lead, tag và quan hệ many-to-many |
+| P3-02 | Lead schema và domain | `feature/p3-02-lead-domain` | P3-01 | ULID, owner, department, trạng thái, contact fields, indexes và factory |
+| P3-03 | Repository và bộ lọc Lead | `feature/p3-03-lead-query-filters` | P3-02 | Search, filter, sort, pagination và reusable data-scope query |
+| P3-04 | Lead policy và visibility | `feature/p3-04-lead-authorization` | P2-04, P3-03 | Policy CRUD/assign/convert/restore đúng permission matrix |
+| P3-05 | Danh sách Lead | `feature/p3-05-lead-list` | P3-03, P3-04 | Livewire table responsive, URL filters, bulk selection foundation và empty states |
+| P3-06 | Form và chi tiết Lead | `feature/p3-06-lead-form-detail` | P3-05 | Create/edit/detail, validation, source/tags/owner và audit cơ bản |
+| P3-07 | Assignment và status history | `feature/p3-07-lead-assignment-status` | P3-06 | Gán owner, chuyển trạng thái hợp lệ, lịch sử và event |
+| P3-08 | Duplicate, soft delete và restore | `feature/p3-08-lead-duplicate-delete` | P3-06 | Phát hiện email/phone trùng, cảnh báo/merge decision, trash/restore |
+| P3-09 | Conversion eligibility và contract | `feature/p3-09-conversion-contract` | P3-07, P3-08 | Rule đủ điều kiện, DTO/action contract, chống convert lặp và test contract; chưa tạo Opportunity |
+| P3-10 | Lead test và checkpoint | `feature/p3-10-lead-checkpoint` | P3-01..P3-09 | Feature/policy/transaction tests và checklist vòng đời Lead |
+
+Conversion transaction tạo Company/Contact/Opportunity được tích hợp ở P5-09 sau khi đủ schema đích; cách chia này loại bỏ phụ thuộc vòng giữa các giai đoạn.
 
 ## Giai đoạn 4 — Companies và Contacts
 
-Mục tiêu: CRUD, quan hệ company-contact-owner, timeline foundation, duplicate handling, authorization và test.
+Mục tiêu: xây dựng hồ sơ khách hàng và quan hệ Company–Contact làm đích chuyển đổi Lead.
+
+| Mã | Feature | Branch đề xuất | Phụ thuộc | Kết quả cần đạt |
+|---|---|---|---|---|
+| P4-01 | Company schema và domain | `feature/p4-01-company-domain` | P2-08 | Schema/model/factory, owner/department, industry, address và indexes |
+| P4-02 | Contact schema và domain | `feature/p4-02-contact-domain` | P4-01 | Schema/model/factory, company relation, email/phone và primary contact |
+| P4-03 | Company CRUD | `feature/p4-03-company-crud` | P4-01, P2-04 | List/filter/create/edit/detail, policy và soft delete |
+| P4-04 | Contact CRUD và quan hệ | `feature/p4-04-contact-crud` | P4-02, P2-04 | List/form/detail, liên kết/chuyển company và policy |
+| P4-05 | Duplicate handling | `feature/p4-05-customer-duplicates` | P4-03, P4-04 | Rule trùng Company/Contact, cảnh báo và merge-safe service foundation |
+| P4-06 | Attachment và timeline foundation | `feature/p4-06-customer-files-timeline` | P4-03, P4-04 | Upload private qua MinIO, metadata DB, signed download và timeline shell |
+| P4-07 | Customer authorization checkpoint | `feature/p4-07-customer-checkpoint` | P4-01..P4-06 | CRUD/file/policy tests và checklist Company–Contact |
+
+Checkpoint: dừng để kiểm thử Company, Contact, file MinIO và visibility trước P5.
 
 ## Giai đoạn 5 — Pipelines và Opportunities
 
-Mục tiêu: multiple pipelines/stages, opportunity lifecycle, backend weighted value, stage history, Kanban bằng Livewire + Alpine + SortableJS, optimistic rollback, private Reverb broadcast và test.
+Mục tiêu: quản lý pipeline có cấu hình, opportunity lifecycle, Kanban và realtime.
+
+| Mã | Feature | Branch đề xuất | Phụ thuộc | Kết quả cần đạt |
+|---|---|---|---|---|
+| P5-01 | Pipeline và stage schema | `feature/p5-01-pipeline-domain` | P2-08 | Multiple pipelines, ordered stages, probability, active/default constraints |
+| P5-02 | Quản lý pipeline/stage | `feature/p5-02-pipeline-management` | P5-01 | CRUD/reorder stage, chống xóa stage đang dùng và policy quản trị |
+| P5-03 | Opportunity schema và domain | `feature/p5-03-opportunity-domain` | P4-02, P5-01 | Company/contact/owner/stage, amount, probability, dates và indexes |
+| P5-04 | Opportunity CRUD và weighted value | `feature/p5-04-opportunity-crud` | P5-03 | List/form/detail, decimal-safe calculation và authorization |
+| P5-05 | Stage transition và history | `feature/p5-05-stage-transition-history` | P5-04 | Server-authoritative transition, version check, history và events |
+| P5-06 | Opportunity Kanban | `feature/p5-06-opportunity-kanban` | P5-05 | Livewire + Alpine + SortableJS board, filters và optimistic rollback |
+| P5-07 | Realtime private broadcast | `feature/p5-07-opportunity-realtime` | P5-06 | Private Reverb channel, authorized events, ordering/idempotency handling |
+| P5-08 | Close won/lost workflow | `feature/p5-08-opportunity-close` | P5-05 | Won/lost reason, closed date, required validation và reopen rule |
+| P5-09 | Lead conversion integration và checkpoint | `feature/p5-09-lead-conversion-checkpoint` | P3-09, P4-02, P5-01..P5-08 | Transaction tạo Company/Contact/Opportunity, idempotency/rollback, Kanban/realtime tests và checklist |
+
+Checkpoint: dừng để kiểm thử Lead conversion hoàn chỉnh và Kanban đa người dùng trước P6.
 
 ## Giai đoạn 6 — Activities và Tasks
 
-Mục tiêu: polymorphic timeline, task/checklist/comment, list/Kanban/calendar, reminder jobs, scheduler và notifications.
+Mục tiêu: timeline tương tác, công việc, lịch và nhắc hạn cho các đối tượng CRM.
+
+| Mã | Feature | Branch đề xuất | Phụ thuộc | Kết quả cần đạt |
+|---|---|---|---|---|
+| P6-01 | Activity polymorphic domain | `feature/p6-01-activity-domain` | P3-10, P4-07, P5-09 | Schema/model cho call/email/meeting/note gắn nhiều subject |
+| P6-02 | Activity timeline CRUD | `feature/p6-02-activity-timeline` | P6-01 | Timeline reusable, create/edit/delete, visibility và audit |
+| P6-03 | Task domain và CRUD | `feature/p6-03-task-crud` | P6-01 | Assignee, due date, priority, status, polymorphic subject và policy |
+| P6-04 | Checklist và comments | `feature/p6-04-task-collaboration` | P6-03 | Checklist ordering, comments, mentions foundation và audit |
+| P6-05 | Task list và Kanban | `feature/p6-05-task-views` | P6-03, P6-04 | My tasks/team tasks, filters, list/Kanban và bulk state changes |
+| P6-06 | Calendar và reminders | `feature/p6-06-calendar-reminders` | P6-03 | Calendar view, scheduler job, idempotent reminders và overdue state |
+| P6-07 | Activity/Task checkpoint | `feature/p6-07-activity-task-checkpoint` | P6-01..P6-06 | Timeline/task/calendar/queue tests và checklist nghiệm thu |
+
+Checkpoint: dừng để kiểm thử scheduler, Horizon và nhắc việc trước P7.
 
 ## Giai đoạn 7 — Dashboard và Reports
 
-Mục tiêu: metric/query services, Chart.js, date/department/user/pipeline filters, funnel/revenue/performance reports, cached aggregates và responsive states.
+Mục tiêu: số liệu thực, bộ lọc dùng chung và báo cáo bán hàng có kiểm soát data scope.
+
+| Mã | Feature | Branch đề xuất | Phụ thuộc | Kết quả cần đạt |
+|---|---|---|---|---|
+| P7-01 | Metrics query services | `feature/p7-01-metrics-services` | P5-09, P6-07 | Query objects cho lead/opportunity/task, date range và data scope |
+| P7-02 | Dashboard filters và KPI | `feature/p7-02-dashboard-kpi` | P7-01 | Date/department/user/pipeline filters, KPI cards và URL state |
+| P7-03 | Funnel report | `feature/p7-03-funnel-report` | P7-01 | Lead conversion và pipeline funnel bằng Chart.js, empty/loading states |
+| P7-04 | Revenue và forecast report | `feature/p7-04-revenue-forecast` | P7-01 | Won revenue, weighted forecast, period comparison và decimal accuracy |
+| P7-05 | Sales performance report | `feature/p7-05-sales-performance` | P7-01, P6-07 | Owner/team performance, activity/task indicators và scoped drill-down |
+| P7-06 | Report cache và checkpoint | `feature/p7-06-report-checkpoint` | P7-02..P7-05 | Cache invalidation, query/performance tests và checklist reports |
+
+Checkpoint: dừng để đối chiếu số liệu dashboard/report với dữ liệu mẫu trước P8.
 
 ## Giai đoạn 8 — Import, Export, Notifications và Audit
 
-Mục tiêu: CSV/Excel preview-map-validate-chunk queue, duplicate strategies, progress/error file, queued export/signed download, notification center và audit hardening.
+Mục tiêu: xử lý dữ liệu lớn qua queue, notification center và audit hoàn chỉnh.
+
+| Mã | Feature | Branch đề xuất | Phụ thuộc | Kết quả cần đạt |
+|---|---|---|---|---|
+| P8-01 | Import upload và preview | `feature/p8-01-import-upload-preview` | P3-10, P4-07 | CSV/XLSX upload MinIO, giới hạn file, sample preview và job record |
+| P8-02 | Column mapping và validation | `feature/p8-02-import-mapping-validation` | P8-01 | Map cột, saved mapping, row validation và localized errors |
+| P8-03 | Chunk queue và duplicate strategy | `feature/p8-03-import-queue-duplicates` | P8-02 | Chunked jobs, skip/update/create strategy, transaction và idempotency |
+| P8-04 | Import progress và error file | `feature/p8-04-import-progress-errors` | P8-03 | Realtime progress, counters, retry/cancel và downloadable error file |
+| P8-05 | Queued export và signed download | `feature/p8-05-export-signed-download` | P7-06 | Scoped CSV/XLSX export, queue, MinIO, expiry và signed URL |
+| P8-06 | Notification center | `feature/p8-06-notification-center` | P6-06, P8-04 | Database/email/broadcast notifications, unread state và preferences |
+| P8-07 | Audit hardening và checkpoint | `feature/p8-07-audit-checkpoint` | P8-01..P8-06 | Immutable audit coverage, sensitive-field masking, import/export tests |
+
+Checkpoint: dừng để kiểm thử file lớn, queue retry, notifications và audit trước hardening P9.
 
 ## Giai đoạn 9 — Hoàn thiện, CI/CD và deployment
 
-Mục tiêu: responsive/accessibility/security review, performance indexes, complete test suite, CI workflow, optimized production image, backup/monitoring/deployment docs và final smoke test.
+Mục tiêu: đưa hệ thống tới trạng thái sẵn sàng triển khai và vận hành.
+
+| Mã | Feature | Branch đề xuất | Phụ thuộc | Kết quả cần đạt |
+|---|---|---|---|---|
+| P9-01 | Responsive và accessibility audit | `feature/p9-01-accessibility-responsive` | P8-07 | Mobile/tablet/desktop, keyboard, focus, contrast và screen-reader fixes |
+| P9-02 | Security hardening | `feature/p9-02-security-hardening` | P8-07 | OWASP review, rate limit, headers, upload safety, secret/cookie policy |
+| P9-03 | Performance và database indexes | `feature/p9-03-performance-indexes` | P8-07 | Explain plans, N+1 fixes, indexes, cache/queue tuning và load baseline |
+| P9-04 | Complete regression suite | `feature/p9-04-regression-suite` | P9-01..P9-03 | Critical E2E/feature/policy/jobs tests và stable fixtures |
+| P9-05 | CI workflow | `feature/p9-05-ci-workflow` | P9-04 | Composer/npm audit, Pest, Pint, PHPStan, Vite build và image build gates |
+| P9-06 | Production image và deployment | `feature/p9-06-production-deployment` | P9-05 | Optimized image, environment/secrets, TLS/reverse proxy và deploy/rollback docs |
+| P9-07 | Backup, monitoring và final checkpoint | `feature/p9-07-final-checkpoint` | P9-06 | Backup/restore drill, logs/metrics/alerts, final smoke test và handover |
+
+Checkpoint cuối: chỉ đóng dự án sau khi restore backup thử thành công, CI xanh và smoke test production đạt.
