@@ -20,4 +20,14 @@ enum LeadPriority: string
             self::Urgent => 'Khẩn cấp',
         };
     }
+
+    public function color(): string
+    {
+        return match ($this) {
+            self::Low => 'zinc',
+            self::Medium => 'blue',
+            self::High => 'amber',
+            self::Urgent => 'red',
+        };
+    }
 }

@@ -951,7 +951,7 @@ Mục tiêu: hoàn thiện vòng đời Lead từ tiếp nhận đến chuyển 
 | P3-03 | ✅ Repository và bộ lọc Lead | `feature/p3-03-lead-query-filters` | P3-02 | Search, filter, sort, pagination và reusable data-scope query |
 | P3-04 | ✅ Lead policy và visibility | `feature/p3-04-lead-authorization` | P2-04, P3-03 | Policy CRUD/assign/convert/restore đúng permission matrix |
 | P3-05 | ✅ Danh sách Lead | `feature/p3-05-lead-list` | P3-03, P3-04 | Livewire table responsive, URL filters, bulk selection foundation và empty states |
-| P3-06 | Form và chi tiết Lead | `feature/p3-06-lead-form-detail` | P3-05 | Create/edit/detail, validation, source/tags/owner và audit cơ bản |
+| P3-06 | ✅ Form và chi tiết Lead | `feature/p3-06-lead-form-detail` | P3-05 | Create/edit/detail, validation, source/tags/owner và audit cơ bản |
 | P3-07 | Assignment và status history | `feature/p3-07-lead-assignment-status` | P3-06 | Gán owner, chuyển trạng thái hợp lệ, lịch sử và event |
 | P3-08 | Duplicate, soft delete và restore | `feature/p3-08-lead-duplicate-delete` | P3-06 | Phát hiện email/phone trùng, cảnh báo/merge decision, trash/restore |
 | P3-09 | Conversion eligibility và contract | `feature/p3-09-conversion-contract` | P3-07, P3-08 | Rule đủ điều kiện, DTO/action contract, chống convert lặp và test contract; chưa tạo Opportunity |
@@ -1262,6 +1262,79 @@ Checklist kiểm thử thủ công:
 7. P3-05 chưa có nút tạo/sửa/xóa Lead; các thao tác này được triển khai từ P3-06 trở đi.
 
 Checkpoint P3-05: dừng tại đây để chủ dự án kiểm thử danh sách Lead trước khi bắt đầu P3-06.
+
+### Nhật ký feature P3-06 — Form và chi tiết Lead
+
+Trạng thái: **hoàn tất triển khai, chờ chủ dự án kiểm thử**.
+
+Đã triển khai:
+
+- Thêm ba route `leads.create`, `leads.show`, `leads.edit`; Controller tải Lead qua scoped repository rồi kiểm tra `LeadPolicy` trước khi render.
+- Tạo Livewire `LeadEditor` dùng chung cho create/edit và `LeadForm` riêng để chuẩn hóa, validate dữ liệu phía server.
+- Form hỗ trợ thông tin liên hệ, công ty, địa chỉ, nguồn, ưu tiên, giá trị dự kiến, ghi chú, nhiều tag và người phụ trách.
+- Email được trim/lowercase; website chỉ nhận HTTP/HTTPS; độ dài khớp schema; source/tag/owner phải tồn tại và đang hoạt động; tối đa 20 tag, không trùng ID.
+- Tạo `LeadManagementService` điều phối Policy, data scope, assignment, transaction, audit và repository write; Livewire/Blade không chứa truy vấn ghi dữ liệu.
+- Sales tạo Lead được tự gán cho chính mình và không thể gửi owner khác qua request giả mạo.
+- Sales Manager chỉ thấy/chọn owner trong phòng ban; Admin/Super Admin có thể chọn owner toàn hệ thống. `department_id` luôn suy ra từ owner, hoặc giữ phòng ban actor khi Manager tạo Lead chưa phân công.
+- Đổi owner trên Lead hiện có yêu cầu `leads.assign`; cập nhật thông thường vẫn yêu cầu `leads.update` và Lead nằm trong data scope.
+- Trạng thái Lead mới luôn là `new`; P3-06 không cho sửa trạng thái để tránh bỏ qua transition/history sẽ triển khai ở P3-07.
+- Repository bổ sung create/update/sync tag và eager-load người tạo/người cập nhật cho trang chi tiết.
+- Mỗi lần tạo/cập nhật có thay đổi đều ghi `activity_log` module `leads`, actor, subject và snapshot old/new; audit được tạo trong cùng database transaction.
+- Trang chi tiết hiển thị đầy đủ liên hệ, địa chỉ, giá trị, source/tag, owner/phòng ban và thời gian theo múi giờ Việt Nam.
+- Danh sách Lead có nút tạo/xem/sửa theo Policy; Viewer chỉ thấy nút xem.
+- Không thêm migration, package hoặc seed mới trong P3-06.
+
+Luồng chạy:
+
+1. `LeadController` kiểm tra route-level Policy; detail/edit tải Lead bằng `LeadRepository::findVisibleOrFail` nên ID ngoài data scope trả 404.
+2. `LeadEditor` nạp option từ `LeadDirectoryService`; `LeadForm` giữ state và validate payload tại backend.
+3. `LeadManagementService` kiểm tra lại Policy, giới hạn owner theo data scope và tự đồng bộ phòng ban.
+4. Trong một transaction, `LeadRepository` create/update Lead, sync tag, sau đó `SystemAuditService` ghi audit old/new.
+5. Lưu thành công chuyển về trang chi tiết bằng `wire:navigate` và hiển thị flash message.
+
+File chính:
+
+- `app/Http/Controllers/LeadController.php`
+- `app/Livewire/Forms/LeadForm.php`
+- `app/Livewire/Leads/LeadEditor.php`
+- `app/Services/LeadManagementService.php`
+- `app/Repositories/Contracts/LeadRepository.php`
+- `app/Repositories/EloquentLeadRepository.php`
+- `resources/views/livewire/leads/lead-editor.blade.php`
+- `resources/views/leads/create.blade.php`, `edit.blade.php`, `show.blade.php`
+- `tests/Feature/LeadFormDetailTest.php`
+
+Kết quả xác minh:
+
+- Test riêng P3-06: **7 test đạt, 86 assertions**.
+- Nhóm form/list/policy Lead: **19 test đạt, 260 assertions**.
+- Toàn dự án: **126 test đạt, 842 assertions**.
+- Pint đạt trên 136 file; PHPStan/Larastan không có lỗi; toàn bộ Blade template compile thành công.
+- Vite production build đạt; toàn bộ 10 service Docker đang chạy và các service có healthcheck đều `healthy`.
+
+Lệnh đã chạy:
+
+```bash
+docker compose exec app php artisan test tests/Feature/LeadFormDetailTest.php tests/Feature/LeadListTest.php tests/Feature/LeadPolicyTest.php
+docker compose exec app php artisan test
+docker compose exec app ./vendor/bin/pint --test
+docker compose exec app ./vendor/bin/phpstan analyse --memory-limit=512M --no-progress
+docker compose exec app php artisan view:cache
+docker compose exec vite npm run build
+docker compose ps
+```
+
+Checklist kiểm thử thủ công:
+
+1. Đăng nhập Admin, mở `/leads`, tạo Lead có source, nhiều tag và owner; xác nhận chuyển về trang chi tiết và phòng ban khớp owner.
+2. Mở Lead vừa tạo, sửa thông tin/tag/owner rồi kiểm tra old/new ở màn Nhật ký hệ thống bằng tài khoản Super Admin hoặc Admin phòng IT.
+3. Thử email/website sai, giá trị âm hoặc bỏ họ tên; xác nhận form báo lỗi và không tạo Lead.
+4. Đăng nhập Sales Manager; xác nhận dropdown owner chỉ có người trong cùng phòng ban và không mở được Lead phòng ban khác.
+5. Đăng nhập Sales; tạo Lead và xác nhận hệ thống tự gán chính Sales, không hiển thị dropdown phân công.
+6. Đăng nhập Viewer; xác nhận xem được chi tiết trong phạm vi nhưng không có nút tạo/sửa và URL create/edit trả 403.
+7. Xác nhận form chưa cho chuyển status; tính năng chuyển trạng thái và lịch sử thuộc P3-07.
+
+Checkpoint P3-06: dừng tại đây để chủ dự án kiểm thử form, trang chi tiết và audit Lead trước khi bắt đầu P3-07.
 
 ## Giai đoạn 4 — Companies và Contacts
 

@@ -26,4 +26,13 @@ interface LeadRepository
     ): LengthAwarePaginator;
 
     public function findVisibleOrFail(User $actor, int $leadId): Lead;
+
+    /** @param array<string, mixed> $attributes */
+    public function create(array $attributes): Lead;
+
+    /** @param array<string, mixed> $attributes */
+    public function update(Lead $lead, array $attributes): Lead;
+
+    /** @param list<int> $tagIds */
+    public function syncTags(Lead $lead, array $tagIds): Lead;
 }

@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace App\Livewire\Leads;
 
-use App\Enums\LeadPriority;
-use App\Enums\LeadStatus;
 use App\Models\Department;
 use App\Models\Lead;
 use App\Models\LeadSource;
@@ -241,28 +239,6 @@ final class LeadList extends Component
         $this->perPage = 15;
         $this->resetPage();
         $this->clearSelection();
-    }
-
-    public function statusColor(LeadStatus $status): string
-    {
-        return match ($status) {
-            LeadStatus::New => 'blue',
-            LeadStatus::Contacted => 'amber',
-            LeadStatus::Qualified => 'emerald',
-            LeadStatus::Unqualified => 'zinc',
-            LeadStatus::Converted => 'violet',
-            LeadStatus::Lost => 'red',
-        };
-    }
-
-    public function priorityColor(LeadPriority $priority): string
-    {
-        return match ($priority) {
-            LeadPriority::Low => 'zinc',
-            LeadPriority::Medium => 'blue',
-            LeadPriority::High => 'amber',
-            LeadPriority::Urgent => 'red',
-        };
     }
 
     public function render(): View

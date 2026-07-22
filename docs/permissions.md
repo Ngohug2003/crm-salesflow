@@ -69,6 +69,8 @@ P3-03 applies this rule to `EloquentLeadRepository`: all, department, owned and 
 
 `leads.view-all` and `leads.update-all` do not bypass `DataScopeService`. For Sales Manager they mean access beyond personal ownership while remaining inside the manager's department. Sales has no `leads.assign`, so assignment remains a manager/admin action. Restore intentionally reuses `leads.delete` because the immutable permission catalog defines both directions of the soft-delete lifecycle under the same capability.
 
+P3-06 enforces assignment again inside `LeadManagementService`, not only through form visibility. A Sales user creating a Lead is the narrow exception: the service ignores an empty owner and self-assigns the new Lead, but rejects any different owner. Sales Manager can assign only an active user visible inside the same department. Admin/Super Admin can assign an active visible user globally. On update, every owner change requires `leads.assign`, and `department_id` is derived from the resulting owner so a crafted request cannot create an inconsistent scope pair.
+
 ## Role assignment safeguards
 
 P2-07 permits multiple roles per user; `DataScopeResolver` continues to choose the broadest effective scope. Every managed user must have at least one configured role.
