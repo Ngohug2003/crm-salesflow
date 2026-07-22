@@ -14,7 +14,7 @@ Tài liệu này là checkpoint chính của dự án. Quy ước làm việc t�
 |---|---|---|---|
 | 0 | Phân tích kiến trúc và dữ liệu | Hoàn tất tài liệu ban đầu | Chưa xác nhận |
 | 1 | Khởi tạo nền tảng và Docker | Hoàn tất triển khai | Chờ chủ dự án kiểm thử |
-| 2 | Users, Departments, Roles, Permissions | Đang làm — P2-01, P2-02, P2-03 hoàn tất | Chờ kiểm thử P2-03 |
+| 2 | Users, Departments, Roles, Permissions | Đang làm — P2-01 đến P2-04 hoàn tất | Chờ kiểm thử P2-04 |
 | 3 | Leads | Chưa bắt đầu | — |
 | 4 | Companies và Contacts | Chưa bắt đầu | — |
 | 5 | Pipelines và Opportunities | Chưa bắt đầu | — |
@@ -327,7 +327,7 @@ Mục tiêu: hoàn thiện tổ chức người dùng và ranh giới phân quy�
 | P2-01 | ✅ Department schema và domain | `feature/p2-01-department-schema` | P1 | Migration/model/factory/seed phòng ban, quan hệ cha-con và trạng thái hoạt động |
 | P2-02 | ✅ Quản lý phòng ban | `feature/p2-02-department-management` | P2-01 | Livewire list/create/edit/disable phòng ban, validation và test |
 | P2-03 | ✅ Danh mục quyền và role seeder | `feature/p2-03-rbac-catalog-seeder` | P2-01 | `config/crm.php`, 5 role mặc định, permission idempotent và super-admin bypass |
-| P2-04 | Data scope và policies nền tảng | `feature/p2-04-data-scope-policies` | P2-03 | Scope all/department/owned/read-only được cưỡng chế ở backend |
+| P2-04 | ✅ Data scope và policies nền tảng | `feature/p2-04-data-scope-policies` | P2-03 | Scope all/department/owned/read-only được cưỡng chế ở backend |
 | P2-05 | Danh sách người dùng | `feature/p2-05-user-list` | P2-01, P2-04 | Tìm kiếm, lọc phòng ban/role/trạng thái, phân trang và URL state |
 | P2-06 | Tạo và chỉnh sửa người dùng | `feature/p2-06-user-form` | P2-05 | Form tạo/sửa, active/locked state, email uniqueness và password rule |
 | P2-07 | Gán phòng ban và role | `feature/p2-07-user-role-assignment` | P2-03, P2-06 | UI gán role/phòng ban, chống tự khóa admin cuối cùng, audit thay đổi |
@@ -504,6 +504,77 @@ Checklist kiểm thử:
 4. Đăng nhập tài khoản demo và xác nhận Dashboard/Phòng ban vẫn truy cập bình thường; UI quản lý role chưa thuộc phạm vi P2-03.
 
 Checkpoint P2-03: dừng tại đây để chủ dự án kiểm thử; chỉ bắt đầu P2-04 sau khi nhận xác nhận.
+
+### Nhật ký feature P2-04 — Data scope và policies nền tảng
+
+Trạng thái: **hoàn tất triển khai, chờ chủ dự án kiểm thử**.
+
+Đã triển khai:
+
+- Tạo enum `DataScope` cho bốn phạm vi `all`, `department`, `owned`, `read-only`; khi một user có nhiều role, phạm vi rộng nhất được chọn theo thứ tự trên.
+- `DataScopeResolver` đọc role/data scope từ `config/crm.php`; user không có role hợp lệ nhận mặc định an toàn `read-only`.
+- `DataScopeService` cung cấp chung hai lớp bảo vệ: lọc query theo actor và xác nhận actor có được thao tác trên một record cụ thể hay không.
+- Tạo `UserPolicy` kết hợp permission với record scope; `read-only` luôn chặn create/update/delete kể cả khi ai đó gán nhầm quyền ghi trực tiếp.
+- Tạo `DepartmentPolicy`: admin/super-admin được quản lý; sales-manager có thể xem nhờ `users.view` nhưng không được sửa vì thiếu `settings.manage`; sales/viewer không được mở module.
+- Controller và mọi Livewire action của Departments đều authorize ở backend. Nút/menu dùng `@can` để giao diện đúng quyền, nhưng policy vẫn là ranh giới bảo mật chính.
+- Tạo `UserRepository`/`EloquentUserRepository`; query user được giới hạn `all`, cùng phòng ban hoặc chính user theo scope tương ứng.
+- Tách đăng ký policy/Gate sang `AuthServiceProvider`, binding repository sang `RepositoryServiceProvider`; `AppServiceProvider` không còn gom các trách nhiệm này.
+- Thêm named volume development cho `bootstrap/cache` để PHP trong container có thể làm mới provider cache khi code local thay đổi mà không gặp lỗi quyền ghi. Cấu hình production không bị thay đổi.
+- Không cài package, không thêm component UI và không tạo migration mới.
+
+File chính:
+
+- `app/Enums/DataScope.php`
+- `app/Services/Authorization/DataScopeResolver.php`
+- `app/Services/Authorization/DataScopeService.php`
+- `app/Policies/UserPolicy.php`
+- `app/Policies/DepartmentPolicy.php`
+- `app/Repositories/Contracts/UserRepository.php`
+- `app/Repositories/EloquentUserRepository.php`
+- `app/Providers/AuthServiceProvider.php`
+- `app/Providers/RepositoryServiceProvider.php`
+- `app/Http/Controllers/DepartmentController.php`
+- `app/Livewire/Departments/DepartmentManagement.php`
+- `resources/views/livewire/departments/department-management.blade.php`
+- `resources/views/layouts/app.blade.php`
+- `bootstrap/providers.php`
+- `compose.override.yaml`
+- `tests/Feature/DataScopePolicyTest.php`
+- `tests/Feature/DepartmentManagementTest.php`
+- `docs/permissions.md`
+
+Lệnh đã chạy:
+
+```bash
+docker compose exec -T app php artisan test tests/Feature/DepartmentManagementTest.php tests/Feature/RbacCatalogSeederTest.php tests/Feature/DataScopePolicyTest.php
+docker compose up -d --force-recreate app horizon scheduler reverb nginx
+docker compose exec -T app php artisan test
+docker compose exec -T app ./vendor/bin/pint --test
+docker compose exec -T app ./vendor/bin/phpstan analyse --memory-limit=512M
+docker compose exec -T --user node vite npm run build
+docker compose ps
+```
+
+Kết quả cuối:
+
+- Riêng P2-04: 5 test đạt, 28 assertions; bao phủ scope resolver, query all/department/owned/read-only, UserPolicy, DepartmentPolicy, Livewire và menu.
+- Nhóm kiểm thử P2-02 đến P2-04: 18 test đạt, 116 assertions.
+- Toàn dự án: 31 test đạt, 149 assertions.
+- Pint: 76 file đạt; PHPStan/Larastan không có lỗi.
+- Vite production build đạt; CSS 242,64 kB và JavaScript 0,40 kB trước gzip.
+- Tất cả service Docker đều chạy; các service có healthcheck đang ở trạng thái `healthy`.
+- Lần chạy đầu phát hiện `bootstrap/cache/services.php` không ghi được do UID của bind mount; named volume development đã xử lý nguyên nhân này.
+- Assertion giao diện ban đầu nhìn thấy chữ trong modal đóng sẵn; test được sửa để kiểm tra sự vắng mặt của action Livewire thay vì text HTML không hiển thị.
+
+Checklist kiểm thử:
+
+1. Chạy `docker compose exec app php artisan test tests/Feature/DataScopePolicyTest.php` và xác nhận 5 test/28 assertions đạt.
+2. Đăng nhập `admin@salesflow.test`, mở **Departments** và thử tạo, sửa, bật/tắt, xóa để xác nhận super-admin vẫn thao tác đầy đủ.
+3. Chạy `docker compose exec app php artisan test tests/Feature/DataScopePolicyTest.php --filter="allows managers"` để xác nhận manager xem được trang nhưng các action ghi bị backend trả `403`.
+4. Chạy `docker compose exec app php artisan test tests/Feature/DataScopePolicyTest.php --filter="denies department pages"` để xác nhận viewer không mở được route/Livewire Departments và không thấy menu.
+5. Khi sửa code provider ở local, chạy lại `docker compose ps` và tải trang; không còn lỗi quyền ghi `bootstrap/cache`.
+
+Checkpoint P2-04: dừng tại đây để chủ dự án kiểm thử; chỉ bắt đầu P2-05 sau khi nhận xác nhận.
 
 Checkpoint: dừng để kiểm thử đăng nhập, quản lý user/department và toàn bộ ma trận quyền trước P3.
 

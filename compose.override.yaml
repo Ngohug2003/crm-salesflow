@@ -6,6 +6,7 @@ x-dev-app: &dev-app
     GIT_CONFIG_VALUE_0: /var/www/html
   volumes:
     - ./:/var/www/html
+    - salesflow-bootstrap-cache:/var/www/html/bootstrap/cache
     - salesflow-vendor:/var/www/html/vendor
     - salesflow-storage:/var/www/html/storage
     - ./docker/php/local.ini:/usr/local/etc/php/conf.d/zz-local.ini:ro
@@ -53,5 +54,6 @@ services:
       retries: 8
 
 volumes:
+  salesflow-bootstrap-cache:
   salesflow-vendor:
   salesflow-node-modules:

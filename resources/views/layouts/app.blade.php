@@ -24,7 +24,9 @@
                 </div>
                 <nav class="mt-8 space-y-1">
                     <a href="{{ route('dashboard') }}" wire:navigate.hover @class(['nav-link', 'nav-link-active' => request()->routeIs('dashboard')])><span>⌂</span><span x-show="sidebar">Dashboard</span></a>
-                    <a href="{{ route('departments.index') }}" wire:navigate.hover @class(['nav-link', 'nav-link-active' => request()->routeIs('departments.*')])><span>▤</span><span x-show="sidebar">Phòng ban</span></a>
+                    @can('viewAny', \App\Models\Department::class)
+                        <a href="{{ route('departments.index') }}" wire:navigate.hover @class(['nav-link', 'nav-link-active' => request()->routeIs('departments.*')])><span>▤</span><span x-show="sidebar">Phòng ban</span></a>
+                    @endcan
                     @foreach (['Leads' => '◎', 'Companies' => '▦', 'Contacts' => '♙', 'Opportunities' => '◇', 'Pipelines' => '◫', 'Activities' => '◷', 'Tasks' => '✓', 'Reports' => '⌁'] as $label => $icon)
                         <span class="nav-link cursor-not-allowed opacity-55" title="Có trong phase tiếp theo"><span>{{ $icon }}</span><span x-show="sidebar">{{ $label }}</span></span>
                     @endforeach
