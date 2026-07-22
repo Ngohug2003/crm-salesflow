@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             DepartmentSeeder::class,
             RolePermissionSeeder::class,
+            LeadTaxonomySeeder::class,
         ]);
 
         $managementDepartment = Department::query()->where('code', 'MANAGEMENT')->firstOrFail();

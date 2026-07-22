@@ -66,6 +66,8 @@ erDiagram
 
 Application domain keys use auto-incrementing `BIGINT` values, foreign keys are indexed, customer-facing records use soft deletes, and monetary fields use fixed precision decimals. `activities`, `tasks`, and `attachments` use polymorphic subjects.
 
+Lead taxonomy is delivered in dependency order: P3-01 creates `lead_sources` and `tags`; P3-02 creates `leads` and the `lead_tag` many-to-many pivot so every foreign key references an existing table during a clean migration.
+
 ## 4. Delivery plan and estimate
 
 | Phase | Deliverable | Estimate |
