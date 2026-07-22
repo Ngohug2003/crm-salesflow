@@ -2,8 +2,10 @@
 
 namespace App\Providers;
 
+use App\Models\User;
 use App\Repositories\Contracts\DepartmentRepository;
 use App\Repositories\EloquentDepartmentRepository;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -21,6 +23,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        Gate::before(static function (User $user, string $ability): ?bool {
+            return $user->hasRole((string) config('crm.rbac.super_admin_role')) ? true : null;
+        });
     }
 }
