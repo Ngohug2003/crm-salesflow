@@ -113,6 +113,9 @@ $allPermissions = array_merge(...array_values(array_map(
 return [
     'display_timezone' => env('CRM_DISPLAY_TIMEZONE', 'Asia/Ho_Chi_Minh'),
 
+    // Only rendered by the login page when APP_ENV=local.
+    'local_login_password' => env('CRM_LOCAL_LOGIN_PASSWORD', 'SalesFlow@123'),
+
     'rbac' => [
         'guard' => 'web',
         'super_admin_role' => 'super-admin',

@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Enums\LeadPriority;
 use App\Enums\LeadStatus;
+use App\Support\LeadContactNormalizer;
 use Database\Factories\LeadFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -43,6 +44,18 @@ final class Lead extends Model
         'created_by',
         'updated_by',
     ];
+
+    protected static function booted(): void
+    {
+        self::saving(function (Lead $lead): void {
+            $lead->setAttribute('email_normalized', LeadContactNormalizer::email($lead->email));
+            $lead->setAttribute('phone_normalized', LeadContactNormalizer::phone($lead->phone));
+            $lead->setAttribute(
+                'secondary_phone_normalized',
+                LeadContactNormalizer::phone($lead->secondary_phone),
+            );
+        });
+    }
 
     /** @return BelongsTo<LeadSource, $this> */
     public function source(): BelongsTo

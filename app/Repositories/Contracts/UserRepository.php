@@ -20,6 +20,8 @@ interface UserRepository
 
     public function findVisibleOrFail(User $actor, int $userId): User;
 
+    public function activeExists(int $userId): bool;
+
     /** @param array{name: string, email: string, department_id: ?int, is_active: bool, password?: string, email_verified_at?: Carbon} $attributes */
     public function create(array $attributes): User;
 

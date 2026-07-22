@@ -27,6 +27,13 @@ final readonly class LeadPolicy
         return $this->dataScope->canWrite($actor) && $actor->can('leads.create');
     }
 
+    public function viewTrash(User $actor): bool
+    {
+        return $this->dataScope->canWrite($actor)
+            && $actor->can('leads.view')
+            && $actor->can('leads.delete');
+    }
+
     public function update(User $actor, Lead $lead): bool
     {
         return $this->canMutate($actor, $lead, 'leads.update');

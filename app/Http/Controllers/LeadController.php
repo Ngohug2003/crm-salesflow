@@ -28,6 +28,13 @@ final class LeadController extends Controller
         return view('leads.create');
     }
 
+    public function trash(): View
+    {
+        Gate::authorize('viewTrash', Lead::class);
+
+        return view('leads.trash');
+    }
+
     public function show(int $leadId): View
     {
         $lead = $this->leads->findVisibleOrFail($this->currentUser(), $leadId);

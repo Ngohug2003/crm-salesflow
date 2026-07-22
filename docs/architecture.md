@@ -78,6 +78,8 @@ P3-06 adds the Lead write path: `LeadForm` normalizes and validates server-side 
 
 P3-07 makes assignment and status explicit workflow boundaries. Both `LeadAssignmentService` and `LeadStatusTransitionService` acquire a scoped row lock, authorize the mutation, update the Lead, append immutable domain history and write system audit inside one transaction. `LeadAssigned` and `LeadStatusChanged` implement `ShouldDispatchAfterCommit`, preventing consumers from observing rolled-back state. The general Lead editor now rejects owner changes; status remains writable only through the transition matrix. A typed `LeadTimelineEntry` keeps the Livewire timeline independent from persistence-model details.
 
+P3-08 adds contact identity and retention boundaries. `LeadContactNormalizer` runs from the model saving event, keeping normalized email/phone columns correct for every write path. `DuplicateLeadService` queries candidates only after `DataScopeService` and binds user confirmation to a contact signature, preventing a stale warning acknowledgement from authorizing changed input. `LeadLifecycleService` owns row-locked Soft Delete/restore transactions and system audit; tags and workflow history survive deletion. Restoring a Lead whose owner is inactive appends a new unassignment history instead of silently bypassing P3-07.
+
 ## 4. Delivery plan and estimate
 
 | Phase | Deliverable | Estimate |

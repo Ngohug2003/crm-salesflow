@@ -12,6 +12,7 @@ use App\Models\Tag;
 use App\Models\User;
 use App\Repositories\Contracts\LeadRepository;
 use App\Services\Authorization\DataScopeService;
+use App\Services\DuplicateLeadService;
 use App\Services\LeadDirectoryService;
 use App\Services\LeadManagementService;
 use Illuminate\Contracts\View\View;
@@ -25,6 +26,15 @@ final class LeadEditor extends Component
     public LeadForm $form;
 
     public ?int $leadId = null;
+
+    /** @var list<array{id: int, full_name: string, email: ?string, phone: ?string, status: string, owner: string, department: string, trashed: bool, matched_fields: list<string>}> */
+    public array $duplicateCandidates = [];
+
+    public ?string $pendingDuplicateSignature = null;
+
+    public ?string $confirmedDuplicateSignature = null;
+
+    public bool $showDuplicateWarning = false;
 
     public function mount(?int $leadId = null): void
     {
@@ -85,8 +95,19 @@ final class LeadEditor extends Component
         $lead = $this->leadId === null
             ? null
             : $this->repository()->findVisibleOrFail($actor, $this->leadId);
+        $payload = $this->form->validatedPayload();
+        $signature = $this->duplicates()->signature($payload);
+        $candidates = $this->duplicates()->candidates($actor, $payload, $this->leadId);
 
-        $savedLead = $this->management()->save($actor, $lead, $this->form->validatedPayload());
+        if ($candidates !== [] && $this->confirmedDuplicateSignature !== $signature) {
+            $this->duplicateCandidates = $candidates;
+            $this->pendingDuplicateSignature = $signature;
+            $this->showDuplicateWarning = true;
+
+            return null;
+        }
+
+        $savedLead = $this->management()->save($actor, $lead, $payload);
 
         session()->flash(
             'status',
@@ -96,6 +117,22 @@ final class LeadEditor extends Component
         );
 
         return $this->redirectRoute('leads.show', ['leadId' => $savedLead->getKey()], navigate: true);
+    }
+
+    public function confirmDuplicateSave(): mixed
+    {
+        $this->confirmedDuplicateSignature = $this->pendingDuplicateSignature;
+        $this->showDuplicateWarning = false;
+
+        return $this->save();
+    }
+
+    public function dismissDuplicateWarning(): void
+    {
+        $this->duplicateCandidates = [];
+        $this->pendingDuplicateSignature = null;
+        $this->confirmedDuplicateSignature = null;
+        $this->showDuplicateWarning = false;
     }
 
     public function render(): View
@@ -116,6 +153,11 @@ final class LeadEditor extends Component
     private function management(): LeadManagementService
     {
         return app(LeadManagementService::class);
+    }
+
+    private function duplicates(): DuplicateLeadService
+    {
+        return app(DuplicateLeadService::class);
     }
 
     private function dataScope(): DataScopeService
