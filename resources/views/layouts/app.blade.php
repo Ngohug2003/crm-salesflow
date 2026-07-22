@@ -17,7 +17,7 @@
             <div class="flex h-full flex-col">
                 <div class="flex items-center justify-between gap-3 px-2 py-2">
                     <a href="{{ route('dashboard') }}" wire:navigate.hover class="flex min-w-0 items-center gap-3">
-                        <span class="grid size-10 shrink-0 place-items-center rounded-xl bg-emerald-400 font-black text-slate-950">SF</span>
+                        {{-- <span class="grid size-10 shrink-0 place-items-center rounded-xl bg-emerald-400 font-black text-slate-950">SF</span> --}}
                         <span x-show="sidebar" class="truncate font-semibold">SalesFlow CRM</span>
                     </a>
                     <button class="lg:hidden" @click="mobileNav=false" aria-label="Đóng menu">✕</button>

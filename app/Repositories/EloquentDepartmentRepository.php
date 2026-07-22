@@ -54,6 +54,21 @@ final class EloquentDepartmentRepository implements DepartmentRepository
             ->get(['id', 'name', 'code']);
     }
 
+    public function userFormOptions(?int $selectedId = null): Collection
+    {
+        return Department::query()
+            ->where(function (Builder $query) use ($selectedId): void {
+                $query->where('is_active', true)
+                    ->when(
+                        $selectedId !== null,
+                        fn (Builder $query): Builder => $query->orWhere('id', $selectedId),
+                    );
+            })
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get(['id', 'name', 'code']);
+    }
+
     public function stats(): array
     {
         return [

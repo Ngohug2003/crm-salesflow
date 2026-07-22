@@ -14,7 +14,7 @@ Tài liệu này là checkpoint chính của dự án. Quy ước làm việc t�
 |---|---|---|---|
 | 0 | Phân tích kiến trúc và dữ liệu | Hoàn tất tài liệu ban đầu | Chưa xác nhận |
 | 1 | Khởi tạo nền tảng và Docker | Hoàn tất triển khai | Chờ chủ dự án kiểm thử |
-| 2 | Users, Departments, Roles, Permissions | Đang làm — P2-01 đến P2-05 hoàn tất | Chờ kiểm thử P2-05 |
+| 2 | Users, Departments, Roles, Permissions | Đang làm — P2-01 đến P2-06 hoàn tất | Chờ kiểm thử P2-06 |
 | 3 | Leads | Chưa bắt đầu | — |
 | 4 | Companies và Contacts | Chưa bắt đầu | — |
 | 5 | Pipelines và Opportunities | Chưa bắt đầu | — |
@@ -329,7 +329,7 @@ Mục tiêu: hoàn thiện tổ chức người dùng và ranh giới phân quy�
 | P2-03 | ✅ Danh mục quyền và role seeder | `feature/p2-03-rbac-catalog-seeder` | P2-01 | `config/crm.php`, 5 role mặc định, permission idempotent và super-admin bypass |
 | P2-04 | ✅ Data scope và policies nền tảng | `feature/p2-04-data-scope-policies` | P2-03 | Scope all/department/owned/read-only được cưỡng chế ở backend |
 | P2-05 | ✅ Danh sách người dùng | `feature/p2-05-user-list` | P2-01, P2-04 | Tìm kiếm, lọc phòng ban/role/trạng thái, phân trang và URL state |
-| P2-06 | Tạo và chỉnh sửa người dùng | `feature/p2-06-user-form` | P2-05 | Form tạo/sửa, active/locked state, email uniqueness và password rule |
+| P2-06 | ✅ Tạo và chỉnh sửa người dùng | `feature/p2-06-user-form` | P2-05 | Form tạo/sửa, active/locked state, email uniqueness và password rule |
 | P2-07 | Gán phòng ban và role | `feature/p2-07-user-role-assignment` | P2-03, P2-06 | UI gán role/phòng ban, chống tự khóa admin cuối cùng, audit thay đổi |
 | P2-08 | Authorization test và checkpoint | `feature/p2-08-authorization-checkpoint` | P2-02..P2-07 | Test đủ 5 role, navigation theo quyền, seed demo và checklist nghiệm thu |
 
@@ -659,6 +659,72 @@ Checklist kiểm thử:
 9. Chọn **Vai trò & quyền** trên sidebar, xác nhận khối đầu trang hiển thị đúng role/data scope của tài khoản đang đăng nhập và mở từng role để xem danh sách quyền.
 
 Checkpoint P2-05: dừng tại đây để chủ dự án kiểm thử; chỉ bắt đầu P2-06 sau khi nhận xác nhận.
+
+### Nhật ký feature P2-06 — Tạo và chỉnh sửa người dùng
+
+Trạng thái: **hoàn tất triển khai, chờ chủ dự án kiểm thử**.
+
+Đã triển khai:
+
+- Thêm form tạo/chỉnh sửa ngay trên trang danh sách người dùng, gồm họ tên, email, phòng ban, active/locked state, mật khẩu và xác nhận mật khẩu.
+- `UserForm` chịu trách nhiệm chuẩn hóa tên/email, validation và tạo payload; lỗi required/email/unique/department/password được hiển thị bằng tiếng Việt.
+- Email được chuyển thành chữ thường trước khi kiểm tra unique; khi sửa, unique rule bỏ qua chính user hiện tại.
+- Tạo mới bắt buộc mật khẩu và xác nhận; chỉnh sửa cho phép bỏ trống để giữ nguyên hash cũ. Nếu nhập mật khẩu mới, `Password::default()` và xác nhận khớp vẫn được áp dụng.
+- Mật khẩu được hash qua cast `hashed` của model; form/service/repository không tự lưu plain text.
+- User được tạo bởi Admin được đánh dấu email verified để có thể đăng nhập ngay; chưa được gán role vì role assignment thuộc P2-07.
+- `is_active = false` là trạng thái locked và Fortify từ chối đăng nhập; bật lại cho phép tài khoản đăng nhập theo luồng hiện có.
+- Chỉ phòng ban active được gán mới. Nếu user đang thuộc một phòng ban đã inactive, form vẫn cho giữ nguyên phòng ban đó khi sửa nhưng không cho gán user khác vào.
+- `UserManagementService` bảo vệ department scope ở backend, ngăn writer có scope department/owned chuyển user ra ngoài phòng ban dù request bị sửa thủ công.
+- Nút **Tạo người dùng** và **Sửa** dùng UserPolicy; action Livewire authorize lại nên role chỉ đọc bị trả `403` khi gọi trực tiếp.
+- Repository được mở rộng với create/update; role hiện có được bảo toàn khi sửa thông tin tài khoản.
+- Không thêm migration, không cài package và không thay đổi/gán role trong P2-06.
+
+File chính:
+
+- `app/Livewire/Forms/UserForm.php`
+- `app/Livewire/Users/UserList.php`
+- `app/Services/UserManagementService.php`
+- `app/Services/UserDirectoryService.php`
+- `app/Repositories/Contracts/UserRepository.php`
+- `app/Repositories/EloquentUserRepository.php`
+- `app/Repositories/Contracts/DepartmentRepository.php`
+- `app/Repositories/EloquentDepartmentRepository.php`
+- `app/Models/User.php`
+- `resources/views/livewire/users/user-list.blade.php`
+- `tests/Feature/UserFormTest.php`
+
+Lệnh đã chạy:
+
+```bash
+docker compose exec -T app php artisan test tests/Feature/UserFormTest.php
+docker compose exec -T app ./vendor/bin/pint --test
+docker compose exec -T app ./vendor/bin/phpstan analyse --memory-limit=512M
+docker compose exec -T app php artisan test
+docker compose exec -T --user node vite npm run build
+docker compose ps
+```
+
+Kết quả cuối:
+
+- Riêng P2-06: 8 test đạt, 48 assertions; bao phủ UI/action, create, edit, email unique, password, inactive department, locked login, permissions và department scope.
+- Toàn dự án: 50 test đạt, 268 assertions.
+- Pint: 89 file đạt; PHPStan/Larastan không có lỗi.
+- Vite production build đạt; CSS 245,24 kB và JavaScript 0,40 kB trước gzip.
+- Tất cả service Docker đang chạy; service có healthcheck đều ở trạng thái `healthy`.
+- Lần test đầu phát hiện Eloquent Builder không có `orWhereKey()`; query phòng ban đã dùng điều kiện `orWhere('id', ...)` tương thích và static analysis xác nhận sạch.
+
+Checklist kiểm thử:
+
+1. Chạy `docker compose exec app php artisan test tests/Feature/UserFormTest.php` và xác nhận 8 test/48 assertions đạt.
+2. Đăng nhập `admin@salesflow.test`, mở **Người dùng**, nhấn **Tạo người dùng** và tạo một email mới với mật khẩu từ 8 ký tự.
+3. Thử tạo lại cùng email ở dạng chữ hoa để xác nhận hệ thống chuẩn hóa và báo email đã được sử dụng.
+4. Sửa user vừa tạo, đổi tên/phòng ban nhưng để trống hai ô mật khẩu; đăng nhập bằng mật khẩu cũ để xác nhận hash được giữ nguyên.
+5. Đặt mật khẩu mới và đăng nhập lại; sau đó khóa chính user thử nghiệm (không khóa tài khoản admin) và xác nhận đăng nhập bị từ chối.
+6. Mở khóa user thử nghiệm và xác nhận đăng nhập hoạt động trở lại.
+7. Chạy `docker compose exec app php artisan test tests/Feature/UserFormTest.php --filter="rejects user form"` để xác nhận Sales Manager không có action ghi.
+8. Xác nhận role hiện có không đổi sau khi sửa; việc gán role mới chỉ bắt đầu ở P2-07.
+
+Checkpoint P2-06: dừng tại đây để chủ dự án kiểm thử; chỉ bắt đầu P2-07 sau khi nhận xác nhận.
 
 Checkpoint: dừng để kiểm thử đăng nhập, quản lý user/department và toàn bộ ma trận quyền trước P3.
 

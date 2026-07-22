@@ -5,7 +5,80 @@
             <h1 class="mt-1 text-3xl font-semibold tracking-tight">Người dùng</h1>
             <p class="mt-2 max-w-2xl text-slate-500">Tra cứu tài khoản theo phạm vi dữ liệu, phòng ban, vai trò và trạng thái hoạt động.</p>
         </div>
+        @can('create', \App\Models\User::class)
+            <flux:button variant="primary" icon="plus" wire:click="openCreate">Tạo người dùng</flux:button>
+        @endcan
     </div>
+
+    @if ($notice)
+        <div class="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200" role="status">
+            {{ $notice }}
+        </div>
+    @endif
+
+    @if ($showForm)
+        <section class="crm-card mb-6" aria-labelledby="user-form-title">
+            <div class="mb-6 flex items-start justify-between gap-4">
+                <div>
+                    <h2 id="user-form-title" class="text-lg font-semibold">{{ $form->userId ? 'Chỉnh sửa người dùng' : 'Tạo người dùng' }}</h2>
+                    <p class="mt-1 text-sm text-slate-500">
+                        {{ $form->userId ? 'Để trống mật khẩu nếu không muốn thay đổi.' : 'Tài khoản mới được xác thực email tự động và chưa được gán vai trò.' }}
+                    </p>
+                </div>
+                <flux:button variant="ghost" icon="x-mark" square wire:click="cancelForm" aria-label="Đóng biểu mẫu" />
+            </div>
+
+            <form wire:submit="save" class="space-y-5">
+                <div class="grid gap-5 md:grid-cols-2">
+                    <flux:input wire:model.blur="form.name" label="Họ và tên" placeholder="Ví dụ: Nguyễn Văn An" required />
+                    <flux:input wire:model.blur="form.email" type="email" label="Email đăng nhập" placeholder="name@salesflow.test" required />
+
+                    <flux:select wire:model="form.departmentId" label="Phòng ban" placeholder="Chưa gán phòng ban">
+                        <option value="">Chưa gán phòng ban</option>
+                        @foreach ($this->formDepartmentOptions as $departmentOption)
+                            <option value="{{ $departmentOption->id }}">{{ $departmentOption->name }} ({{ $departmentOption->code }})</option>
+                        @endforeach
+                    </flux:select>
+
+                    <div class="rounded-xl border border-slate-200 px-4 py-3 dark:border-slate-800">
+                        <flux:switch
+                            wire:model="form.isActive"
+                            label="Tài khoản đang hoạt động"
+                            description="Tắt tùy chọn này để khóa đăng nhập của tài khoản."
+                        />
+                    </div>
+
+                    <flux:input
+                        wire:model="form.password"
+                        type="password"
+                        label="{{ $form->userId ? 'Mật khẩu mới (không bắt buộc)' : 'Mật khẩu' }}"
+                        autocomplete="new-password"
+                        :required="$form->userId === null"
+                        viewable
+                    />
+                    <flux:input
+                        wire:model="form.passwordConfirmation"
+                        type="password"
+                        label="Xác nhận mật khẩu"
+                        autocomplete="new-password"
+                        :required="$form->userId === null"
+                        viewable
+                    />
+                </div>
+
+                <flux:callout icon="information-circle" heading="Vai trò được quản lý riêng">
+                    P2-06 chỉ lưu thông tin tài khoản. Việc gán hoặc thay đổi vai trò sẽ được thực hiện ở P2-07.
+                </flux:callout>
+
+                <div class="flex flex-col-reverse gap-3 border-t border-slate-200 pt-5 dark:border-slate-800 sm:flex-row sm:justify-end">
+                    <flux:button type="button" variant="ghost" wire:click="cancelForm">Hủy</flux:button>
+                    <flux:button type="submit" variant="primary" wire:loading.attr="disabled" wire:target="save">
+                        {{ $form->userId ? 'Lưu thay đổi' : 'Tạo người dùng' }}
+                    </flux:button>
+                </div>
+            </form>
+        </section>
+    @endif
 
     <section class="crm-card">
         <div class="mb-5">
@@ -60,6 +133,7 @@
                     <flux:table.column>Vai trò</flux:table.column>
                     <flux:table.column>Trạng thái</flux:table.column>
                     <flux:table.column>Xác thực email</flux:table.column>
+                    <flux:table.column align="end">Thao tác</flux:table.column>
                 </flux:table.columns>
 
                 <flux:table.rows>
@@ -108,6 +182,11 @@
                                 ])>
                                     {{ $user->email_verified_at ? 'Đã xác thực' : 'Chưa xác thực' }}
                                 </span>
+                            </flux:table.cell>
+                            <flux:table.cell align="end">
+                                @can('update', $user)
+                                    <flux:button size="sm" variant="ghost" wire:click="openEdit({{ $user->id }})">Sửa</flux:button>
+                                @endcan
                             </flux:table.cell>
                         </flux:table.row>
                     @endforeach
