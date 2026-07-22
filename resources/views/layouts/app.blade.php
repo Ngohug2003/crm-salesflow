@@ -24,12 +24,16 @@
                 </div>
                 <nav class="mt-8 space-y-1">
                     <a href="{{ route('dashboard') }}" wire:navigate.hover @class(['nav-link', 'nav-link-active' => request()->routeIs('dashboard')])><span>⌂</span><span x-show="sidebar">Dashboard</span></a>
+                    @can('viewAny', \App\Models\User::class)
+                        <a href="{{ route('users.index') }}" wire:navigate.hover @class(['nav-link', 'nav-link-active' => request()->routeIs('users.*')])><span>♙</span><span x-show="sidebar">Người dùng</span></a>
+                    @endcan
                     @can('viewAny', \App\Models\Department::class)
                         <a href="{{ route('departments.index') }}" wire:navigate.hover @class(['nav-link', 'nav-link-active' => request()->routeIs('departments.*')])><span>▤</span><span x-show="sidebar">Phòng ban</span></a>
                     @endcan
                     @foreach (['Leads' => '◎', 'Companies' => '▦', 'Contacts' => '♙', 'Opportunities' => '◇', 'Pipelines' => '◫', 'Activities' => '◷', 'Tasks' => '✓', 'Reports' => '⌁'] as $label => $icon)
                         <span class="nav-link cursor-not-allowed opacity-55" title="Có trong phase tiếp theo"><span>{{ $icon }}</span><span x-show="sidebar">{{ $label }}</span></span>
                     @endforeach
+                    <a href="{{ route('help.roles') }}" wire:navigate.hover @class(['nav-link', 'nav-link-active' => request()->routeIs('help.roles')])><span>?</span><span x-show="sidebar">Vai trò & quyền</span></a>
                 </nav>
                 <div class="mt-auto border-t border-slate-200 pt-4 dark:border-slate-800">
                     <div class="flex items-center gap-3 px-3 py-2">

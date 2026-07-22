@@ -33,5 +33,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $admin->syncRoles((string) config('crm.rbac.super_admin_role'));
+
+        $this->call(DemoUserSeeder::class);
     }
 }

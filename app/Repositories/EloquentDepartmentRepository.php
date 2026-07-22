@@ -45,6 +45,15 @@ final class EloquentDepartmentRepository implements DepartmentRepository
             ->get(['id', 'name', 'code']);
     }
 
+    public function userFilterOptions(?array $onlyIds = null): Collection
+    {
+        return Department::query()
+            ->when($onlyIds !== null, fn (Builder $query): Builder => $query->whereIn('id', $onlyIds))
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get(['id', 'name', 'code']);
+    }
+
     public function stats(): array
     {
         return [
