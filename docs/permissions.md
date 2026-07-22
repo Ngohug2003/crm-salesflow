@@ -51,7 +51,23 @@ When a user has several roles, the resolver selects the broadest configured scop
 
 The current foundation is exercised on `UserPolicy`, `DepartmentPolicy` and `EloquentUserRepository`. A sales manager may view Departments because the role has `users.view`, but Department creation, editing, activation and deletion additionally require `settings.manage`; therefore those actions remain read-only for that role. Future CRM repositories should call `DataScopeService::apply()` with their owner and department columns, and their policies should combine the module permission with `DataScopeService::allows()`.
 
-P3-03 applies this rule to `EloquentLeadRepository`: all, department, owned and read-only scopes are added before Lead filters or pagination. This protects record visibility in the query layer, but it does not replace permission checks. Until P3-04 adds `LeadPolicy`, no Lead route or UI should expose the repository directly to a request.
+P3-03 applies this rule to `EloquentLeadRepository`: all, department, owned and read-only scopes are added before Lead filters or pagination. P3-04 adds the separate permission boundary through `LeadPolicy`; request consumers must use both layers.
+
+## Lead policy
+
+| Ability | Required permission | Additional rule |
+|---|---|---|
+| `viewAny` | `leads.view` | — |
+| `view` | `leads.view` | Lead must be inside data scope |
+| `create` | `leads.create` | Scope must be writable |
+| `update` | `leads.update` | Writable and inside data scope |
+| `delete` | `leads.delete` | Writable and inside data scope |
+| `restore` | `leads.delete` | Writable and checked against retained owner/department |
+| `assign` | `leads.assign` | Writable and inside data scope |
+| `convert` | `leads.convert` | Writable and inside data scope |
+| `forceDelete` | none | Denied by policy; only Super Admin Gate bypass succeeds |
+
+`leads.view-all` and `leads.update-all` do not bypass `DataScopeService`. For Sales Manager they mean access beyond personal ownership while remaining inside the manager's department. Sales has no `leads.assign`, so assignment remains a manager/admin action. Restore intentionally reuses `leads.delete` because the immutable permission catalog defines both directions of the soft-delete lifecycle under the same capability.
 
 ## Role assignment safeguards
 

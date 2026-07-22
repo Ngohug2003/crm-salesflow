@@ -23,7 +23,7 @@ final readonly class DataScopeService
         return ! $this->resolve($user)->isReadOnly();
     }
 
-    public function allows(User $actor, int $ownerId, ?int $departmentId): bool
+    public function allows(User $actor, ?int $ownerId, ?int $departmentId): bool
     {
         return match ($this->resolve($actor)) {
             DataScope::All, DataScope::ReadOnly => true,
