@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace App\Livewire\Users;
 
 use App\Data\UserListFilters;
+use App\Livewire\Forms\UserForm;
 use App\Models\Department;
 use App\Models\User;
+use App\Repositories\Contracts\UserRepository;
 use App\Services\UserDirectoryService;
+use App\Services\UserManagementService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Collection;
@@ -21,6 +24,8 @@ final class UserList extends Component
 {
     use WithPagination;
 
+    public UserForm $form;
+
     #[Url(as: 'q', except: '')]
     public string $search = '';
 
@@ -32,6 +37,10 @@ final class UserList extends Component
 
     #[Url(except: 'all')]
     public string $status = 'all';
+
+    public bool $showForm = false;
+
+    public ?string $notice = null;
 
     public function mount(): void
     {
@@ -62,6 +71,63 @@ final class UserList extends Component
     public function roleOptions(): array
     {
         return $this->service()->roleOptions();
+    }
+
+    /** @return Collection<int, Department> */
+    #[Computed]
+    public function formDepartmentOptions(): Collection
+    {
+        return $this->service()->formDepartmentOptions(
+            $this->currentUser(),
+            $this->form->originalDepartmentId,
+        );
+    }
+
+    public function openCreate(): void
+    {
+        Gate::authorize('create', User::class);
+
+        $this->resetForm();
+        $this->showForm = true;
+    }
+
+    public function openEdit(int $userId): void
+    {
+        $user = $this->repository()->findVisibleOrFail($this->currentUser(), $userId);
+        Gate::authorize('update', $user);
+
+        $this->resetValidation();
+        $this->notice = null;
+        $this->form->fillFrom($user);
+        $this->showForm = true;
+    }
+
+    public function cancelForm(): void
+    {
+        $this->resetForm();
+    }
+
+    public function save(): void
+    {
+        $actor = $this->currentUser();
+        $user = $this->form->userId === null
+            ? null
+            : $this->repository()->findVisibleOrFail($actor, $this->form->userId);
+
+        if ($user === null) {
+            Gate::authorize('create', User::class);
+        } else {
+            Gate::authorize('update', $user);
+        }
+
+        $isCreating = $user === null;
+        $savedUser = $this->managementService()->save($actor, $user, $this->form->validatedPayload());
+
+        $this->notice = $isCreating
+            ? "Đã tạo người dùng {$savedUser->name}."
+            : "Đã cập nhật người dùng {$savedUser->name}.";
+        $this->resetForm(keepNotice: true);
+        unset($this->users);
     }
 
     public function updatedSearch(): void
@@ -101,6 +167,27 @@ final class UserList extends Component
     private function service(): UserDirectoryService
     {
         return app(UserDirectoryService::class);
+    }
+
+    private function managementService(): UserManagementService
+    {
+        return app(UserManagementService::class);
+    }
+
+    private function repository(): UserRepository
+    {
+        return app(UserRepository::class);
+    }
+
+    private function resetForm(bool $keepNotice = false): void
+    {
+        $this->resetValidation();
+        $this->form->clear();
+        $this->showForm = false;
+
+        if (! $keepNotice) {
+            $this->notice = null;
+        }
     }
 
     private function currentUser(): User

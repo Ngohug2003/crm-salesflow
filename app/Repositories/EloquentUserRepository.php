@@ -69,4 +69,16 @@ final readonly class EloquentUserRepository implements UserRepository
     {
         return $this->visibleTo($actor)->findOrFail($userId);
     }
+
+    public function create(array $attributes): User
+    {
+        return User::query()->create($attributes);
+    }
+
+    public function update(User $user, array $attributes): User
+    {
+        $user->fill($attributes)->save();
+
+        return $user->refresh();
+    }
 }

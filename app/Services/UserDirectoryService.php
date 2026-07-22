@@ -41,6 +41,19 @@ final readonly class UserDirectoryService
         return $this->departments->userFilterOptions($onlyIds);
     }
 
+    /** @return Collection<int, Department> */
+    public function formDepartmentOptions(User $actor, ?int $selectedId = null): Collection
+    {
+        $departments = $this->departments->userFormOptions($selectedId);
+
+        return match ($this->dataScope->resolve($actor)) {
+            DataScope::Department, DataScope::Owned => $departments
+                ->filter(fn (Department $department): bool => $department->getKey() === $actor->department_id)
+                ->values(),
+            DataScope::All, DataScope::ReadOnly => $departments,
+        };
+    }
+
     /** @return array<string, string> */
     public function roleOptions(): array
     {

@@ -24,6 +24,9 @@ interface DepartmentRepository
      */
     public function userFilterOptions(?array $onlyIds = null): Collection;
 
+    /** @return Collection<int, Department> */
+    public function userFormOptions(?int $selectedId = null): Collection;
+
     /** @return array{total: int, active: int, inactive: int, roots: int} */
     public function stats(): array;
 
