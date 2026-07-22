@@ -332,7 +332,8 @@ Mục tiêu: hoàn thiện tổ chức người dùng và ranh giới phân quy�
 | P2-06 | ✅ Tạo và chỉnh sửa người dùng | `feature/p2-06-user-form` | P2-05 | Form tạo/sửa, active/locked state, email uniqueness và password rule |
 | P2-07 | ✅ Gán phòng ban và role | `feature/p2-07-user-role-assignment` | P2-03, P2-06 | UI gán role/phòng ban, chống tự khóa admin cuối cùng, audit thay đổi |
 | P2-07-01 | ✅ Audit log toàn hệ thống | `feature/p2-07-user-role-assignment` | P2-07 | Audit dùng chung, màn hình bảng/log, lọc và giới hạn truy cập cho Super Admin/Admin IT |
-| P2-08 | Authorization test và checkpoint | `feature/p2-08-authorization-checkpoint` | P2-02..P2-07-01 | Test đủ 5 role, navigation theo quyền, seed demo và checklist nghiệm thu |
+| P2-07-02 | ✅ Realtime Audit Log | `feature/p2-07-user-role-assignment` | P2-07-01 | Private Reverb channel, Echo client và Livewire tự cập nhật log mới |
+| P2-08 | Authorization test và checkpoint | `feature/p2-08-authorization-checkpoint` | P2-02..P2-07-02 | Test đủ 5 role, navigation theo quyền, seed demo và checklist nghiệm thu |
 
 ### Nhật ký feature P2-01 — Department schema và domain
 
@@ -844,6 +845,50 @@ Checklist kiểm thử thủ công:
 6. Kiểm tra JSON không có password, hash, token hoặc secret; IP đăng nhập được che một phần.
 
 Checkpoint P2-07-01: dừng để chủ dự án kiểm thử audit trước khi bắt đầu P2-08.
+
+### Nhật ký feature P2-07-02 — Realtime Audit Log
+
+Trạng thái: **hoàn tất triển khai, chờ chủ dự án kiểm thử**.
+
+Đã triển khai:
+
+- Cài `laravel-echo` và `pusher-js`; Vite khởi tạo Echo trước Livewire và kết nối Reverb qua nginx.
+- Tách địa chỉ server/browser: Laravel phát nội bộ tới `reverb:8080`, trình duyệt nối `localhost:80` qua WebSocket proxy `/app/`.
+- `AuditLogCreated` chỉ broadcast `activity_id` trên private channel `audit-logs`; không gửi properties, old/new hoặc dữ liệu nhạy cảm.
+- Event chạy sau database commit, phát ngay và dùng `ShouldRescue` để lỗi Reverb không làm hỏng thao tác nghiệp vụ hoặc đăng nhập.
+- `AuditLogsChannel` dùng cùng Gate/Policy với route audit: chỉ Super Admin hoặc Admin IT active được subscribe.
+- Livewire nghe `.audit.created`, giữ nguyên filter/tab, về trang mới nhất, tải lại dữ liệu và tô sáng activity vừa nhận.
+- UI hiển thị trạng thái đang kết nối/đã kết nối/mất kết nối và thông báo khi nhận activity mới.
+- WebSocket handshake qua nginx đạt `101 Switching Protocols`; thử broadcast Laravel → Reverb đạt.
+
+File chính:
+
+- `app/Events/AuditLogCreated.php`
+- `app/Broadcasting/AuditLogsChannel.php`
+- `app/Services/SystemAuditService.php`
+- `app/Livewire/AuditLogs/AuditLogList.php`
+- `resources/js/echo.js`
+- `resources/js/app.js`
+- `routes/channels.php`
+- `tests/Feature/RealtimeAuditLogTest.php`
+
+Kết quả xác minh:
+
+- Realtime riêng: **5 test đạt, 10 assertions**; bao phủ payload tối thiểu, private channel Super Admin/Admin IT, từ chối Admin ngoài IT và Livewire refresh/highlight.
+- Toàn dự án: **68 test đạt**; Pint đạt trên 106 file và PHPStan/Larastan không có lỗi.
+- NPM cài 3 package dependency, audit 0 vulnerability; Vite production build đạt với CSS 249,71 kB và JavaScript 74,10 kB trước gzip.
+- WebSocket nginx → Reverb trả `101 Switching Protocols`; Laravel → Reverb thử nghiệm trả `broadcast-ok`.
+
+Checklist kiểm thử thủ công:
+
+1. Mở `/settings/audit-logs` bằng `it.admin@salesflow.test`; xác nhận badge **Realtime đã kết nối**.
+2. Giữ nguyên trang audit, mở trình duyệt ẩn danh và đăng nhập một tài khoản khác.
+3. Xác nhận log **Đăng nhập hệ thống thành công** xuất hiện ngay, không reload trang và dòng mới được tô sáng.
+4. Đăng xuất tài khoản thứ hai; xác nhận log đăng xuất tiếp tục xuất hiện realtime.
+5. Thử filter phân hệ/sự kiện: activity mới chỉ xuất hiện nếu phù hợp filter hiện tại.
+6. Admin ngoài IT không thấy trang audit và không được phép join private channel.
+
+Checkpoint P2-07-02: dừng để chủ dự án kiểm thử bằng hai phiên trình duyệt trước khi bắt đầu P2-08.
 
 Checkpoint: dừng để kiểm thử đăng nhập, quản lý user/department và toàn bộ ma trận quyền trước P3.
 

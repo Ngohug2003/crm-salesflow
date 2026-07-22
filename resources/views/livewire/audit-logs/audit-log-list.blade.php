@@ -1,4 +1,7 @@
-<div>
+<div
+    x-data="{ realtime: window.salesflowRealtimeState ?? 'connecting' }"
+    x-on:salesflow-realtime-state.window="realtime = $event.detail.state"
+>
     <div class="mb-8">
         <p class="text-sm text-slate-500">Cài đặt / Bảo mật</p>
         <h1 class="mt-1 text-3xl font-semibold tracking-tight">Nhật ký kiểm toán</h1>
@@ -19,10 +22,26 @@
                 <div class="flex flex-wrap items-center gap-2">
                     <h2 class="font-semibold">Hoạt động hệ thống</h2>
                     <flux:badge size="sm" color="blue">Giờ Việt Nam · UTC+7</flux:badge>
+                    <span x-cloak x-show="realtime === 'connected'" class="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+                        <span class="size-1.5 rounded-full bg-emerald-500"></span> Realtime đã kết nối
+                    </span>
+                    <span x-cloak x-show="realtime === 'connecting'" class="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-950 dark:text-amber-300">
+                        <span class="size-1.5 animate-pulse rounded-full bg-amber-500"></span> Đang kết nối realtime
+                    </span>
+                    <span x-cloak x-show="!['connected', 'connecting'].includes(realtime)" class="inline-flex items-center gap-1.5 rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700 dark:bg-red-950 dark:text-red-300">
+                        <span class="size-1.5 rounded-full bg-red-500"></span> Realtime mất kết nối
+                    </span>
                 </div>
                 <p class="mt-1 text-sm text-slate-500">Có {{ $this->activities->total() }} bản ghi phù hợp.</p>
             </div>
         </div>
+
+        @if ($realtimeNotice)
+            <div class="mb-5 flex items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200" role="status">
+                <span class="flex items-center gap-2"><span class="size-2 rounded-full bg-emerald-500"></span>{{ $realtimeNotice }}</span>
+                <button type="button" class="font-medium hover:underline" wire:click="$set('realtimeNotice', null)">Ẩn</button>
+            </div>
+        @endif
 
         <div class="mb-6 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/80 dark:border-slate-800 dark:bg-slate-900/50">
             <div class="flex flex-col justify-between gap-3 border-b border-slate-200 px-4 py-3 dark:border-slate-800 sm:flex-row sm:items-center">
@@ -158,7 +177,9 @@
                     </flux:table.columns>
                     <flux:table.rows>
                         @foreach ($this->activities as $activity)
-                            <flux:table.row :key="$activity->id">
+                            <flux:table.row :key="$activity->id" @class([
+                                'bg-emerald-50/80 dark:bg-emerald-950/20' => $latestRealtimeActivityId === $activity->id,
+                            ])>
                                 <flux:table.cell>
                                     <p class="min-w-36 font-medium">{{ $activity->created_at?->timezone(config('crm.display_timezone'))->format('d/m/Y H:i:s') }}</p>
                                     <p class="text-xs text-slate-500">Log #{{ $activity->id }}</p>
@@ -192,7 +213,11 @@
                     </div>
                     <div class="max-h-[38rem] overflow-auto p-4 font-mono text-xs leading-6 sm:text-sm">
                         @foreach ($this->activities as $activity)
-                            <details wire:key="audit-log-{{ $activity->id }}" class="group border-l-2 border-transparent pl-2 hover:border-emerald-500 hover:bg-white/[0.025]">
+                            <details wire:key="audit-log-{{ $activity->id }}" @class([
+                                'group border-l-2 pl-2 hover:border-emerald-500 hover:bg-white/[0.025]',
+                                'border-emerald-400 bg-emerald-500/10' => $latestRealtimeActivityId === $activity->id,
+                                'border-transparent' => $latestRealtimeActivityId !== $activity->id,
+                            ])>
                                 <summary class="grid cursor-pointer list-none gap-x-3 lg:grid-cols-[10.75rem_1fr]">
                                     <span class="select-none whitespace-nowrap text-blue-500">[{{ $activity->created_at?->timezone(config('crm.display_timezone'))->format('d/m/Y H:i:s') }}]</span>
                                     <span class="text-emerald-400">
