@@ -948,7 +948,7 @@ Mục tiêu: hoàn thiện vòng đời Lead từ tiếp nhận đến chuyển 
 |---|---|---|---|---|
 | P3-01 | ✅ Lead sources và tags | `feature/p3-01-lead-taxonomy` | P2-08 | Schema/model/factory/seed nguồn Lead và Tag, chuẩn bị contract many-to-many |
 | P3-02 | ✅ Lead schema và domain | `feature/p3-02-lead-domain` | P3-01 | BIGINT tự tăng, owner, department, source, contact fields, indexes, factory và pivot `lead_tag` |
-| P3-03 | Repository và bộ lọc Lead | `feature/p3-03-lead-query-filters` | P3-02 | Search, filter, sort, pagination và reusable data-scope query |
+| P3-03 | ✅ Repository và bộ lọc Lead | `feature/p3-03-lead-query-filters` | P3-02 | Search, filter, sort, pagination và reusable data-scope query |
 | P3-04 | Lead policy và visibility | `feature/p3-04-lead-authorization` | P2-04, P3-03 | Policy CRUD/assign/convert/restore đúng permission matrix |
 | P3-05 | Danh sách Lead | `feature/p3-05-lead-list` | P3-03, P3-04 | Livewire table responsive, URL filters, bulk selection foundation và empty states |
 | P3-06 | Form và chi tiết Lead | `feature/p3-06-lead-form-detail` | P3-05 | Create/edit/detail, validation, source/tags/owner và audit cơ bản |
@@ -1077,6 +1077,66 @@ Checklist kiểm thử thủ công:
 6. Bảng `leads` chưa có dữ liệu demo là đúng phạm vi P3-02; dùng factory trong test cho đến khi feature danh sách/form bổ sung seed trực quan.
 
 Checkpoint P3-02: dừng tại đây để chủ dự án kiểm thử schema/domain trước khi bắt đầu P3-03.
+
+### Nhật ký feature P3-03 — Repository và bộ lọc Lead
+
+Trạng thái: **hoàn tất triển khai, chờ chủ dự án kiểm thử**.
+
+Đã triển khai:
+
+- Tạo `LeadFilterData` readonly DTO dùng Enum cho status/priority, `CarbonImmutable` cho khoảng ngày và typed ID cho source/tag/owner/department.
+- Tạo `LeadRepository` contract với base query theo scope, filtered query tái sử dụng, pagination và `findVisibleOrFail`.
+- `EloquentLeadRepository` luôn gọi `DataScopeService::apply()` với `owner_id` và `department_id` trước khi search/filter/sort.
+- Search không phân biệt hoa thường trên họ tên, email, điện thoại chính/phụ và công ty.
+- Có thể kết hợp status, priority, source, tag, owner, department và khoảng ngày tạo trong một query.
+- Filter tag dùng `whereHas` nên một Lead có nhiều tag vẫn chỉ xuất hiện một lần.
+- Sort chỉ cho phép `created_at`, `full_name`, `status`, `priority`, `estimated_value`; input ngoài allowlist fallback về ngày tạo giảm dần.
+- Mọi sort thêm `leads.id` làm khóa phụ để thứ tự phân trang ổn định.
+- `perPage` được giới hạn từ 1 đến 100.
+- List và find eager-load source, owner, department, tags để tránh N+1 khi tầng UI đọc quan hệ.
+- Soft-deleted Lead bị loại khỏi query mặc định.
+- Binding repository được đăng ký tập trung trong `RepositoryServiceProvider`.
+- P3-03 chỉ cưỡng chế phạm vi bản ghi. Permission mở route và hành động CRUD sẽ do `LeadPolicy` ở P3-04 cưỡng chế.
+- Không tạo migration, không cài package và chưa tạo UI trong feature này.
+
+File chính:
+
+- `app/Data/LeadFilterData.php`
+- `app/Repositories/Contracts/LeadRepository.php`
+- `app/Repositories/EloquentLeadRepository.php`
+- `app/Providers/RepositoryServiceProvider.php`
+- `tests/Feature/LeadRepositoryTest.php`
+- `docs/architecture.md`, `docs/permissions.md`
+
+Kết quả xác minh:
+
+- Test riêng P3-03: **7 test đạt, 27 assertions**.
+- Nhóm domain/query P3-01..P3-03: **23 test đạt, 97 assertions**.
+- Toàn dự án: **106 test đạt, 574 assertions**.
+- Pint đạt trên 124 file; PHPStan/Larastan không có lỗi.
+- Vite production build đạt; toàn bộ 10 service Docker đang chạy và các service có healthcheck đều `healthy`.
+
+Lệnh đã chạy:
+
+```bash
+docker compose exec app php artisan test tests/Feature/LeadRepositoryTest.php
+docker compose exec app php artisan test
+docker compose exec app ./vendor/bin/pint --test
+docker compose exec app ./vendor/bin/phpstan analyse --memory-limit=512M --no-progress
+docker compose exec vite npm run build
+docker compose ps
+```
+
+Checklist kiểm thử:
+
+1. Chạy `docker compose exec app php artisan test tests/Feature/LeadRepositoryTest.php` và xác nhận 7 test đạt.
+2. Xác nhận test 4 data scope trả đúng Lead cho Admin, Sales Manager, Sales và Viewer.
+3. Xác nhận search tìm được tên/email/điện thoại/công ty không phân biệt hoa thường và bỏ qua Lead đã soft delete.
+4. Xác nhận filter kết hợp source/tag/status/priority/owner/department/ngày chỉ trả đúng Lead phù hợp.
+5. Xác nhận test sort độc hại không làm thay đổi câu SQL và bảng `leads` vẫn tồn tại.
+6. P3-03 chưa có trang web để kiểm thử thủ công; repository sẽ được nối vào Lead List ở P3-05 sau khi P3-04 khóa Policy.
+
+Checkpoint P3-03: dừng tại đây để chủ dự án kiểm thử repository trước khi bắt đầu P3-04.
 
 ## Giai đoạn 4 — Companies và Contacts
 
