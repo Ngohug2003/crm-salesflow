@@ -592,7 +592,7 @@ Trạng thái: **hoàn tất triển khai, chờ chủ dự án kiểm thử**.
 - Query list eager-load đúng cột của `department` và `roles`, tránh N+1. Query lựa chọn phòng ban được tách riêng, không dùng `withCount` dư thừa từ màn hình quản lý phòng ban.
 - Sales Manager chỉ thấy user và lựa chọn phòng ban trong chính phòng ban của mình; role thiếu `users.view` bị trả `403` và không thấy menu.
 - Bảng hiển thị tên/email, phòng ban, role, trạng thái tài khoản và trạng thái xác thực email; empty state và nút xóa filter đã có.
-- Thêm trang trợ giúp `/help/roles` dành cho mọi user đã đăng nhập: hiển thị role của chính user, data scope hiệu lực, số quyền và danh sách quyền của cả 5 role theo từng module. Role hiện tại được đánh dấu/mở sẵn; dữ liệu lấy trực tiếp từ `config/crm.php` qua `RoleGuideService` nên luôn đồng bộ với backend.
+- Thêm trang trợ giúp `/help/roles` dành cho mọi user đã đăng nhập: hiển thị role của chính user, data scope hiệu lực, số quyền và danh sách quyền của cả 5 role theo từng module. Role hiện tại được đánh dấu/mở sẵn; dữ liệu lấy trực tiếp từ `config/crm.php` qua `RoleGuideService` nên luôn đồng bộ với backend. Accordion dùng Alpine `x-collapse` đã được Livewire tích hợp sẵn, chỉ mở một role tại một thời điểm, không thêm package và không tạo request server khi đóng/mở.
 - `DemoUserSeeder` tạo idempotent 20 tài khoản `demo01@salesflow.test` đến `demo20@salesflow.test`: 2 MANAGEMENT, 11 SALES, 7 MARKETING; gồm 2 admin, 2 sales-manager, 12 sales, 4 viewer, 3 inactive và 2 chưa xác thực. Mật khẩu demo dùng chung `SalesFlow@123`.
 - Không triển khai tạo/sửa/gán role trong P2-05; các thao tác ghi lần lượt thuộc P2-06 và P2-07.
 - Không cài package, không thêm migration và chỉ tái sử dụng component Flux UI đã có.
@@ -638,10 +638,10 @@ Kết quả cuối:
 
 - Riêng P2-05: 6 test đạt, 40 assertions; bao phủ route/menu, từng filter, URL state, pagination, department scope và truy cập bị từ chối.
 - Demo user seeder: 1 test đạt, 7 assertions; chạy hai lần vẫn giữ đúng 20 bản ghi, phân bổ/role/trạng thái đúng cấu hình.
-- Trang hướng dẫn role: 4 test đạt, 21 assertions; guest bị chuyển login, Viewer truy cập được, role/scope/quyền hiện tại đúng và số quyền catalog là 45/45/40/30/8.
-- Toàn dự án: 42 test đạt, 217 assertions.
+- Trang hướng dẫn role: 4 test đạt, 24 assertions; guest bị chuyển login, Viewer truy cập được, role/scope/quyền hiện tại đúng, Alpine Accordion được render với accessibility attributes và số quyền catalog là 45/45/40/30/8.
+- Toàn dự án: 42 test đạt, 220 assertions.
 - Pint: 86 file đạt; PHPStan/Larastan không có lỗi.
-- Vite production build đạt; CSS 245,26 kB và JavaScript 0,40 kB trước gzip.
+- Vite production build đạt; CSS 245,20 kB và JavaScript 0,40 kB trước gzip.
 - `app`, `horizon`, `mailpit`, `minio`, `nginx`, `postgres`, `redis`, `reverb`, `scheduler` và `vite` đều đang chạy; service có healthcheck đều `healthy`.
 - Sau lần chạy đầu, query filter phòng ban được tối ưu từ query quản lý có `withCount` thành query options chỉ lấy `id`, `name`, `code`.
 - PostgreSQL local đã được seed và kiểm tra thực tế: đúng 20 demo user, phân bổ MANAGEMENT 2, SALES 11, MARKETING 7.

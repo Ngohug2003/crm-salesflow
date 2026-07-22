@@ -38,7 +38,10 @@ it('shows the current role scope and permissions from the backend catalog', func
         ->assertSee('40 quyền')
         ->assertSee('Xem người dùng')
         ->assertSee('Gán người phụ trách lead')
-        ->assertSee('Vai trò của bạn');
+        ->assertSee('Vai trò của bạn')
+        ->assertSee('x-collapse.duration.200ms', false)
+        ->assertSee('aria-controls="role-panel-sales-manager"', false)
+        ->assertDontSee('<details', false);
 });
 
 it('allows viewers to open the guide and see its navigation item', function (): void {
