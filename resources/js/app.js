@@ -1,3 +1,5 @@
+import './echo';
+
 window.salesflow = {
     toggleTheme() {
         const dark = document.documentElement.classList.toggle('dark');

@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Events\AuditLogCreated;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
+use LogicException;
 
 final class SystemAuditService
 {
@@ -23,7 +25,7 @@ final class SystemAuditService
         ?array $new,
         array $metadata = [],
     ): void {
-        activity($this->logName($subject))
+        $activity = activity($this->logName($subject))
             ->performedOn($subject)
             ->causedBy($actor)
             ->event($event)
@@ -33,6 +35,12 @@ final class SystemAuditService
                 ...$metadata,
             ]))
             ->log($description);
+
+        if (! $activity instanceof Model) {
+            throw new LogicException('The configured activity logger must return an Eloquent model.');
+        }
+
+        AuditLogCreated::dispatch((int) $activity->getKey());
     }
 
     /** @param array<string, mixed> $values

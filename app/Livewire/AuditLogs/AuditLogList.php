@@ -12,6 +12,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -41,6 +42,10 @@ final class AuditLogList extends Component
 
     #[Url(as: 'view', except: 'table')]
     public string $viewMode = 'table';
+
+    public ?int $latestRealtimeActivityId = null;
+
+    public ?string $realtimeNotice = null;
 
     public function mount(): void
     {
@@ -85,6 +90,19 @@ final class AuditLogList extends Component
     {
         $this->reset('search', 'module', 'event', 'actor', 'dateFrom', 'dateTo');
         $this->resetPage();
+    }
+
+    /** @param array{activity_id?: int|string} $payload */
+    #[On('echo-private:audit-logs,.audit.created')]
+    public function refreshFromRealtime(array $payload = []): void
+    {
+        Gate::authorize('viewAny', Activity::class);
+
+        $activityId = $payload['activity_id'] ?? null;
+        $this->latestRealtimeActivityId = is_numeric($activityId) ? (int) $activityId : null;
+        $this->realtimeNotice = 'Đã nhận hoạt động mới qua kết nối realtime.';
+        $this->resetPage();
+        unset($this->activities, $this->options);
     }
 
     public function render(): View
