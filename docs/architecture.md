@@ -70,6 +70,8 @@ Lead taxonomy is delivered in dependency order: P3-01 creates `lead_sources` and
 
 The Lead aggregate uses nullable `owner_id` and `department_id` for unassigned intake while preserving compatibility with backend data scopes. Status and priority are typed backed enums, contact duplicates remain allowed until the P3-08 review workflow, and Soft Delete preserves tag membership for restoration. Conversion target foreign keys remain deferred until Company and Contact schemas exist.
 
+P3-03 adds the reusable Lead read path: UI/service consumers construct a typed `LeadFilterData`, then `LeadRepository` applies `DataScopeService` before search, filters, allowlisted sorting and pagination. Relationship eager loading is owned by the repository. This query boundary prevents consumers from accidentally omitting owner/department scope; P3-04 adds the separate permission boundary through `LeadPolicy`.
+
 ## 4. Delivery plan and estimate
 
 | Phase | Deliverable | Estimate |

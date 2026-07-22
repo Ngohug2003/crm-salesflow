@@ -51,6 +51,8 @@ When a user has several roles, the resolver selects the broadest configured scop
 
 The current foundation is exercised on `UserPolicy`, `DepartmentPolicy` and `EloquentUserRepository`. A sales manager may view Departments because the role has `users.view`, but Department creation, editing, activation and deletion additionally require `settings.manage`; therefore those actions remain read-only for that role. Future CRM repositories should call `DataScopeService::apply()` with their owner and department columns, and their policies should combine the module permission with `DataScopeService::allows()`.
 
+P3-03 applies this rule to `EloquentLeadRepository`: all, department, owned and read-only scopes are added before Lead filters or pagination. This protects record visibility in the query layer, but it does not replace permission checks. Until P3-04 adds `LeadPolicy`, no Lead route or UI should expose the repository directly to a request.
+
 ## Role assignment safeguards
 
 P2-07 permits multiple roles per user; `DataScopeResolver` continues to choose the broadest effective scope. Every managed user must have at least one configured role.
