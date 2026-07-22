@@ -946,8 +946,8 @@ Mục tiêu: hoàn thiện vòng đời Lead từ tiếp nhận đến chuyển 
 
 | Mã | Feature | Branch đề xuất | Phụ thuộc | Kết quả cần đạt |
 |---|---|---|---|---|
-| P3-01 | Lead sources và tags | `feature/p3-01-lead-taxonomy` | P2-08 | Schema/model/seed nguồn lead, tag và quan hệ many-to-many |
-| P3-02 | Lead schema và domain | `feature/p3-02-lead-domain` | P3-01 | BIGINT tự tăng, owner, department, trạng thái, contact fields, indexes và factory |
+| P3-01 | ✅ Lead sources và tags | `feature/p3-01-lead-taxonomy` | P2-08 | Schema/model/factory/seed nguồn Lead và Tag, chuẩn bị contract many-to-many |
+| P3-02 | Lead schema và domain | `feature/p3-02-lead-domain` | P3-01 | BIGINT tự tăng, owner, department, source, contact fields, indexes, factory và pivot `lead_tag` |
 | P3-03 | Repository và bộ lọc Lead | `feature/p3-03-lead-query-filters` | P3-02 | Search, filter, sort, pagination và reusable data-scope query |
 | P3-04 | Lead policy và visibility | `feature/p3-04-lead-authorization` | P2-04, P3-03 | Policy CRUD/assign/convert/restore đúng permission matrix |
 | P3-05 | Danh sách Lead | `feature/p3-05-lead-list` | P3-03, P3-04 | Livewire table responsive, URL filters, bulk selection foundation và empty states |
@@ -958,6 +958,62 @@ Mục tiêu: hoàn thiện vòng đời Lead từ tiếp nhận đến chuyển 
 | P3-10 | Lead test và checkpoint | `feature/p3-10-lead-checkpoint` | P3-01..P3-09 | Feature/policy/transaction tests và checklist vòng đời Lead |
 
 Conversion transaction tạo Company/Contact/Opportunity được tích hợp ở P5-09 sau khi đủ schema đích; cách chia này loại bỏ phụ thuộc vòng giữa các giai đoạn.
+
+### Nhật ký feature P3-01 — Lead sources và tags
+
+Trạng thái: **hoàn tất triển khai, chờ chủ dự án kiểm thử**.
+
+Đã triển khai:
+
+- Tạo hai bảng `lead_sources` và `tags` dùng khóa chính PostgreSQL `BIGINT` tự tăng.
+- `lead_sources.code` và `tags.slug` là khóa nghiệp vụ duy nhất; cả hai bảng có màu hiển thị, trạng thái hoạt động và thứ tự sắp xếp.
+- Model `LeadSource` và `Tag` có typed casts, scope `active()` và `ordered()` để dùng lại trong form/filter Lead.
+- Factory hỗ trợ trạng thái active/inactive và dữ liệu độc lập cho test.
+- `LeadTaxonomySeeder` idempotent tạo 8 nguồn Lead và 6 tag tiếng Việt; chạy lại sẽ sửa dữ liệu chuẩn mà không tạo bản ghi trùng.
+- `DatabaseSeeder` gọi taxonomy seeder để môi trường local có dữ liệu ngay sau `migrate --seed`.
+- Chưa tạo bảng pivot `lead_tag` trong P3-01 vì bảng `leads` chưa tồn tại. P3-02 sẽ tạo `leads`, pivot cùng foreign key và quan hệ Eloquent hai chiều trong một migration chain hợp lệ.
+
+File chính:
+
+- `database/migrations/2026_07_22_210000_create_lead_taxonomies_tables.php`
+- `app/Models/LeadSource.php`, `app/Models/Tag.php`
+- `database/factories/LeadSourceFactory.php`, `database/factories/TagFactory.php`
+- `database/seeders/LeadTaxonomySeeder.php`, `database/seeders/DatabaseSeeder.php`
+- `tests/Feature/LeadTaxonomyDomainTest.php`
+- `docs/database.md`, `docs/architecture.md`
+
+Kết quả xác minh:
+
+- Test riêng P3-01: **7 test đạt, 20 assertions**.
+- Toàn dự án: **90 test đạt, 497 assertions**.
+- Pint đạt trên 114 file; PHPStan/Larastan không có lỗi.
+- Migration P3-01 đã chạy trên PostgreSQL; database local có đúng 8 nguồn Lead và 6 tag.
+- Vite production build đạt; toàn bộ 10 service Docker đang chạy và các service có healthcheck đều `healthy`.
+- Không cài thêm Composer/NPM package và không cần build lại image Docker.
+
+Lệnh đã chạy:
+
+```bash
+docker compose exec app php artisan migrate --seed --force
+docker compose exec app php artisan test tests/Feature/LeadTaxonomyDomainTest.php
+docker compose exec app php artisan test
+docker compose exec app ./vendor/bin/pint --test
+docker compose exec app ./vendor/bin/phpstan analyse --memory-limit=512M --no-progress
+docker compose exec vite npm run build
+docker compose exec app php artisan migrate:status
+docker compose ps
+```
+
+Checklist kiểm thử thủ công:
+
+1. Chạy `docker compose exec app php artisan migrate --seed --force`.
+2. Trong DBeaver, mở `lead_sources`; xác nhận có 8 bản ghi từ `WEBSITE` đến `MANUAL`, `sort_order` từ 10 đến 80.
+3. Mở `tags`; xác nhận có 6 bản ghi và các slug như `moi`, `tiem-nang-cao`, `vip`.
+4. Chạy lại seeder và xác nhận số lượng vẫn là 8 nguồn, 6 tag.
+5. Chạy `docker compose exec app php artisan test tests/Feature/LeadTaxonomyDomainTest.php`.
+6. Xác nhận chưa có bảng `lead_tag`; bảng này thuộc phạm vi P3-02.
+
+Checkpoint P3-01: dừng tại đây để chủ dự án kiểm thử taxonomy trước khi bắt đầu P3-02.
 
 ## Giai đoạn 4 — Companies và Contacts
 
