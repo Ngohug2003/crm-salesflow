@@ -44,7 +44,7 @@ it('shows create and edit actions to authorized users', function (): void {
         ->assertSee('Để trống mật khẩu nếu không muốn thay đổi');
 });
 
-it('creates a normalized verified user with a hashed password and no role', function (): void {
+it('creates a normalized verified user with a hashed password and assigned role', function (): void {
     $department = Department::factory()->create();
     $admin = userFormActor();
 
@@ -54,6 +54,7 @@ it('creates a normalized verified user with a hashed password and no role', func
         ->set('form.name', '  Nguyễn Văn Mới  ')
         ->set('form.email', '  NEW.USER@SALESFLOW.TEST  ')
         ->set('form.departmentId', (string) $department->getKey())
+        ->set('form.roles', ['sales'])
         ->set('form.password', 'StrongPass@123')
         ->set('form.passwordConfirmation', 'StrongPass@123')
         ->call('save')
@@ -68,7 +69,7 @@ it('creates a normalized verified user with a hashed password and no role', func
         ->and($user->is_active)->toBeTrue()
         ->and($user->email_verified_at)->not->toBeNull()
         ->and(Hash::check('StrongPass@123', $user->password))->toBeTrue()
-        ->and($user->roles)->toHaveCount(0);
+        ->and($user->hasRole('sales'))->toBeTrue();
 });
 
 it('validates unique email active department and password confirmation', function (): void {
@@ -82,6 +83,7 @@ it('validates unique email active department and password confirmation', functio
         ->set('form.name', 'Invalid User')
         ->set('form.email', 'EXISTING@SALESFLOW.TEST')
         ->set('form.departmentId', (string) $inactiveDepartment->getKey())
+        ->set('form.roles', ['sales'])
         ->set('form.password', 'short')
         ->set('form.passwordConfirmation', 'different')
         ->call('save')
@@ -126,6 +128,8 @@ it('allows an inactive current department but rejects assigning it to another us
     $admin = userFormActor();
     $existingMember = User::factory()->create(['department_id' => $inactiveDepartment->getKey()]);
     $otherUser = User::factory()->create();
+    $existingMember->assignRole('sales');
+    $otherUser->assignRole('sales');
 
     Livewire::actingAs($admin)
         ->test(UserList::class)
@@ -148,6 +152,7 @@ it('updates the password and prevents a locked account from logging in', functio
         'email' => 'locked-user@salesflow.test',
         'password' => 'OldPassword@123',
     ]);
+    $target->assignRole('sales');
 
     Livewire::actingAs($admin)
         ->test(UserList::class)
@@ -192,6 +197,7 @@ it('prevents department scoped writers from moving users outside their departmen
     $manager = userFormActor('sales-manager', $departmentA);
     $manager->givePermissionTo('users.update');
     $target = User::factory()->create(['department_id' => $departmentA->getKey()]);
+    $target->assignRole('sales');
 
     Livewire::actingAs($manager)
         ->test(UserList::class)

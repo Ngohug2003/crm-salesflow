@@ -48,6 +48,7 @@ services:
 
   postgres:
     image: postgres:17-alpine
+    command: postgres -c timezone=Asia/Ho_Chi_Minh
     restart: unless-stopped
     ports:
       - "${DB_FORWARD_PORT:-15432}:5432"

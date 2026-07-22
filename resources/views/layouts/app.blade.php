@@ -30,6 +30,9 @@
                     @can('viewAny', \App\Models\Department::class)
                         <a href="{{ route('departments.index') }}" wire:navigate.hover @class(['nav-link', 'nav-link-active' => request()->routeIs('departments.*')])><span>▤</span><span x-show="sidebar">Phòng ban</span></a>
                     @endcan
+                    @can('viewAny', \Spatie\Activitylog\Models\Activity::class)
+                        <a href="{{ route('audit-logs.index') }}" wire:navigate.hover @class(['nav-link', 'nav-link-active' => request()->routeIs('audit-logs.*')])><span>◴</span><span x-show="sidebar">Nhật ký kiểm toán</span></a>
+                    @endcan
                     @foreach (['Leads' => '◎', 'Companies' => '▦', 'Contacts' => '♙', 'Opportunities' => '◇', 'Pipelines' => '◫', 'Activities' => '◷', 'Tasks' => '✓', 'Reports' => '⌁'] as $label => $icon)
                         <span class="nav-link cursor-not-allowed opacity-55" title="Có trong phase tiếp theo"><span>{{ $icon }}</span><span x-show="sidebar">{{ $label }}</span></span>
                     @endforeach

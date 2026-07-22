@@ -52,7 +52,7 @@ it('seeds permissions and role assignments idempotently', function (): void {
         ->and(Role::query()->count())->toBe(5)
         ->and(Role::findByName('super-admin')->permissions)->toHaveCount(0)
         ->and(Role::findByName('admin')->permissions)->toHaveCount(45)
-        ->and(Role::findByName('sales-manager')->permissions)->toHaveCount(40)
+        ->and(Role::findByName('sales-manager')->permissions)->toHaveCount(39)
         ->and(Role::findByName('sales')->permissions)->toHaveCount(30)
         ->and(Role::findByName('viewer')->permissions)->toHaveCount(8)
         ->and(Role::findByName('admin')->hasPermissionTo('users.view'))->toBeTrue()

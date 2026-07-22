@@ -6,7 +6,7 @@ The executable RBAC catalog lives in `config/crm.php`. It contains 45 permission
 |---|---|---:|---|
 | `super-admin` | `all` | 0 | Bypasses Laravel Gate checks; reserved for the platform owner |
 | `admin` | `all` | 45 | Manages users, settings and all CRM records |
-| `sales-manager` | `department` | 40 | Manages sales records within the user's department |
+| `sales-manager` | `department` | 39 | Manages sales records within the user's department |
 | `sales` | `owned` | 30 | Manages records owned by the user |
 | `viewer` | `read-only` | 8 | Reads allowed CRM modules without mutation permissions |
 
@@ -23,7 +23,7 @@ Legend: **A** all records/manage, **D** department records, **O** owned records,
 | Pipelines manage | A | A | R | — | — |
 | Activities / tasks | A | A | D | O | R |
 | Reports | A | A | D | R | R |
-| Audit logs | A | A | R | — | — |
+| Audit logs | A | A (IT only) | — | — | — |
 
 `RolePermissionSeeder` uses `findOrCreate` and `syncPermissions`, so rerunning it repairs the configured matrix without creating duplicates. It intentionally does not delete additional permissions that may be introduced by later modules.
 
@@ -50,3 +50,14 @@ P2-04 implements the reusable authorization path below:
 When a user has several roles, the resolver selects the broadest configured scope in this order: `all`, `department`, `owned`, `read-only`. A user with no recognized role receives `read-only` as the safe default.
 
 The current foundation is exercised on `UserPolicy`, `DepartmentPolicy` and `EloquentUserRepository`. A sales manager may view Departments because the role has `users.view`, but Department creation, editing, activation and deletion additionally require `settings.manage`; therefore those actions remain read-only for that role. Future CRM repositories should call `DataScopeService::apply()` with their owner and department columns, and their policies should combine the module permission with `DataScopeService::allows()`.
+
+## Role assignment safeguards
+
+P2-07 permits multiple roles per user; `DataScopeResolver` continues to choose the broadest effective scope. Every managed user must have at least one configured role.
+
+- Only a `super-admin` may assign, remove or edit a user carrying the `super-admin` role. A regular `admin` may assign `admin`, `sales-manager`, `sales` and `viewer`.
+- The system must retain at least one active user carrying either `super-admin` or `admin`. Locking or demoting the last such user is rejected inside the same database transaction as the account update.
+- User attributes and roles are updated atomically. Successful create/update operations write an `activity_log` entry with actor, target, old/new name, email, department, active state and roles.
+- Audit properties never contain a plaintext password or password hash; they only contain a `password_changed` boolean.
+- Audit viewing is restricted to `super-admin`, or an `admin` carrying `audit-logs.view` whose department code is `IT`. This condition is enforced by `AuditLogPolicy`, not only by navigation visibility.
+- Only `super-admin` may add, remove or edit IT department members, preventing a regular admin from granting itself audit access.

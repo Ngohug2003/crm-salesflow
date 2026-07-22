@@ -25,4 +25,10 @@ interface UserRepository
 
     /** @param array{name: string, email: string, department_id: ?int, is_active: bool, password?: string} $attributes */
     public function update(User $user, array $attributes): User;
+
+    /** @param list<string> $roles */
+    public function syncRoles(User $user, array $roles): User;
+
+    /** @param list<string> $administratorRoles */
+    public function lockActiveAdministratorIds(array $administratorRoles): array;
 }

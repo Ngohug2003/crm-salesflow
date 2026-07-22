@@ -111,9 +111,12 @@ $allPermissions = array_merge(...array_values(array_map(
 )));
 
 return [
+    'display_timezone' => env('CRM_DISPLAY_TIMEZONE', 'Asia/Ho_Chi_Minh'),
+
     'rbac' => [
         'guard' => 'web',
         'super_admin_role' => 'super-admin',
+        'administrator_roles' => ['super-admin', 'admin'],
         'data_scopes' => ['all', 'department', 'owned', 'read-only'],
         'permission_groups' => $permissionGroups,
         'roles' => [
@@ -145,7 +148,6 @@ return [
                     'activities.view', 'activities.create', 'activities.update', 'activities.delete',
                     'tasks.view', 'tasks.view-all', 'tasks.create', 'tasks.update', 'tasks.delete', 'tasks.assign',
                     'reports.view', 'reports.export',
-                    'audit-logs.view',
                 ],
             ],
             'sales' => [

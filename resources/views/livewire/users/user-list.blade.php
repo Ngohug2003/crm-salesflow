@@ -22,7 +22,7 @@
                 <div>
                     <h2 id="user-form-title" class="text-lg font-semibold">{{ $form->userId ? 'Chỉnh sửa người dùng' : 'Tạo người dùng' }}</h2>
                     <p class="mt-1 text-sm text-slate-500">
-                        {{ $form->userId ? 'Để trống mật khẩu nếu không muốn thay đổi.' : 'Tài khoản mới được xác thực email tự động và chưa được gán vai trò.' }}
+                        {{ $form->userId ? 'Để trống mật khẩu nếu không muốn thay đổi.' : 'Tài khoản mới được xác thực email tự động.' }}
                     </p>
                 </div>
                 <flux:button variant="ghost" icon="x-mark" square wire:click="cancelForm" aria-label="Đóng biểu mẫu" />
@@ -66,14 +66,36 @@
                     />
                 </div>
 
-                <flux:callout icon="information-circle" heading="Vai trò được quản lý riêng">
-                    P2-06 chỉ lưu thông tin tài khoản. Việc gán hoặc thay đổi vai trò sẽ được thực hiện ở P2-07.
-                </flux:callout>
+                <fieldset>
+                    <div class="mb-3">
+                        <legend class="font-medium">Vai trò <span class="text-red-500">*</span></legend>
+                        <p class="mt-1 text-sm text-slate-500">Có thể chọn nhiều vai trò; data scope rộng nhất sẽ có hiệu lực.</p>
+                    </div>
+
+                    <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                        @foreach ($this->roleAssignmentOptions as $roleKey => $roleDefinition)
+                            <label class="flex cursor-pointer gap-3 rounded-xl border border-slate-200 p-4 transition hover:border-emerald-300 dark:border-slate-800 dark:hover:border-emerald-800">
+                                <flux:checkbox wire:model="form.roles" value="{{ $roleKey }}" />
+                                <span class="min-w-0">
+                                    <span class="flex flex-wrap items-center gap-2 font-medium">
+                                        {{ $roleDefinition['label'] }}
+                                        <flux:badge size="sm">{{ $roleDefinition['scope'] }}</flux:badge>
+                                    </span>
+                                    <span class="mt-1 block text-sm text-slate-500">{{ $roleDefinition['description'] }}</span>
+                                </span>
+                            </label>
+                        @endforeach
+                    </div>
+
+                    @error('form.roles')
+                        <p class="mt-2 text-sm font-medium text-red-600 dark:text-red-400">{{ $message }}</p>
+                    @enderror
+                </fieldset>
 
                 <div class="flex flex-col-reverse gap-3 border-t border-slate-200 pt-5 dark:border-slate-800 sm:flex-row sm:justify-end">
                     <flux:button type="button" variant="ghost" wire:click="cancelForm">Hủy</flux:button>
                     <flux:button type="submit" variant="primary" wire:loading.attr="disabled" wire:target="save">
-                        {{ $form->userId ? 'Lưu thay đổi' : 'Tạo người dùng' }}
+                        {{ $form->userId ? 'Lưu thông tin và vai trò' : 'Tạo người dùng' }}
                     </flux:button>
                 </div>
             </form>
