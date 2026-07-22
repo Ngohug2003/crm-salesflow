@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 final class Lead extends Model
@@ -77,6 +78,18 @@ final class Lead extends Model
     public function tags(): BelongsToMany
     {
         return $this->belongsToMany(Tag::class)->withTimestamps();
+    }
+
+    /** @return HasMany<LeadAssignmentHistory, $this> */
+    public function assignmentHistories(): HasMany
+    {
+        return $this->hasMany(LeadAssignmentHistory::class);
+    }
+
+    /** @return HasMany<LeadStatusHistory, $this> */
+    public function statusHistories(): HasMany
+    {
+        return $this->hasMany(LeadStatusHistory::class);
     }
 
     /** @return array<string, string> */

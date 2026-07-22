@@ -82,4 +82,6 @@
             </section>
         </aside>
     </div>
+
+    <livewire:leads.lead-workflow :lead-id="$lead->id" />
 @endsection

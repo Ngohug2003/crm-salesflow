@@ -37,3 +37,14 @@ Lead status and priority are stored as indexed strings and cast to `LeadStatus` 
 ## Lead demo data
 
 P3-05 adds an idempotent `DemoLeadSeeder` for local development. It maintains 30 records identified by fixed `lead.demoNN@salesflow.test` addresses: 18 belong to the Sales department and 12 to Marketing. The dataset cycles through every Lead status and priority, assigns an active source and exactly two tags, and uses existing demo users as owners so policy and data-scope behavior can be inspected in the UI. Running the root `DatabaseSeeder` again updates these records rather than duplicating them.
+
+## Lead workflow history
+
+P3-07 adds immutable append-only workflow history alongside the general activity log.
+
+| Table | Business history | Main query indexes |
+|---|---|---|
+| `lead_assignment_histories` | previous/new owner, previous/new department, actor and reason | `(lead_id, created_at)`, `(changed_by, created_at)` |
+| `lead_status_histories` | nullable initial status, target status, actor and reason | `(lead_id, created_at)`, `(to_status, created_at)`, `(changed_by, created_at)` |
+
+Both tables use auto-incrementing BIGINT identifiers. Deleting a user or department sets the corresponding historical reference to null while retaining the history row. Force deleting a Lead cascades its workflow history; ordinary Soft Delete retains it for restoration. Assignment/status history, Lead state and general audit are written in one transaction.

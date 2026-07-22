@@ -76,6 +76,8 @@ P3-05 connects this read path to the web UI without moving query logic into Live
 
 P3-06 adds the Lead write path: `LeadForm` normalizes and validates server-side input, `LeadEditor` owns presentation state, and `LeadManagementService` re-authorizes the operation, resolves assignment scope and controls a transaction around repository persistence, tag synchronization and system audit. Department assignment is derived from the selected owner instead of trusting a separate client field. Sales creation is automatically self-owned; department-scoped creation stays in the actor's department. Status is deliberately excluded from this general editor so P3-07 can introduce an explicit transition service and history without a bypass path.
 
+P3-07 makes assignment and status explicit workflow boundaries. Both `LeadAssignmentService` and `LeadStatusTransitionService` acquire a scoped row lock, authorize the mutation, update the Lead, append immutable domain history and write system audit inside one transaction. `LeadAssigned` and `LeadStatusChanged` implement `ShouldDispatchAfterCommit`, preventing consumers from observing rolled-back state. The general Lead editor now rejects owner changes; status remains writable only through the transition matrix. A typed `LeadTimelineEntry` keeps the Livewire timeline independent from persistence-model details.
+
 ## 4. Delivery plan and estimate
 
 | Phase | Deliverable | Estimate |

@@ -952,7 +952,7 @@ Mục tiêu: hoàn thiện vòng đời Lead từ tiếp nhận đến chuyển 
 | P3-04 | ✅ Lead policy và visibility | `feature/p3-04-lead-authorization` | P2-04, P3-03 | Policy CRUD/assign/convert/restore đúng permission matrix |
 | P3-05 | ✅ Danh sách Lead | `feature/p3-05-lead-list` | P3-03, P3-04 | Livewire table responsive, URL filters, bulk selection foundation và empty states |
 | P3-06 | ✅ Form và chi tiết Lead | `feature/p3-06-lead-form-detail` | P3-05 | Create/edit/detail, validation, source/tags/owner và audit cơ bản |
-| P3-07 | Assignment và status history | `feature/p3-07-lead-assignment-status` | P3-06 | Gán owner, chuyển trạng thái hợp lệ, lịch sử và event |
+| P3-07 | ✅ Assignment và status history | `feature/p3-07-lead-assignment-status` | P3-06 | Gán owner, chuyển trạng thái hợp lệ, lịch sử và event |
 | P3-08 | Duplicate, soft delete và restore | `feature/p3-08-lead-duplicate-delete` | P3-06 | Phát hiện email/phone trùng, cảnh báo/merge decision, trash/restore |
 | P3-09 | Conversion eligibility và contract | `feature/p3-09-conversion-contract` | P3-07, P3-08 | Rule đủ điều kiện, DTO/action contract, chống convert lặp và test contract; chưa tạo Opportunity |
 | P3-10 | Lead test và checkpoint | `feature/p3-10-lead-checkpoint` | P3-01..P3-09 | Feature/policy/transaction tests và checklist vòng đời Lead |
@@ -1327,7 +1327,7 @@ docker compose ps
 Checklist kiểm thử thủ công:
 
 1. Đăng nhập Admin, mở `/leads`, tạo Lead có source, nhiều tag và owner; xác nhận chuyển về trang chi tiết và phòng ban khớp owner.
-2. Mở Lead vừa tạo, sửa thông tin/tag/owner rồi kiểm tra old/new ở màn Nhật ký hệ thống bằng tài khoản Super Admin hoặc Admin phòng IT.
+2. Mở Lead vừa tạo, sửa thông tin/tag rồi kiểm tra old/new ở màn Nhật ký hệ thống bằng tài khoản Super Admin hoặc Admin phòng IT; owner được chuyển qua workflow từ P3-07.
 3. Thử email/website sai, giá trị âm hoặc bỏ họ tên; xác nhận form báo lỗi và không tạo Lead.
 4. Đăng nhập Sales Manager; xác nhận dropdown owner chỉ có người trong cùng phòng ban và không mở được Lead phòng ban khác.
 5. Đăng nhập Sales; tạo Lead và xác nhận hệ thống tự gán chính Sales, không hiển thị dropdown phân công.
@@ -1335,6 +1335,105 @@ Checklist kiểm thử thủ công:
 7. Xác nhận form chưa cho chuyển status; tính năng chuyển trạng thái và lịch sử thuộc P3-07.
 
 Checkpoint P3-06: dừng tại đây để chủ dự án kiểm thử form, trang chi tiết và audit Lead trước khi bắt đầu P3-07.
+
+### Nhật ký feature P3-07 — Assignment và status history
+
+Trạng thái: **hoàn tất triển khai, chờ chủ dự án kiểm thử**.
+
+Đã triển khai:
+
+- Tạo bảng `lead_assignment_histories` lưu owner/phòng ban cũ và mới, actor, lý do và timestamps.
+- Tạo bảng `lead_status_histories` lưu trạng thái cũ/mới, actor, lý do và timestamps.
+- Hai bảng dùng BIGINT tự tăng, foreign key phù hợp, cascade khi Lead bị force delete và tổng cộng 7 index phục vụ timeline/audit query.
+- Thêm model/relationship hai chiều từ Lead tới assignment/status history.
+- Tạo `LeadAssignmentService`: khóa bản ghi bằng `SELECT ... FOR UPDATE`, kiểm tra `LeadPolicy::assign`, giới hạn owner đang hoạt động theo data scope, đồng bộ phòng ban, ghi history và audit trong cùng transaction.
+- Tạo `LeadStatusTransitionService`: khóa Lead, kiểm tra `LeadPolicy::update`, áp dụng transition matrix allowlist và ghi status/history/audit nguyên tử.
+- Trạng thái `converted` là terminal và không thể chọn thủ công; chỉ integration conversion sau này được đặt trạng thái này.
+- Chuyển sang `unqualified` hoặc `lost` bắt buộc nhập lý do. Các lý do khác không bắt buộc nhưng tối đa 500 ký tự.
+- Không tạo history/event khi gán lại đúng owner/phòng ban hiện tại; request bị trả validation error rõ ràng.
+- Form nhận biết owner hiện tại theo thời gian thực: nút lưu bị vô hiệu hóa cho đến khi chọn owner khác và nhãn giải thích rõ lý do chỉ áp dụng cho lần phân công mới; lịch sử cũ không được chỉnh sửa.
+- Thêm `LeadAssigned` và `LeadStatusChanged`, đều implement `ShouldDispatchAfterCommit` để consumer không thấy dữ liệu chưa commit.
+- Khi tạo Lead mới, hệ thống ghi status history `Khởi tạo → Mới`; nếu có owner/phòng ban ban đầu thì ghi thêm assignment history.
+- Khóa đường đổi owner trong form edit thông tin chung; request giả mạo bị backend từ chối và phải dùng workflow service.
+- Tạo `LeadWorkflow` Livewire trên trang chi tiết với form phân công, form chuyển trạng thái và timeline hợp nhất mới nhất trước.
+- Sales Manager chỉ thấy owner cùng phòng ban; Sales không có form phân công nhưng được chuyển trạng thái Lead sở hữu; Viewer chỉ xem timeline.
+- Timeline hiển thị actor, lý do và thời gian theo `Asia/Ho_Chi_Minh`.
+- Không thêm package hoặc seed mới.
+
+Transition matrix:
+
+```text
+new         -> contacted, unqualified, lost
+contacted   -> qualified, unqualified, lost
+qualified   -> contacted, lost
+unqualified -> new
+lost        -> new
+converted   -> (terminal, không có transition thủ công)
+```
+
+Luồng phân công:
+
+1. `LeadWorkflow` validate input cơ bản và gọi `LeadAssignmentService`.
+2. Service mở transaction, dùng scoped repository khóa Lead và kiểm tra Policy.
+3. Owner mới phải đang hoạt động và nằm trong data scope; `department_id` được suy ra ở backend.
+4. Repository cập nhật Lead, tạo assignment history; `SystemAuditService` ghi audit `assigned`.
+5. Transaction commit xong mới dispatch `LeadAssigned`, sau đó UI điều hướng lại trang chi tiết.
+
+Luồng chuyển trạng thái:
+
+1. UI chỉ hiển thị các trạng thái kế tiếp do service trả về.
+2. Backend vẫn parse enum và kiểm tra transition matrix sau khi khóa Lead; request sửa DOM không thể vượt qua.
+3. Lead, status history và audit `status_changed` được ghi trong cùng transaction.
+4. Commit xong mới dispatch `LeadStatusChanged`; timeline mới xuất hiện khi trang chi tiết reload bằng `wire:navigate`.
+
+File chính:
+
+- `database/migrations/2026_07_22_230000_create_lead_workflow_histories_tables.php`
+- `app/Models/LeadAssignmentHistory.php`, `LeadStatusHistory.php`
+- `app/Services/LeadAssignmentService.php`
+- `app/Services/LeadStatusTransitionService.php`
+- `app/Repositories/Contracts/LeadWorkflowRepository.php`
+- `app/Repositories/EloquentLeadWorkflowRepository.php`
+- `app/Events/LeadAssigned.php`, `LeadStatusChanged.php`
+- `app/Livewire/Leads/LeadWorkflow.php`
+- `resources/views/livewire/leads/lead-workflow.blade.php`
+- `tests/Feature/LeadWorkflowTest.php`
+
+Kết quả xác minh:
+
+- Test riêng P3-07: **8 test đạt, 68 assertions**.
+- Toàn bộ nhóm Lead P3-01..P3-07: **50 test đạt, 425 assertions**.
+- Toàn dự án: **134 test đạt, 910 assertions**.
+- Migration P3-07 đã chạy trên PostgreSQL; hai bảng history và 7 index tồn tại đúng thiết kế.
+- Pint đạt trên 149 file; PHPStan/Larastan không có lỗi; toàn bộ Blade template compile thành công.
+- Vite production build đạt; toàn bộ 10 service Docker đang chạy và các service có healthcheck đều `healthy`.
+
+Lệnh đã chạy:
+
+```bash
+docker compose exec app php artisan migrate --force
+docker compose exec app php artisan test tests/Feature/LeadWorkflowTest.php
+docker compose exec app php artisan test tests/Feature/LeadWorkflowTest.php tests/Feature/LeadFormDetailTest.php tests/Feature/LeadListTest.php tests/Feature/LeadPolicyTest.php tests/Feature/LeadRepositoryTest.php tests/Feature/LeadDomainTest.php tests/Feature/LeadTaxonomyDomainTest.php
+docker compose exec app php artisan test
+docker compose exec app ./vendor/bin/pint --test
+docker compose exec app ./vendor/bin/phpstan analyse --memory-limit=512M --no-progress
+docker compose exec app php artisan view:cache
+docker compose exec vite npm run build
+docker compose ps
+```
+
+Checklist kiểm thử thủ công:
+
+1. Tạo Lead mới có owner, mở chi tiết và xác nhận timeline có `Khởi tạo → Mới` cùng assignment ban đầu.
+2. Đăng nhập Admin/Sales Manager, đổi owner kèm lý do; xác nhận owner, phòng ban, timeline và Audit Log cùng thay đổi.
+3. Với Sales Manager, xác nhận dropdown không có user phòng ban khác; với Sales, xác nhận hoàn toàn không có form phân công.
+4. Từ Lead `Mới`, chuyển sang `Đã liên hệ`, sau đó `Đủ điều kiện`; xác nhận chỉ trạng thái hợp lệ được hiển thị.
+5. Thử chuyển sang `Đã mất` hoặc `Không đủ điều kiện` mà không nhập lý do; xác nhận backend từ chối.
+6. Xác nhận không thể đặt `Đã chuyển đổi` thủ công và Lead converted không còn form chuyển trạng thái.
+7. Đăng nhập Viewer và xác nhận chỉ thấy timeline, không có hai form mutation.
+8. Dùng Super Admin/Admin phòng IT kiểm tra Audit Log có event `assigned` và `status_changed`, đúng actor/reason/old/new.
+
+Checkpoint P3-07: dừng tại đây để chủ dự án kiểm thử assignment, transition và timeline trước khi bắt đầu P3-08.
 
 ## Giai đoạn 4 — Companies và Contacts
 

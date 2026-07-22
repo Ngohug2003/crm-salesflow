@@ -117,6 +117,13 @@ final readonly class EloquentLeadRepository implements LeadRepository
             ->findOrFail($leadId);
     }
 
+    public function findVisibleForUpdateOrFail(User $actor, int $leadId): Lead
+    {
+        return $this->visibleTo($actor)
+            ->lockForUpdate()
+            ->findOrFail($leadId);
+    }
+
     public function create(array $attributes): Lead
     {
         return Lead::query()->create($attributes);

@@ -7,9 +7,12 @@ namespace App\Services;
 use App\Enums\DataScope;
 use App\Enums\LeadPriority;
 use App\Enums\LeadStatus;
+use App\Events\LeadAssigned;
+use App\Events\LeadStatusChanged;
 use App\Models\Lead;
 use App\Models\User;
 use App\Repositories\Contracts\LeadRepository;
+use App\Repositories\Contracts\LeadWorkflowRepository;
 use App\Repositories\Contracts\UserRepository;
 use App\Services\Authorization\DataScopeService;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -20,6 +23,7 @@ final readonly class LeadManagementService
 {
     public function __construct(
         private LeadRepository $leads,
+        private LeadWorkflowRepository $workflow,
         private UserRepository $users,
         private DataScopeService $dataScope,
         private SystemAuditService $audit,
@@ -34,10 +38,19 @@ final readonly class LeadManagementService
         $tagIds = $attributes['tag_ids'];
         unset($attributes['tag_ids']);
 
-        $owner = $this->resolveOwner($actor, $attributes['owner_id']);
-        $this->authorizeAssignment($actor, $lead, $owner);
-        $attributes['owner_id'] = $owner?->getKey();
-        $attributes['department_id'] = $this->departmentId($actor, $owner);
+        if ($lead === null) {
+            $owner = $this->resolveOwner($actor, $attributes['owner_id']);
+            $this->authorizeInitialAssignment($actor, $owner);
+            $attributes['owner_id'] = $owner?->getKey();
+            $attributes['department_id'] = $this->departmentId($actor, $owner);
+        } else {
+            if ($attributes['owner_id'] !== $lead->owner_id) {
+                throw new AuthorizationException('Hãy dùng chức năng phân công để thay đổi người phụ trách.');
+            }
+
+            $attributes['owner_id'] = $lead->owner_id;
+            $attributes['department_id'] = $lead->department_id;
+        }
 
         return DB::transaction(function () use ($actor, $lead, $attributes, $tagIds): Lead {
             $oldValues = $lead === null ? null : $this->auditSnapshot($lead);
@@ -57,6 +70,11 @@ final readonly class LeadManagementService
             }
 
             $savedLead = $this->leads->syncTags($savedLead, $tagIds);
+
+            if ($lead === null) {
+                $this->recordInitialWorkflow($actor, $savedLead);
+            }
+
             $newValues = $this->auditSnapshot($savedLead);
 
             if ($oldValues !== $newValues) {
@@ -102,16 +120,11 @@ final readonly class LeadManagementService
         return $owner;
     }
 
-    private function authorizeAssignment(User $actor, ?Lead $lead, ?User $owner): void
+    private function authorizeInitialAssignment(User $actor, ?User $owner): void
     {
-        $oldOwnerId = $lead?->owner_id;
         $newOwnerId = $owner?->getKey();
 
-        if ($oldOwnerId === $newOwnerId) {
-            return;
-        }
-
-        if ($lead === null && $newOwnerId === $actor->getKey()) {
+        if ($newOwnerId === null || $newOwnerId === $actor->getKey()) {
             return;
         }
 
@@ -129,6 +142,45 @@ final readonly class LeadManagementService
         return $this->dataScope->resolve($actor) === DataScope::Department
             ? $actor->department_id
             : null;
+    }
+
+    private function recordInitialWorkflow(User $actor, Lead $lead): void
+    {
+        $this->workflow->createStatusHistory([
+            'lead_id' => $lead->getKey(),
+            'from_status' => null,
+            'to_status' => LeadStatus::New,
+            'changed_by' => $actor->getKey(),
+            'reason' => 'Khởi tạo Lead',
+        ]);
+
+        LeadStatusChanged::dispatch(
+            $lead->getKey(),
+            null,
+            LeadStatus::New->value,
+            $actor->getKey(),
+        );
+
+        if ($lead->owner_id === null && $lead->department_id === null) {
+            return;
+        }
+
+        $this->workflow->createAssignmentHistory([
+            'lead_id' => $lead->getKey(),
+            'previous_owner_id' => null,
+            'new_owner_id' => $lead->owner_id,
+            'previous_department_id' => null,
+            'new_department_id' => $lead->department_id,
+            'changed_by' => $actor->getKey(),
+            'reason' => 'Phân công khi tạo Lead',
+        ]);
+
+        LeadAssigned::dispatch(
+            $lead->getKey(),
+            null,
+            $lead->owner_id,
+            $actor->getKey(),
+        );
     }
 
     /** @return array<string, mixed> */
