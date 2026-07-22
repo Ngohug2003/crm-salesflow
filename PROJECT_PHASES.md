@@ -14,7 +14,7 @@ Tài liệu này là checkpoint chính của dự án. Quy ước làm việc t�
 |---|---|---|---|
 | 0 | Phân tích kiến trúc và dữ liệu | Hoàn tất tài liệu ban đầu | Chưa xác nhận |
 | 1 | Khởi tạo nền tảng và Docker | Hoàn tất triển khai | Chờ chủ dự án kiểm thử |
-| 2 | Users, Departments, Roles, Permissions | Đang làm — P2-01 đến P2-04 hoàn tất | Chờ kiểm thử P2-04 |
+| 2 | Users, Departments, Roles, Permissions | Đang làm — P2-01 đến P2-05 hoàn tất | Chờ kiểm thử P2-05 |
 | 3 | Leads | Chưa bắt đầu | — |
 | 4 | Companies và Contacts | Chưa bắt đầu | — |
 | 5 | Pipelines và Opportunities | Chưa bắt đầu | — |
@@ -328,7 +328,7 @@ Mục tiêu: hoàn thiện tổ chức người dùng và ranh giới phân quy�
 | P2-02 | ✅ Quản lý phòng ban | `feature/p2-02-department-management` | P2-01 | Livewire list/create/edit/disable phòng ban, validation và test |
 | P2-03 | ✅ Danh mục quyền và role seeder | `feature/p2-03-rbac-catalog-seeder` | P2-01 | `config/crm.php`, 5 role mặc định, permission idempotent và super-admin bypass |
 | P2-04 | ✅ Data scope và policies nền tảng | `feature/p2-04-data-scope-policies` | P2-03 | Scope all/department/owned/read-only được cưỡng chế ở backend |
-| P2-05 | Danh sách người dùng | `feature/p2-05-user-list` | P2-01, P2-04 | Tìm kiếm, lọc phòng ban/role/trạng thái, phân trang và URL state |
+| P2-05 | ✅ Danh sách người dùng | `feature/p2-05-user-list` | P2-01, P2-04 | Tìm kiếm, lọc phòng ban/role/trạng thái, phân trang và URL state |
 | P2-06 | Tạo và chỉnh sửa người dùng | `feature/p2-06-user-form` | P2-05 | Form tạo/sửa, active/locked state, email uniqueness và password rule |
 | P2-07 | Gán phòng ban và role | `feature/p2-07-user-role-assignment` | P2-03, P2-06 | UI gán role/phòng ban, chống tự khóa admin cuối cùng, audit thay đổi |
 | P2-08 | Authorization test và checkpoint | `feature/p2-08-authorization-checkpoint` | P2-02..P2-07 | Test đủ 5 role, navigation theo quyền, seed demo và checklist nghiệm thu |
@@ -575,6 +575,90 @@ Checklist kiểm thử:
 5. Khi sửa code provider ở local, chạy lại `docker compose ps` và tải trang; không còn lỗi quyền ghi `bootstrap/cache`.
 
 Checkpoint P2-04: dừng tại đây để chủ dự án kiểm thử; chỉ bắt đầu P2-05 sau khi nhận xác nhận.
+
+### Nhật ký feature P2-05 — Danh sách người dùng
+
+Trạng thái: **hoàn tất triển khai, chờ chủ dự án kiểm thử**.
+
+Đã triển khai:
+
+- Tạo route `/settings/users` và `UserController`; cả controller lẫn Livewire component đều authorize `UserPolicy::viewAny` ở backend.
+- Thêm mục **Người dùng** vào sidebar theo `@can`; chuyển trang tiếp tục dùng `wire:navigate.hover` để không tải lại toàn bộ layout.
+- Tách luồng theo trách nhiệm `Controller → Livewire → UserDirectoryService → UserRepository`; filter input được đóng gói trong `UserListFilters` thay vì truyền nhiều tham số rời.
+- Repository luôn bắt đầu từ `visibleTo($actor)`, do đó data scope P2-04 được áp dụng trước tìm kiếm, bộ lọc và phân trang.
+- Tìm kiếm không phân biệt hoa thường theo tên/email; lọc theo phòng ban, chưa gán phòng ban, role và trạng thái active/inactive.
+- Tất cả filter dùng Livewire URL state: từ khóa là `q`, các filter còn lại là `department`, `role`, `status`; tải lại hoặc chia sẻ URL giữ nguyên trạng thái.
+- Khi đổi filter, pagination tự trở về trang 1; kết quả được phân trang 15 user/trang và sắp xếp ổn định theo tên rồi ID.
+- Query list eager-load đúng cột của `department` và `roles`, tránh N+1. Query lựa chọn phòng ban được tách riêng, không dùng `withCount` dư thừa từ màn hình quản lý phòng ban.
+- Sales Manager chỉ thấy user và lựa chọn phòng ban trong chính phòng ban của mình; role thiếu `users.view` bị trả `403` và không thấy menu.
+- Bảng hiển thị tên/email, phòng ban, role, trạng thái tài khoản và trạng thái xác thực email; empty state và nút xóa filter đã có.
+- Thêm trang trợ giúp `/help/roles` dành cho mọi user đã đăng nhập: hiển thị role của chính user, data scope hiệu lực, số quyền và danh sách quyền của cả 5 role theo từng module. Role hiện tại được đánh dấu/mở sẵn; dữ liệu lấy trực tiếp từ `config/crm.php` qua `RoleGuideService` nên luôn đồng bộ với backend.
+- `DemoUserSeeder` tạo idempotent 20 tài khoản `demo01@salesflow.test` đến `demo20@salesflow.test`: 2 MANAGEMENT, 11 SALES, 7 MARKETING; gồm 2 admin, 2 sales-manager, 12 sales, 4 viewer, 3 inactive và 2 chưa xác thực. Mật khẩu demo dùng chung `SalesFlow@123`.
+- Không triển khai tạo/sửa/gán role trong P2-05; các thao tác ghi lần lượt thuộc P2-06 và P2-07.
+- Không cài package, không thêm migration và chỉ tái sử dụng component Flux UI đã có.
+
+File chính:
+
+- `app/Data/UserListFilters.php`
+- `app/Http/Controllers/UserController.php`
+- `app/Livewire/Users/UserList.php`
+- `app/Services/UserDirectoryService.php`
+- `app/Services/RoleGuideService.php`
+- `app/Http/Controllers/RoleGuideController.php`
+- `app/Repositories/Contracts/UserRepository.php`
+- `app/Repositories/EloquentUserRepository.php`
+- `app/Repositories/Contracts/DepartmentRepository.php`
+- `app/Repositories/EloquentDepartmentRepository.php`
+- `resources/views/users/index.blade.php`
+- `resources/views/livewire/users/user-list.blade.php`
+- `resources/views/help/roles.blade.php`
+- `resources/views/layouts/app.blade.php`
+- `routes/web.php`
+- `database/seeders/DemoUserSeeder.php`
+- `database/seeders/DatabaseSeeder.php`
+- `tests/Feature/UserListTest.php`
+- `tests/Feature/DemoUserSeederTest.php`
+- `tests/Feature/RoleGuideTest.php`
+
+Lệnh đã chạy:
+
+```bash
+git switch -c feature/p2-05-user-list
+docker compose exec -T app php artisan test tests/Feature/UserListTest.php
+docker compose exec -T app php artisan test tests/Feature/RoleGuideTest.php
+docker compose exec -T app ./vendor/bin/pint --test
+docker compose exec -T app ./vendor/bin/phpstan analyse --memory-limit=512M
+docker compose exec -T app php artisan test
+docker compose exec -T --user node vite npm run build
+docker compose ps
+docker compose exec -T app php artisan db:seed --force
+```
+
+Kết quả cuối:
+
+- Riêng P2-05: 6 test đạt, 40 assertions; bao phủ route/menu, từng filter, URL state, pagination, department scope và truy cập bị từ chối.
+- Demo user seeder: 1 test đạt, 7 assertions; chạy hai lần vẫn giữ đúng 20 bản ghi, phân bổ/role/trạng thái đúng cấu hình.
+- Trang hướng dẫn role: 4 test đạt, 21 assertions; guest bị chuyển login, Viewer truy cập được, role/scope/quyền hiện tại đúng và số quyền catalog là 45/45/40/30/8.
+- Toàn dự án: 42 test đạt, 217 assertions.
+- Pint: 86 file đạt; PHPStan/Larastan không có lỗi.
+- Vite production build đạt; CSS 245,26 kB và JavaScript 0,40 kB trước gzip.
+- `app`, `horizon`, `mailpit`, `minio`, `nginx`, `postgres`, `redis`, `reverb`, `scheduler` và `vite` đều đang chạy; service có healthcheck đều `healthy`.
+- Sau lần chạy đầu, query filter phòng ban được tối ưu từ query quản lý có `withCount` thành query options chỉ lấy `id`, `name`, `code`.
+- PostgreSQL local đã được seed và kiểm tra thực tế: đúng 20 demo user, phân bổ MANAGEMENT 2, SALES 11, MARKETING 7.
+
+Checklist kiểm thử:
+
+1. Chạy `docker compose exec app php artisan test tests/Feature/UserListTest.php` và xác nhận 6 test/40 assertions đạt.
+2. Đăng nhập `admin@salesflow.test`, chọn **Người dùng** trên sidebar hoặc mở `http://localhost/settings/users`.
+3. Thử tìm theo một phần tên/email; lần lượt lọc phòng ban, role và trạng thái. Nhấn **Xóa bộ lọc** để trở về danh sách ban đầu.
+4. Quan sát URL có các query `q`, `department`, `role`, `status`; tải lại trang và xác nhận filter vẫn được giữ.
+5. Khi database có hơn 15 user, chuyển trang rồi đổi một filter và xác nhận danh sách quay về trang 1.
+6. Chạy `docker compose exec app php artisan test tests/Feature/UserListTest.php --filter="limits managers"` để xác nhận Sales Manager không thấy user/phòng ban bên ngoài data scope.
+7. Chạy `docker compose exec app php artisan test tests/Feature/UserListTest.php --filter="denies the user list"` để xác nhận viewer bị `403` và không thấy menu **Người dùng**.
+8. Có thể đăng nhập một tài khoản active bất kỳ từ `demo01@salesflow.test` đến `demo20@salesflow.test` bằng mật khẩu `SalesFlow@123`; quyền truy cập phụ thuộc role đã được seed.
+9. Chọn **Vai trò & quyền** trên sidebar, xác nhận khối đầu trang hiển thị đúng role/data scope của tài khoản đang đăng nhập và mở từng role để xem danh sách quyền.
+
+Checkpoint P2-05: dừng tại đây để chủ dự án kiểm thử; chỉ bắt đầu P2-06 sau khi nhận xác nhận.
 
 Checkpoint: dừng để kiểm thử đăng nhập, quản lý user/department và toàn bộ ma trận quyền trước P3.
 

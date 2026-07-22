@@ -18,6 +18,12 @@ interface DepartmentRepository
      */
     public function activeOptions(array $excludedIds = []): Collection;
 
+    /**
+     * @param  list<int>|null  $onlyIds
+     * @return Collection<int, Department>
+     */
+    public function userFilterOptions(?array $onlyIds = null): Collection;
+
     /** @return array{total: int, active: int, inactive: int, roots: int} */
     public function stats(): array;
 
