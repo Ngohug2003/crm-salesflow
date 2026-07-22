@@ -1,241 +1,248 @@
-# SalesFlow CRM — Kế hoạch chuẩn hóa kỹ thuật
+# SalesFlow CRM — Kế hoạch sửa lệch kỹ thuật theo giai đoạn
 
-> Tài liệu này quản lý các feature sửa lệch kỹ thuật được phát hiện sau checkpoint P3-08. Đây không phải roadmap nghiệp vụ thay thế `PROJECT_PHASES.md`; sau khi hoàn tất từng feature kỹ thuật phải dừng để chủ dự án kiểm thử và xác nhận.
+> Tài liệu này quản lý các feature sửa lệch kỹ thuật của Giai đoạn 1, 2 và 3. Đây không phải roadmap nghiệp vụ thay thế `PROJECT_PHASES.md`. Mỗi feature phải được triển khai trên branch riêng, xác minh, cập nhật nhật ký và dừng để chủ dự án kiểm thử.
 
-Ngày lập kế hoạch: **23/07/2026**.
+Ngày cập nhật cấu trúc: **23/07/2026**.
 
 ## 1. Mục đích
 
-- Sửa các khoảng lệch kiến trúc trước khi tiếp tục mở rộng nghiệp vụ từ P3-09.
+- Phân loại vấn đề theo đúng giai đoạn đã tạo ra nền tảng hoặc nghiệp vụ liên quan.
+- Sửa các khoảng lệch kỹ thuật trước khi tiếp tục P3-09.
 - Giữ nguyên cây thư mục technical-layer hiện tại: Controller, Livewire, Form, Service, Repository, Policy và Model.
-- Không gom nhiều thay đổi khó kiểm soát vào một branch.
-- Mỗi feature phải có phạm vi, dependency, test tự động, checklist thủ công và checkpoint riêng.
-- Không cài package mới nếu chưa có use case bắt buộc và chưa được chủ dự án xác nhận.
+- Không gom toàn bộ remediation vào một branch lớn.
+- Mỗi feature có mục tiêu, dependency, phạm vi, test, checklist thủ công và checkpoint riêng.
 
 ## 2. Quy tắc thực hiện
 
-1. Chỉ làm đúng **một feature kỹ thuật** tại một thời điểm.
-2. Trước khi code phải giải thích mục đích, vấn đề hiện tại, mục tiêu và phạm vi không làm.
+1. Chỉ triển khai đúng **một feature kỹ thuật** tại một thời điểm.
+2. Trước khi code phải giải thích mục đích, hiện trạng, mục tiêu và phạm vi không làm.
 3. Không đổi cấu trúc dự án sang `app/Modules` và không tạo generic `BaseRepository`.
-4. Authorization, data scope, validation và duplicate guard phải được cưỡng chế ở backend.
-5. Migration mới phải an toàn với dữ liệu hiện có và có đường rollback hợp lý.
-6. Không đánh dấu hoàn tất nếu test liên quan, toàn bộ test, Pint, PHPStan và frontend build chưa đạt hoặc chưa ghi rõ blocker môi trường.
-7. Sau khi hoàn tất phải cập nhật mục nhật ký của feature trong file này và dừng để chủ dự án kiểm thử.
-8. Chỉ chuyển feature kế tiếp khi có xác nhận rõ ràng.
+4. Authorization, data scope, ownership, validation và duplicate guard phải được cưỡng chế ở backend.
+5. Không cài package mới nếu chưa có use case bắt buộc và chưa được chủ dự án xác nhận.
+6. Migration phải an toàn với dữ liệu hiện có và có đường rollback hợp lý.
+7. Không đánh dấu hoàn tất nếu test liên quan, toàn bộ test, Pint, PHPStan và frontend build chưa đạt hoặc chưa ghi rõ blocker môi trường.
+8. Sau mỗi feature phải cập nhật nhật ký trong file này, đưa commit đề xuất và dừng để chủ dự án kiểm thử.
+9. Chỉ chuyển feature kế tiếp khi có xác nhận rõ ràng.
 
 ## 3. Cảnh báo tài liệu nguồn
 
-- `PROJECT_PHASES.md` đang trỏ đến `docs/requirements.md`, nhưng file requirement này không tồn tại trên branch `develop` tại thời điểm lập kế hoạch.
+- `PROJECT_PHASES.md` đang trỏ đến `docs/requirements.md`, nhưng requirement này không tồn tại trên branch `develop` tại thời điểm audit.
 - Skill `.agents/skills/salesflow-feature-development/SKILL.md` cũng không tồn tại trên branch hiện tại.
-- P3-T07 phải khôi phục hoặc hợp nhất đúng hai tài liệu trên từ branch/commit chứa bản chuẩn trước khi chốt checkpoint kỹ thuật.
-- Trong thời gian chưa khôi phục, phạm vi trong file này dựa trên code hiện tại, `PROJECT_PHASES.md` và kết quả audit sau P3-08.
+- TR-02 phải khôi phục hoặc hợp nhất hai tài liệu trên từ nguồn chuẩn trước khi chốt remediation.
+- Trong thời gian chưa khôi phục, kế hoạch này dựa trên code hiện tại, `PROJECT_PHASES.md` và audit sau P3-08.
 
-## 4. Đánh giá tổng quan
+## 4. Đánh giá tổng quan theo nguồn phát sinh
 
-| Hạng mục | Hiện trạng | Mức độ | Hướng xử lý |
-|---|---|---:|---|
-| Quy tắc Repository | Một số contract trả `Eloquent\Builder`; Service/Livewire có thể nối query; `LeadDirectoryService` query trực tiếp taxonomy | Cao | P3-T01 |
-| Request ID | Chưa có request context thống nhất và response header | Cao | P3-T02 |
-| Audit request ID | Audit chưa liên kết chắc chắn với request tạo ra thay đổi | Cao | P3-T02 |
-| Logging | Chủ yếu dùng channel mặc định; thiếu structured context và quy tắc redaction chung | Trung bình | P3-T02 |
-| Quản lý phiên đăng nhập | Có database session nhưng chưa có màn xem/thu hồi phiên | Cao | P3-T03 |
-| Lead duplicate/trash | Cảnh báo duplicate và soft delete/restore đã có; Service vẫn có thể bị gọi mà không qua preflight từ UI; restore chưa xử lý xung đột duplicate | Cao | P3-T04 |
-| App shell | Sidebar/dark mode/navigation đã có; global search, quick create, notification và user menu chưa hoàn chỉnh | Trung bình | P3-T05 |
-| UI states | Loading/empty/success chưa đồng nhất; thiếu skeleton và error/retry chuẩn | Trung bình | P3-T06 |
-| Modal/form | Chưa có quy tắc dùng modal/full page được ghi và áp dụng thống nhất | Trung bình | P3-T06 |
-| Testing | Có test feature tốt nhưng thiếu test cho request context, session management và ranh giới Repository mới | Cao | P3-T07 tổng kiểm |
-| Tài liệu | README/requirement có nguy cơ lệch hoặc thiếu trên branch hiện tại | Cao | P3-T07 |
-| Phase log | `PROJECT_PHASES.md` trộn roadmap với nhật ký triển khai và đã quá dài | Trung bình | P3-T07 |
+| Giai đoạn | Hạng mục | Hiện trạng | Mức độ | Feature xử lý |
+|---|---|---|---:|---|
+| P1 | Request ID | Chưa có request context và response header thống nhất | Cao | P1-T01 |
+| P1 | Logging | Chủ yếu dùng channel Laravel mặc định, thiếu structured context/redaction chung | Cao | P1-T01 |
+| P1 | Session management | Có database session nhưng chưa có màn xem/thu hồi phiên | Cao | P1-T02 |
+| P1 | App shell | Sidebar, dark mode và navigation đã có; topbar/platform slots chưa hoàn chỉnh | Trung bình | P1-T03 |
+| P1 | Quality foundation | Có Pest/Pint/PHPStan/build nhưng chưa có một quality command chuẩn | Trung bình | P1-T04 |
+| P2 | User Repository | `UserRepository::visibleTo()` trả `Eloquent\Builder` | Cao | P2-T01 |
+| P2 | Audit request ID | Audit chưa liên kết first-class với request tạo ra thay đổi | Cao | P2-T02 |
+| P2 | Account/session lifecycle | Khóa user hoặc đổi mật khẩu chưa chủ động thu hồi đầy đủ session theo rule | Cao | P2-T03 |
+| P2 | User/Department/Audit UI | State và modal/form chưa áp dụng nhất quán | Trung bình | P2-T04 |
+| P3 | Lead Repository | Contract trả Builder; Service query trực tiếp source/tag | Cao | P3-T01 |
+| P3 | Lead duplicate | Preflight chủ yếu do Livewire điều phối, caller khác có thể bypass | Cao | P3-T02 |
+| P3 | Lead trash/restore | Restore chưa xử lý xung đột duplicate với Lead active | Cao | P3-T03 |
+| P3 | Lead UI | Loading/error/empty và quyết định full-page/modal chưa chuẩn hóa | Trung bình | P3-T04 |
+| Xuyên suốt | Testing | Thiếu test cho các boundary mới và chưa có checkpoint tổng | Cao | TR-01 |
+| Xuyên suốt | Tài liệu | Requirement/skill thiếu; README và trạng thái có nguy cơ lệch code | Cao | TR-02 |
+| Xuyên suốt | Phase log | `PROJECT_PHASES.md` trộn roadmap với nhật ký dài | Trung bình | TR-03 |
 
-## 5. Danh sách feature kỹ thuật
+## 5. Trạng thái feature tổng thể
 
 | Mã | Feature | Branch đề xuất | Phụ thuộc | Trạng thái | Kết quả cần đạt |
 |---|---|---|---|---|---|
-| P3-T01 | Chuẩn hóa Repository boundary | `feature/p3-t01-repository-boundary` | P3-08 | Chưa bắt đầu | Repository sở hữu toàn bộ query; Service/Livewire không nhận Builder |
-| P3-T02 | Request context, Audit và Logging | `feature/p3-t02-request-context-logging` | P3-T01 | Chưa bắt đầu | Một request ID xuyên suốt response, log và audit |
-| P3-T03 | Quản lý phiên đăng nhập | `feature/p3-t03-session-management` | P3-T02 | Chưa bắt đầu | Xem và thu hồi session đúng ownership, có xác nhận mật khẩu và audit |
-| P3-T04 | Hoàn thiện Lead duplicate/trash | `feature/p3-t04-lead-duplicate-lifecycle` | P3-T01, P3-T02 | Chưa bắt đầu | Duplicate guard nằm ở backend service; restore xử lý xung đột an toàn |
-| P3-T05 | Chuẩn hóa App shell | `feature/p3-t05-app-shell` | P3-T02 | Chưa bắt đầu | Layout responsive, điều hướng mượt và slot platform nhất quán |
-| P3-T06 | UI states, modal và form | `feature/p3-t06-ui-foundation` | P3-T05 | Chưa bắt đầu | Loading/empty/error/success và modal/form có pattern dùng lại |
-| P3-T07 | Quality gate, tài liệu và phase log | `feature/p3-t07-quality-docs` | P3-T01..P3-T06 | Chưa bắt đầu | Test tổng đạt; tài liệu đúng code; phase log được tách gọn |
+| P1-T01 | Request context và structured logging | `feature/p1-t01-request-context-logging` | P1 | Chưa bắt đầu | Một request ID xuyên suốt response và application/security log |
+| P1-T02 | Quản lý phiên đăng nhập | `feature/p1-t02-session-management` | P1-T01 | Chưa bắt đầu | User xem/thu hồi session đúng ownership và có audit foundation |
+| P1-T03 | Chuẩn hóa App shell | `feature/p1-t03-app-shell` | P1-T01 | Chưa bắt đầu | Layout responsive, navigation mượt và platform slots nhất quán |
+| P1-T04 | Quality foundation | `feature/p1-t04-quality-foundation` | P1-T01..P1-T03 | Chưa bắt đầu | Một lệnh quality chuẩn và test nền tảng P1 |
+| P2-T01 | Chuẩn hóa User Repository boundary | `feature/p2-t01-user-repository-boundary` | P1-T04, P2-08 | Chưa bắt đầu | User query thuộc Repository; Service/Livewire không nhận Builder |
+| P2-T02 | Audit correlation với Request ID | `feature/p2-t02-audit-request-correlation` | P1-T01, P2-07-02 | Chưa bắt đầu | Audit, realtime và response dùng cùng request ID |
+| P2-T03 | Account và session lifecycle | `feature/p2-t03-account-session-lifecycle` | P1-T02, P2-07 | Chưa bắt đầu | Khóa user/đổi mật khẩu thu hồi session đúng rule |
+| P2-T04 | UI states và form quản trị | `feature/p2-t04-admin-ui-states` | P1-T03, P2-T01..P2-T03 | Chưa bắt đầu | User/Department/Audit có state, modal/form thống nhất |
+| P3-T01 | Chuẩn hóa Lead Repository boundary | `feature/p3-t01-lead-repository-boundary` | P2-T01, P3-08 | Chưa bắt đầu | Lead query thuộc Repository; taxonomy không query trong Service |
+| P3-T02 | Duplicate guard tại backend | `feature/p3-t02-lead-duplicate-guard` | P3-T01, P2-T02 | Chưa bắt đầu | Mọi caller phải qua duplicate decision và recheck |
+| P3-T03 | Trash/restore conflict handling | `feature/p3-t03-lead-trash-conflict` | P3-T02 | Chưa bắt đầu | Restore xử lý duplicate active an toàn và có audit |
+| P3-T04 | UI states và form Lead | `feature/p3-t04-lead-ui-states` | P1-T03, P3-T02, P3-T03 | Chưa bắt đầu | Lead UI có state nhất quán và quyết định modal/full page rõ ràng |
+| TR-01 | Test và quality checkpoint toàn hệ thống | `feature/tr-01-system-quality-checkpoint` | P1/P2/P3 technical features | Chưa bắt đầu | Toàn bộ test/quality/build đạt |
+| TR-02 | Khôi phục và đồng bộ tài liệu | `docs/tr-02-requirements-sync` | TR-01 | Chưa bắt đầu | Requirement, skill, README và docs đúng code |
+| TR-03 | Tách và chuẩn hóa phase log | `docs/tr-03-phase-log-split` | TR-02 | Chưa bắt đầu | Roadmap gọn, lịch sử vẫn được giữ và liên kết |
 
-Luồng dependency:
+Luồng triển khai đề xuất:
 
 ```text
-P3-T01 Repository boundary
-    └── P3-T02 Request context + Audit + Logging
-          ├── P3-T03 Session management
-          ├── P3-T04 Lead duplicate/trash
-          └── P3-T05 App shell
-                    └── P3-T06 UI states/modal/form
-                              └── P3-T07 Quality/docs
-                                        └── P3-09 Conversion
+P1-T01 Request context/logging
+  ├── P1-T02 Session management
+  └── P1-T03 App shell
+          └── P1-T04 Quality foundation
+                  └── P2-T01 User Repository
+
+P1-T01 + P2-07-02 ──> P2-T02 Audit correlation
+P1-T02 + P2-07    ──> P2-T03 Account/session lifecycle
+P1-T03 + P2-T01..03 -> P2-T04 Admin UI states
+
+P2-T01 + P3-08 ──> P3-T01 Lead Repository
+P3-T01 + P2-T02 ─> P3-T02 Duplicate guard
+P3-T02 ──────────> P3-T03 Trash conflict
+P1-T03 + P3-T02..03 -> P3-T04 Lead UI states
+
+P1/P2/P3 technical features
+  └── TR-01 Test checkpoint
+        └── TR-02 Documentation
+              └── TR-03 Phase log
+                    └── P3-09 Conversion
+```
+
+## 5.1. Thứ tự bắt buộc để tạo và triển khai branch
+
+Mặc dù một số feature có thể chạy song song theo dependency, dự án hiện làm theo checkpoint từng feature. Vì vậy áp dụng **thứ tự tuyến tính dưới đây** để dễ kiểm thử, merge và rollback.
+
+| Thứ tự | Feature phải làm | Branch phải tạo | Chỉ bắt đầu khi | Sau khi đạt checkpoint |
+|---:|---|---|---|---|
+| 1 | P1-T01 — Request context và structured logging | `feature/p1-t01-request-context-logging` | Kế hoạch này được chủ dự án xác nhận | Merge về `develop`, chuyển bước 2 |
+| 2 | P1-T02 — Quản lý phiên đăng nhập | `feature/p1-t02-session-management` | P1-T01 đã test và merge | Merge về `develop`, chuyển bước 3 |
+| 3 | P1-T03 — Chuẩn hóa App shell | `feature/p1-t03-app-shell` | P1-T02 đã test và merge | Merge về `develop`, chuyển bước 4 |
+| 4 | P1-T04 — Quality foundation | `feature/p1-t04-quality-foundation` | P1-T03 đã test và merge | Chốt remediation P1, chuyển bước 5 |
+| 5 | P2-T01 — Chuẩn hóa User Repository boundary | `feature/p2-t01-user-repository-boundary` | P1-T04 đã test và merge | Merge về `develop`, chuyển bước 6 |
+| 6 | P2-T02 — Audit correlation với Request ID | `feature/p2-t02-audit-request-correlation` | P2-T01 đã test và merge | Merge về `develop`, chuyển bước 7 |
+| 7 | P2-T03 — Account và session lifecycle | `feature/p2-t03-account-session-lifecycle` | P2-T02 đã test và merge | Merge về `develop`, chuyển bước 8 |
+| 8 | P2-T04 — UI states và form quản trị | `feature/p2-t04-admin-ui-states` | P2-T03 đã test và merge | Chốt remediation P2, chuyển bước 9 |
+| 9 | P3-T01 — Chuẩn hóa Lead Repository boundary | `feature/p3-t01-lead-repository-boundary` | P2-T04 đã test và merge | Merge về `develop`, chuyển bước 10 |
+| 10 | P3-T02 — Duplicate guard tại backend | `feature/p3-t02-lead-duplicate-guard` | P3-T01 đã test và merge | Merge về `develop`, chuyển bước 11 |
+| 11 | P3-T03 — Trash/restore conflict handling | `feature/p3-t03-lead-trash-conflict` | P3-T02 đã test và merge | Merge về `develop`, chuyển bước 12 |
+| 12 | P3-T04 — UI states và form Lead | `feature/p3-t04-lead-ui-states` | P3-T03 đã test và merge | Chốt remediation P3, chuyển bước 13 |
+| 13 | TR-01 — Test và quality checkpoint toàn hệ thống | `feature/tr-01-system-quality-checkpoint` | P3-T04 đã test và merge | Merge về `develop`, chuyển bước 14 |
+| 14 | TR-02 — Khôi phục và đồng bộ tài liệu | `docs/tr-02-requirements-sync` | TR-01 đã đạt toàn bộ quality gate | Merge về `develop`, chuyển bước 15 |
+| 15 | TR-03 — Tách và chuẩn hóa phase log | `docs/tr-03-phase-log-split` | TR-02 đã được đọc và xác nhận | Chốt remediation, sau đó mới bắt đầu P3-09 |
+
+### Quy trình Git lặp lại cho từng branch
+
+Mỗi branch mới phải được tạo từ `develop` mới nhất sau khi branch trước đã được kiểm thử và merge:
+
+```bash
+git switch develop
+git pull --ff-only
+git switch -c <branch-trong-bảng>
+```
+
+Sau khi Codex hoàn tất feature:
+
+1. Codex cập nhật nhật ký feature trong file này.
+2. Codex đưa commit title/body đề xuất và dừng.
+3. Chủ dự án chạy checklist thủ công.
+4. Chỉ commit/merge khi chủ dự án xác nhận đạt.
+5. Quay lại `develop`, cập nhật branch và tạo branch ở dòng kế tiếp trong bảng.
+
+Không tạo sẵn nhiều branch cùng lúc. Không bắt đầu branch tiếp theo từ branch feature chưa được merge, vì sẽ làm dependency và rollback khó theo dõi.
+
+### Feature phải bắt đầu ngay bây giờ
+
+```text
+Bước 1
+Feature: P1-T01 — Request context và structured logging
+Branch: feature/p1-t01-request-context-logging
+Base branch: develop
 ```
 
 ---
 
-## P3-T01 — Chuẩn hóa Repository boundary
+# Phần A — Remediation Giai đoạn 1
+
+## P1-T01 — Request context và structured logging
 
 ### Mục đích
 
-Ngăn query Eloquent bị phân tán sang Livewire và Service, bảo đảm data scope luôn được áp dụng tại một nơi có thể kiểm thử.
-
-### Hiện trạng và đánh giá
-
-- `LeadRepository` đang public các method trả `Builder`: `visibleTo`, `filteredVisibleTo`, `trashedVisibleTo`.
-- Code gọi Repository có thể nối thêm `where`, `find`, `count`, dẫn đến Repository không còn sở hữu toàn bộ query.
-- `LeadDirectoryService` query trực tiếp `LeadSource` và `Tag`.
-- Repository hiện đã làm tốt filter, sort, pagination và data scope; cần refactor boundary, không viết lại toàn bộ.
-
-Đánh giá: **cần sửa trước khi thêm P3-09** để conversion không tiếp tục phụ thuộc query bị rò rỉ.
-
-### Phạm vi triển khai
-
-- Contract Repository chỉ trả Model, Collection, Paginator, DTO, scalar hoặc boolean.
-- Đưa builder dùng chung thành private method trong Eloquent Repository.
-- Bổ sung method có ý nghĩa nghiệp vụ như `countVisibleTo`, `findVisibleOrFail`, `paginateTrashedVisibleTo`.
-- Tạo `LeadSourceRepository` và `TagRepository` khi taxonomy cần query dùng lại.
-- Chuyển Livewire sang gọi Service thay vì tự lấy Repository cho các use case nghiệp vụ.
-- Transaction tiếp tục thuộc Service; Repository chỉ đọc/ghi dữ liệu.
-
-### Ngoài phạm vi
-
-- Không tạo generic `BaseRepository`.
-- Không thay ORM hoặc thay đổi schema Lead.
-- Không đổi data scope/permission matrix.
-
-### File dự kiến
-
-- `app/Repositories/Contracts/LeadRepository.php`
-- `app/Repositories/EloquentLeadRepository.php`
-- `app/Repositories/Contracts/LeadSourceRepository.php`
-- `app/Repositories/EloquentLeadSourceRepository.php`
-- `app/Repositories/Contracts/TagRepository.php`
-- `app/Repositories/EloquentTagRepository.php`
-- `app/Providers/RepositoryServiceProvider.php`
-- `app/Services/LeadDirectoryService.php`
-- Các Livewire Lead đang gọi trực tiếp `LeadRepository`
-- `tests/Feature/LeadRepositoryTest.php`
-- Test kiến trúc mới cho Repository boundary
-
-### Tiêu chí nghiệm thu
-
-- Không có Repository contract nào public `Eloquent\Builder`.
-- Không còn `Model::query()` trong Service thuộc phạm vi Lead.
-- Data scope vẫn áp dụng cho list, detail, trash và duplicate.
-- Không phát sinh N+1 ở danh sách Lead và thùng rác.
-- Toàn bộ test Lead hiện có vẫn đạt.
-
-### Checklist thủ công
-
-1. Đăng nhập lần lượt Super Admin, Sales Manager, Sales và Viewer.
-2. Kiểm tra danh sách, tìm kiếm, lọc, chi tiết và thùng rác vẫn đúng phạm vi.
-3. Xác nhận user phòng A không nhìn thấy Lead phòng B.
-4. Kiểm tra pagination và sort không thay đổi hành vi.
-
-### Checkpoint
-
-Dừng sau P3-T01 để chủ dự án kiểm thử list/detail/trash theo đủ role trước khi làm request context.
-
----
-
-## P3-T02 — Request context, Audit và Logging
-
-### Mục đích
-
-Cho phép truy vết một thao tác từ HTTP response đến application log và audit database bằng cùng một mã request.
+Thiết lập nền tảng truy vết dùng chung cho mọi HTTP request trước khi Audit, Session và các module mới mở rộng.
 
 ### Hiện trạng và đánh giá
 
 - Chưa có middleware cấp request ID.
-- `SystemAuditService` chưa lưu request ID chuẩn.
-- Log đang dùng cấu hình Laravel chung và chưa có context thống nhất.
-- Audit đã sanitize password/token và đã realtime; đây là nền tảng tốt để mở rộng.
+- HTTP response chưa trả `X-Request-ID`.
+- Log chưa có context chung gồm request ID, user, route và method.
+- Chưa có quy tắc redaction thống nhất ở tầng logging.
 
-Đánh giá: **ưu tiên cao**, nên làm trước session và các module nghiệp vụ mới.
+Đánh giá: **lệch nền tảng P1, ưu tiên cao nhất**.
 
 ### Phạm vi triển khai
 
-- Tạo `AssignRequestId` middleware và `RequestContext` dùng trong toàn request.
-- Chấp nhận inbound `X-Request-ID` chỉ khi đúng format/độ dài; nếu không thì sinh UUID mới.
-- Gắn `request_id`, `user_id`, route và method vào log context.
-- Trả `X-Request-ID` trong response.
-- Thêm cột `request_id` có index vào `activity_log` hoặc một cơ chế first-class tương đương.
-- `SystemAuditService` tự lấy request ID từ context; caller không truyền thủ công.
-- Trang lỗi hiển thị mã tra cứu nhưng không lộ stack trace ở production.
-- Cấu hình structured logging cho application/security; queue/import chỉ tạo khi use case bắt đầu.
+- Tạo `AssignRequestId` middleware và `RequestContext`.
+- Chỉ giữ inbound `X-Request-ID` hợp lệ; nếu thiếu/sai thì sinh UUID mới.
+- Gắn request ID vào request attribute, log context và response header.
+- Thêm context an toàn: user ID, route, method, environment.
+- Tạo structured application/security logging phù hợp môi trường.
 - Redact password, token, cookie, authorization header, secret và session ID.
+- Trang lỗi production hiển thị mã tra cứu, không lộ stack trace.
 
 ### Ngoài phạm vi
 
-- Không lưu toàn bộ request body vào log/audit.
-- Không triển khai hệ thống log tập trung bên ngoài trong feature này.
-- Không cài monitoring package khi chưa chốt nhà cung cấp.
+- Chưa gắn request ID vào audit database; việc đó thuộc P2-T02.
+- Không lưu toàn bộ request body.
+- Không cài monitoring provider bên ngoài.
 
 ### File dự kiến
 
 - `app/Http/Middleware/AssignRequestId.php`
 - `app/Support/RequestContext.php`
 - `bootstrap/app.php`
-- Migration bổ sung `request_id` cho `activity_log`
-- Model audit tùy chỉnh nếu Spatie Activity cần ánh xạ cột mới
-- `app/Services/SystemAuditService.php`
 - `config/logging.php`
-- Error views/exception configuration liên quan
-- Test request ID, logging context và audit correlation
+- Error/exception configuration liên quan
+- `tests/Feature/RequestContextTest.php`
 
 ### Tiêu chí nghiệm thu
 
 - Mọi HTTP response có `X-Request-ID`.
-- Request ID hợp lệ từ client được giữ lại; giá trị không hợp lệ bị thay mới.
-- Audit tạo trong request có cùng request ID với response.
-- Tìm audit theo request ID được hỗ trợ.
-- Log và audit không chứa dữ liệu nhạy cảm.
-- Audit realtime không bị gián đoạn.
+- Request ID hợp lệ được giữ; giá trị không hợp lệ bị thay mới.
+- Application/security log có cùng request ID.
+- Log không chứa secret hoặc session ID nguyên bản.
+- Error response production có mã tra cứu.
 
 ### Checklist thủ công
 
-1. Mở DevTools và xác nhận response có `X-Request-ID`.
-2. Sửa một Lead rồi tìm đúng audit bằng request ID đó.
-3. Gửi request ID không hợp lệ và xác nhận server sinh mã mới.
-4. Gây một lỗi validation; xác nhận log có request ID nhưng không có password/token.
+1. Kiểm tra response header bằng DevTools.
+2. Gửi request có/không có `X-Request-ID`.
+3. Đối chiếu response ID với Docker application log.
+4. Gây lỗi validation và xác nhận không lộ password/token.
 
 ### Checkpoint
 
-Dừng sau P3-T02 để chủ dự án kiểm tra response header, audit filter và log trước khi làm session management.
+Dừng sau P1-T01 để kiểm tra request header và log trước khi làm session/audit.
 
 ---
 
-## P3-T03 — Quản lý phiên đăng nhập
+## P1-T02 — Quản lý phiên đăng nhập
 
 ### Mục đích
 
-Cho người dùng biết tài khoản đang đăng nhập ở đâu và chủ động thu hồi phiên không còn tin cậy.
+Hoàn thiện phần authentication foundation: người dùng biết tài khoản đang đăng nhập ở đâu và chủ động thu hồi phiên không tin cậy.
 
 ### Hiện trạng và đánh giá
 
-- `SESSION_DRIVER=database` và bảng `sessions` đã có `user_id`, IP, user agent, payload, last activity.
-- Chưa có route/UI quản lý session.
-- Tài khoản inactive bị logout ở request kế tiếp, nhưng chưa chủ động xóa tất cả session khi khóa tài khoản.
+- Database session và bảng `sessions` đã tồn tại.
+- Chưa có UI hoặc Service quản lý session.
+- Middleware inactive chỉ xử lý phiên đang gửi request.
 
-Đánh giá: **thiếu chức năng bảo mật người dùng**, cần bổ sung trước production.
+Đánh giá: **thiếu chức năng bảo mật thuộc P1**.
 
 ### Phạm vi triển khai
 
-- Tạo trang `/settings/sessions` cho user hiện tại.
-- Hiển thị thiết bị/trình duyệt, IP đã che, hoạt động cuối và dấu hiệu phiên hiện tại.
-- Thu hồi một phiên khác.
-- Đăng xuất tất cả phiên khác sau khi xác nhận mật khẩu.
-- Hỗ trợ đăng xuất phiên hiện tại đúng chuẩn invalidate session và regenerate CSRF token.
-- Khi khóa tài khoản hoặc đổi/reset mật khẩu, thu hồi session theo rule được chốt.
-- Audit sự kiện revoke; chỉ lưu hash/đoạn nhận diện an toàn, không lưu session ID nguyên bản.
-- Authorization bằng ownership ở backend, không tin session ID từ UI.
+- Tạo `/settings/sessions` cho user hiện tại.
+- Hiển thị trình duyệt/thiết bị, IP đã che, hoạt động cuối và phiên hiện tại.
+- Thu hồi một phiên khác và tất cả phiên khác.
+- Yêu cầu xác nhận mật khẩu cho thao tác nhạy cảm.
+- Phiên hiện tại logout bằng invalidate session và regenerate CSRF token.
+- Repository bắt buộc lọc theo `user_id` của actor.
+- Chuẩn bị event/service để P2-T03 gọi khi khóa user/đổi mật khẩu.
+- Audit nền tảng chỉ lưu nhận diện session đã hash/rút gọn.
 
 ### Ngoài phạm vi
 
-- Không cài package phân tích User-Agent ở bước đầu.
-- Không xây trang Admin theo dõi session toàn hệ thống trong feature này.
-- Không lưu vị trí địa lý từ IP.
+- Chưa triển khai Admin xem session toàn hệ thống.
+- Không cài package User-Agent nếu chưa cần.
+- Không suy luận vị trí địa lý từ IP.
 
 ### File dự kiến
 
@@ -244,274 +251,424 @@ Cho người dùng biết tài khoản đang đăng nhập ở đâu và chủ �
 - `app/Repositories/Contracts/SessionRepository.php`
 - `app/Repositories/EloquentSessionRepository.php`
 - `app/Services/SessionManagementService.php`
-- `resources/views/settings/sessions.blade.php`
-- `resources/views/livewire/settings/session-manager.blade.php`
+- View settings/session
 - `routes/web.php`
-- Navigation/user menu liên quan
 - `tests/Feature/SessionManagementTest.php`
 
 ### Tiêu chí nghiệm thu
 
-- User chỉ đọc và xóa session thuộc chính mình.
-- Thu hồi session khiến thiết bị tương ứng bị logout ở request kế tiếp.
-- Thao tác tất cả phiên khác yêu cầu xác nhận mật khẩu.
-- Khóa tài khoản làm mất hiệu lực các session còn lại.
-- Audit có actor, action, thời gian và request ID.
+- User chỉ thấy và thu hồi session của chính mình.
+- Phiên bị thu hồi bị logout ở request kế tiếp.
+- Thu hồi tất cả phiên khác yêu cầu xác nhận mật khẩu.
+- Không log/audit session ID nguyên bản.
 
 ### Checklist thủ công
 
 1. Đăng nhập cùng tài khoản bằng hai trình duyệt.
-2. Xác nhận trang session hiển thị hai phiên và đánh dấu đúng phiên hiện tại.
-3. Thu hồi phiên còn lại và kiểm tra trình duyệt kia bị logout.
-4. Thử sửa request để xóa session user khác; phải bị từ chối.
-5. Khóa user từ tài khoản Admin và xác nhận user bị logout.
+2. Kiểm tra đánh dấu đúng phiên hiện tại.
+3. Thu hồi trình duyệt còn lại và xác nhận bị logout.
+4. Thử xóa session của user khác bằng request sửa tay; phải bị chặn.
 
 ### Checkpoint
 
-Dừng sau P3-T03 để chủ dự án kiểm thử bằng ít nhất hai trình duyệt trước khi tiếp tục.
+Dừng sau P1-T02 để kiểm thử bằng ít nhất hai trình duyệt.
 
 ---
 
-## P3-T04 — Hoàn thiện Lead duplicate/trash
+## P1-T03 — Chuẩn hóa App shell
 
 ### Mục đích
 
-Đảm bảo duplicate guard không thể bị bỏ qua ngoài Livewire và restore không tạo xung đột dữ liệu âm thầm.
+Hoàn thiện layout foundation đã bắt đầu ở P1, giảm giật khi chuyển trang và tạo slot thống nhất cho platform feature.
 
 ### Hiện trạng và đánh giá
 
-- Đã normalize email/số điện thoại và có index.
-- Đã tìm duplicate active + trashed theo data scope.
-- Livewire cảnh báo, cho mở Lead cũ hoặc `Vẫn lưu riêng`.
-- Đã soft delete/restore, giữ tag/history và audit.
-- Duplicate preflight chủ yếu được điều phối trong `LeadEditor`; caller mới như API/import có nguy cơ gọi save mà không kiểm tra.
-- Restore chưa cảnh báo khi một Lead active khác đang dùng contact giống Lead trong trash.
-- P3-08 chủ ý chưa tự động merge/ghi đè.
-
-Đánh giá: nền tảng **đã tốt nhưng boundary chưa đủ an toàn**.
-
-### Phạm vi triển khai
-
-- Đưa duplicate decision contract xuống Service backend.
-- Recheck candidate ngay trước transaction lưu.
-- Chuẩn hóa quyết định: cancel, open existing, save separately, restore existing; merge chỉ định nghĩa contract nếu chưa đủ domain.
-- `save separately` yêu cầu xác nhận gắn với signature mới nhất và lưu audit lý do/candidate IDs.
-- Restore phải chạy duplicate preflight với active Lead.
-- Xử lý owner inactive và duplicate conflict trong cùng transaction an toàn.
-- Không để duplicate query lộ bản ghi ngoài data scope.
-- Giữ hard delete ngoài UI.
-
-### Ngoài phạm vi
-
-- Không tự động merge Lead trong feature này nếu chưa chốt rule tag/history/converted records.
-- Không thêm Company/Contact/Opportunity.
-- Không đặt unique constraint tuyệt đối cho email/phone vì hệ thống cho phép lưu riêng có chủ ý.
-
-### File dự kiến
-
-- DTO/enum cho duplicate decision trong technical layer hiện tại
-- `app/Services/DuplicateLeadService.php`
-- `app/Services/LeadManagementService.php`
-- `app/Services/LeadLifecycleService.php`
-- `app/Repositories/Contracts/LeadRepository.php`
-- `app/Repositories/EloquentLeadRepository.php`
-- `app/Livewire/Leads/LeadEditor.php`
-- `app/Livewire/Leads/LeadTrash.php`
-- Các view modal duplicate/restore
-- `tests/Feature/LeadDuplicateLifecycleTest.php`
-
-### Tiêu chí nghiệm thu
-
-- Gọi Service trực tiếp vẫn bắt buộc duplicate decision.
-- Đổi contact sau cảnh báo làm confirmation cũ mất hiệu lực.
-- Lưu riêng có reason và audit request ID.
-- Restore có duplicate active phải dừng và hiển thị lựa chọn.
-- Hai user khác data scope không nhìn thấy candidate của nhau.
-- Tag, assignment/status history và audit được giữ nguyên khi trash/restore.
-
-### Checklist thủ công
-
-1. Tạo Lead trùng email khác hoa/thường và kiểm tra modal.
-2. Tạo Lead trùng số với định dạng `+84`, `0084`, dấu cách/gạch.
-3. Chọn lưu riêng, nhập lý do và kiểm tra audit.
-4. Xóa một Lead, tạo Lead active cùng contact rồi thử restore Lead cũ.
-5. Kiểm tra Sales phòng A không thấy duplicate thuộc phòng B.
-
-### Checkpoint
-
-Dừng sau P3-T04 để chủ dự án kiểm thử duplicate create/edit/restore trước khi chạm UI nền tảng.
-
----
-
-## P3-T05 — Chuẩn hóa App shell
-
-### Mục đích
-
-Tạo layout dùng chung ổn định, chuyển trang mượt và sẵn slot cho tính năng platform mà không query nặng ở mọi request.
-
-### Hiện trạng và đánh giá
-
-- Sidebar responsive, dark mode, active navigation và `wire:navigate` đã có.
-- Global search/quick create/notification mới là placeholder hoặc chưa hoàn chỉnh.
-- Layout cần được tách thành component nhỏ để tránh một file chứa quá nhiều trách nhiệm.
-
-Đánh giá: **không chặn nghiệp vụ**, nhưng nên chuẩn hóa trước khi thêm nhiều module.
+- Sidebar responsive, active navigation, dark mode và `wire:navigate` đã có.
+- Topbar, user menu, global search, quick create và notification slot chưa hoàn chỉnh.
+- Layout cần tách trách nhiệm để tránh một file lớn.
 
 ### Phạm vi triển khai
 
 - Tách app layout thành sidebar, topbar, user menu và page header.
-- Chuẩn hóa desktop/mobile navigation và active state.
-- Giữ sidebar/topbar ổn định qua Livewire navigation bằng pattern phù hợp.
-- Thêm quick-create theo permission cho các action đã tồn tại.
-- Global search và notification có slot rõ ràng; chưa có backend thì hiển thị trạng thái disabled có chủ ý.
-- User menu có profile/session/help/logout.
-- Hiển thị trạng thái kết nối realtime ở vị trí phù hợp.
-- Không chạy query danh sách nghiệp vụ trực tiếp trong layout.
+- Chuẩn hóa desktop/mobile navigation, active state và keyboard focus.
+- Dùng Livewire navigation/persist pattern phù hợp để hạn chế full reload/nhấp nháy.
+- Quick create chỉ hiện action đã tồn tại và đúng permission.
+- Global search/notification có slot rõ ràng; nếu chưa có backend thì disabled có chủ ý.
+- User menu có session/help/logout.
+- Không chạy query nghiệp vụ nặng trực tiếp trong layout.
 
 ### Ngoài phạm vi
 
-- Không triển khai global search backend đầy đủ.
-- Không triển khai notification center nghiệp vụ trước phase tương ứng.
-- Không thay Flux UI bằng component library khác.
-
-### File dự kiến
-
-- App layout hiện tại
-- Component layout sidebar/topbar/user-menu/page-header
-- Navigation config/helper nếu cần
-- CSS/JS nhỏ phục vụ persistent navigation
-- Test navigation theo role
+- Chưa xây global search backend.
+- Chưa xây notification center nghiệp vụ.
+- Không thay Flux UI/Tailwind bằng thư viện khác.
 
 ### Tiêu chí nghiệm thu
 
-- Chuyển Dashboard, Leads, Users, Departments và Audit không full reload.
-- Không nháy theme hoặc giật layout rõ rệt.
-- Mobile navigation và keyboard focus hoạt động.
-- Link/action ẩn đúng permission; backend vẫn authorize độc lập.
-- Không tăng query lặp theo số lượng menu.
+- Chuyển trang nội bộ không full reload.
+- Không nháy dark mode hoặc giật layout rõ rệt.
+- Mobile và keyboard navigation hoạt động.
+- Menu đúng permission và không tăng query theo số menu.
 
 ### Checklist thủ công
 
-1. Chuyển liên tục giữa Dashboard, Lead và Phòng ban.
-2. Kiểm tra desktop/mobile và dark/light mode.
+1. Chuyển liên tục Dashboard, Lead, Users, Departments và Audit.
+2. Kiểm tra mobile/desktop, dark/light mode.
 3. Đăng nhập đủ role để kiểm tra navigation.
-4. Tắt Reverb và xác nhận trạng thái kết nối hiển thị hợp lý.
-5. Kiểm tra logout và link quản lý session từ user menu.
+4. Kiểm tra user menu và link session.
 
 ### Checkpoint
 
-Dừng sau P3-T05 để chủ dự án đánh giá độ mượt và navigation trước khi chuẩn hóa từng page state.
+Dừng sau P1-T03 để chủ dự án đánh giá độ mượt và layout.
 
 ---
 
-## P3-T06 — UI states, modal và form
+## P1-T04 — Quality foundation
 
 ### Mục đích
 
-Đảm bảo các màn hình có cùng cách phản hồi khi tải, không có dữ liệu, lỗi, thành công và thao tác form.
-
-### Hiện trạng và đánh giá
-
-- Một số màn có loading, empty và success nhưng cách trình bày chưa đồng nhất.
-- Skeleton, error/retry và filtered-empty chưa đầy đủ ở các màn cũ.
-- Form ngắn, form dài và modal chưa có decision rule được ghi rõ.
-
-Đánh giá: **cần chuẩn hóa theo pattern dùng lại**, không refactor giao diện hàng loạt thiếu kiểm soát.
+Tạo một quy trình kiểm tra lặp lại được cho mọi feature sau này.
 
 ### Phạm vi triển khai
 
-- Tạo component state dùng lại: loading, skeleton, empty, filtered-empty, error/retry và success feedback.
-- Dùng Flux UI Free trước; fallback Blade/Tailwind khi component không có trong bản Free.
-- Chuẩn hóa `wire:loading`, `wire:target` và disable submit để chống thao tác lặp.
-- Form ngắn/action xác nhận dùng modal.
-- Form dài, nhiều section hoặc cần URL riêng được phép dùng full page và phải ghi lý do.
-- Validation nằm trong Livewire Form Object; save/mutation nằm trong Service.
-- Khi mở modal phải reset data/error; quản lý focus, Escape và tab order.
-- Áp dụng trước cho Lead, User, Department và Audit đang có.
-
-### Ngoài phạm vi
-
-- Không redesign toàn bộ thương hiệu/màu sắc.
-- Không thêm JavaScript framework mới.
-- Không chuyển Lead create/edit dài sang modal chỉ để đồng nhất hình thức.
-
-### File dự kiến
-
-- `resources/views/components/ui/*`
-- Livewire views của Lead/User/Department/Audit
-- Livewire components và Form Objects liên quan
-- Test component cho state, reset modal và duplicate submit
+- Thêm script `composer quality` hoặc script tương đương.
+- Chạy test, Pint, PHPStan và frontend build theo thứ tự rõ ràng.
+- Chuẩn hóa database test tách biệt local development.
+- Bổ sung test nền tảng request context, session và app shell permission.
+- Không đánh dấu pass nếu lệnh chưa chạy thật.
 
 ### Tiêu chí nghiệm thu
 
-- Mỗi trang dữ liệu có loading, empty, filtered-empty và error/retry hợp lý.
-- Submit hai lần không tạo mutation trùng.
-- Modal không giữ dữ liệu/error từ lần mở trước.
-- Lead form tiếp tục full page với lý do được ghi; action ngắn dùng modal.
-- UI responsive, dark mode và keyboard cơ bản đạt.
-
-### Checklist thủ công
-
-1. Dùng network throttling để quan sát loading/skeleton.
-2. Tìm kiếm giá trị không tồn tại để kiểm tra filtered-empty.
-3. Gây lỗi backend có kiểm soát và thử Retry.
-4. Mở/đóng modal nhiều lần để kiểm tra reset.
-5. Double-click nút Save và xác nhận chỉ có một mutation.
+- Một lệnh quality chạy được trong Docker.
+- Không ghi vào database development.
+- Kết quả từng bước hiển thị rõ và fail-fast.
+- Test P1 mới đạt.
 
 ### Checkpoint
 
-Dừng sau P3-T06 để chủ dự án kiểm thử UI trên desktop/mobile và dark mode.
+Dừng sau P1-T04 để xác nhận baseline P1 trước khi sửa P2.
 
 ---
 
-## P3-T07 — Quality gate, tài liệu và phase log
+# Phần B — Remediation Giai đoạn 2
+
+## P2-T01 — Chuẩn hóa User Repository boundary
 
 ### Mục đích
 
-Chốt toàn bộ technical checkpoint bằng test, tài liệu đúng với code và phase file dễ bảo trì.
+Đảm bảo data scope User được cưỡng chế trong Repository và query không rò rỉ sang Service/Livewire.
 
 ### Hiện trạng và đánh giá
 
-- Source hiện có nhiều Pest feature tests, nhưng cần bổ sung test cho các boundary mới.
-- Phiên audit gần nhất không chạy lại được runtime vì WSL không có lệnh Docker/PHP.
-- `README.md` và trạng thái phase có nguy cơ lệch code.
-- `docs/requirements.md` cùng skill dự án đang thiếu trên branch `develop`.
-- `PROJECT_PHASES.md` đang chứa cả roadmap và nhật ký rất dài.
-
-Đánh giá: **bắt buộc hoàn tất trước P3-09** để có baseline tin cậy.
+- `UserRepository::visibleTo()` public `Eloquent\Builder`.
+- Caller có thể nối `where`, `find`, `orderBy` ngoài Repository.
+- Department/Audit Repository chủ yếu đã trả dữ liệu cụ thể; cần audit contract nhưng không viết lại nếu không vi phạm.
 
 ### Phạm vi triển khai
 
-- Bổ sung test Repository boundary, request ID, audit correlation, logging redaction, session ownership/revoke, duplicate restore conflict, navigation và UI state quan trọng.
-- Tạo một quality command chuẩn chạy test, Pint, PHPStan và frontend build.
-- Khôi phục/hợp nhất `docs/requirements.md` và skill dự án từ nguồn chuẩn sau khi xác định commit/branch.
-- Cập nhật README đúng checkpoint P3-T07.
-- Cập nhật architecture, security, audit, session, duplicate flow và deployment commands.
-- Rút gọn `PROJECT_PHASES.md` thành roadmap/status/dependency/checkpoint link.
-- Chuyển nhật ký dài sang `docs/checkpoints/P2/*`, `docs/checkpoints/P3/*` mà không làm mất lịch sử.
-- File này tiếp tục là backlog và checkpoint cho remediation; sau khi hoàn tất có thể archive dưới docs.
+- Repository contract chỉ trả Model, Collection, Paginator, DTO, scalar hoặc boolean.
+- Chuyển Builder thành private query method trong Eloquent implementation.
+- Bổ sung method có ý nghĩa: paginate visible users, active options, role filters, find visible user.
+- Service chỉ điều phối use case; Livewire không nối query.
+- Không đổi permission/data scope matrix.
+
+### Tiêu chí nghiệm thu
+
+- `UserRepository` không public Builder.
+- User list/form/assignment vẫn đúng data scope.
+- Admin/Sales Manager/Sales/Viewer không nhìn thấy dữ liệu ngoài quyền.
+- Test P2 repository và authorization đạt.
+
+### Checkpoint
+
+Dừng sau P2-T01 để kiểm thử danh sách và quản lý user theo đủ role.
+
+---
+
+## P2-T02 — Audit correlation với Request ID
+
+### Mục đích
+
+Liên kết audit nghiệp vụ P2 với request context P1 để tra cứu một thao tác xuyên suốt.
+
+### Hiện trạng và đánh giá
+
+- `SystemAuditService` đã sanitize dữ liệu nhạy cảm và broadcast realtime.
+- `activity_log` chưa có request ID first-class.
+- Audit filter chưa tìm theo request ID.
+
+### Phạm vi triển khai
+
+- Thêm cột/index `request_id` hoặc cơ chế first-class tương đương cho activity log.
+- `SystemAuditService` tự lấy ID từ `RequestContext`, caller không truyền thủ công.
+- Audit lưu route/method an toàn khi có HTTP request.
+- Job/CLI không giả lập HTTP request ID; dùng correlation context phù hợp khi phát sinh.
+- Bổ sung filter request ID trên màn Audit.
+- Giữ private Reverb channel và quyền Super Admin/Admin IT.
+
+### Tiêu chí nghiệm thu
+
+- Response, application log và audit cùng request ID.
+- Tìm audit theo request ID được.
+- Realtime audit vẫn cập nhật.
+- Password/token/session ID không xuất hiện trong properties.
+
+### Checklist thủ công
+
+1. Sửa User/Department và lấy request ID từ response.
+2. Tìm đúng audit theo ID.
+3. Kiểm tra Admin ngoài IT không truy cập Audit.
+4. Kiểm tra realtime không cần reload.
+
+### Checkpoint
+
+Dừng sau P2-T02 để chủ dự án kiểm tra correlation và quyền truy cập Audit.
+
+---
+
+## P2-T03 — Account và session lifecycle
+
+### Mục đích
+
+Đảm bảo thay đổi trạng thái bảo mật của User có hiệu lực với tất cả phiên liên quan.
+
+### Phạm vi triển khai
+
+- Khi khóa user: thu hồi toàn bộ session của user trong transaction/use case phù hợp.
+- Khi đổi/reset mật khẩu: áp dụng rule thu hồi các phiên khác và cập nhật remember token.
+- Không tự thu hồi phiên nếu chỉ đổi tên/phòng ban/role, trừ khi policy bảo mật được chốt khác.
+- Không cho admin cuối cùng tự khóa nếu rule P2 hiện tại cấm.
+- Audit actor, target, số session bị thu hồi và request ID; không lưu session ID.
+
+### Tiêu chí nghiệm thu
+
+- User bị khóa mất quyền ở tất cả thiết bị.
+- Đổi/reset mật khẩu vô hiệu phiên theo rule đã ghi.
+- Thay đổi thông tin thường không logout ngoài ý muốn.
+- Audit không chứa credential/session secret.
+
+### Checklist thủ công
+
+1. Đăng nhập user trên hai trình duyệt rồi khóa từ Admin.
+2. Xác nhận cả hai phiên bị vô hiệu.
+3. Mở lại user và kiểm tra không tự phục hồi session cũ.
+4. Đổi mật khẩu và kiểm tra rule phiên.
+
+### Checkpoint
+
+Dừng sau P2-T03 để kiểm thử account/session lifecycle bằng nhiều trình duyệt.
+
+---
+
+## P2-T04 — UI states và form quản trị
+
+### Mục đích
+
+Chuẩn hóa trải nghiệm User, Department và Audit theo app shell P1.
+
+### Phạm vi triển khai
+
+- State dùng chung: loading, skeleton, empty, filtered-empty, error/retry, success.
+- Form ngắn User/Department ưu tiên Flux modal nếu phù hợp.
+- Validation nằm trong Livewire Form Object; mutation nằm trong Service.
+- Disable submit theo `wire:target` để chống gửi lặp.
+- Modal reset data/error khi mở; focus, Escape và tab order hợp lý.
+- Audit filter có loading/error/empty state nhất quán.
 
 ### Ngoài phạm vi
 
-- Không xóa lịch sử feature cũ.
-- Không sửa lại Git history.
-- Không đánh dấu pass nếu lệnh chưa chạy thật.
-- Không làm CI/CD production thay cho P9.
+- Không thay permission matrix.
+- Không redesign thương hiệu.
+- Không thêm JavaScript framework.
 
-### File dự kiến
+### Tiêu chí nghiệm thu
 
-- Các test Feature/Unit liên quan P3-T01..P3-T06
-- `composer.json` nếu thêm script `quality`
-- `README.md`
-- `docs/requirements.md`
-- `docs/architecture.md`
-- `docs/database.md`
-- `docs/deployment.md`
-- `docs/permissions.md`
-- `docs/checkpoints/P2/*`
-- `docs/checkpoints/P3/*`
-- `PROJECT_PHASES.md`
-- Skill dự án dưới `.agents/skills/` sau khi khôi phục nguồn chuẩn
+- User/Department/Audit có đầy đủ state cần thiết.
+- Không duplicate submit.
+- Modal không giữ lỗi/dữ liệu cũ.
+- Responsive, dark mode và keyboard đạt mức cơ bản.
+
+### Checkpoint
+
+Dừng sau P2-T04 để nghiệm thu toàn bộ remediation P2.
+
+---
+
+# Phần C — Remediation Giai đoạn 3
+
+## P3-T01 — Chuẩn hóa Lead Repository boundary
+
+### Mục đích
+
+Đưa toàn bộ Lead query về Repository trước khi xây conversion P3-09.
+
+### Hiện trạng và đánh giá
+
+- `LeadRepository` public `visibleTo`, `filteredVisibleTo`, `trashedVisibleTo` trả Builder.
+- `LeadDirectoryService` query trực tiếp `LeadSource` và `Tag`.
+- Livewire/Service có thể nối query ngoài Repository.
+- Data scope/filter hiện hoạt động tốt; chỉ refactor boundary, không viết lại nghiệp vụ.
+
+### Phạm vi triển khai
+
+- Contract chỉ trả Model, Collection, Paginator, DTO, scalar hoặc boolean.
+- Query builder trở thành private method trong Eloquent Repository.
+- Tạo Repository taxonomy khi source/tag có query dùng lại.
+- Livewire gọi Service thay vì tự lấy Repository cho use case nghiệp vụ.
+- Transaction tiếp tục thuộc Service.
+
+### Ngoài phạm vi
+
+- Không tạo generic BaseRepository.
+- Không đổi schema hoặc permission Lead.
+- Không thêm conversion.
+
+### Tiêu chí nghiệm thu
+
+- Không có Lead Repository contract public Builder.
+- Không còn `LeadSource::query()`/`Tag::query()` trong Service.
+- List/detail/trash/duplicate vẫn đúng data scope.
+- Không phát sinh N+1.
+
+### Checklist thủ công
+
+1. Kiểm tra list/search/filter/sort/pagination.
+2. Kiểm tra detail/edit/trash theo đủ role.
+3. Xác nhận phòng A không thấy Lead phòng B.
+
+### Checkpoint
+
+Dừng sau P3-T01 để kiểm thử Repository boundary trước duplicate hardening.
+
+---
+
+## P3-T02 — Duplicate guard tại backend
+
+### Mục đích
+
+Ngăn API/import/service caller tương lai bypass duplicate check đang được điều phối từ Livewire.
+
+### Phạm vi triển khai
+
+- Đưa duplicate decision contract xuống Service.
+- Recheck candidate ngay trước transaction lưu.
+- Chuẩn hóa quyết định: cancel, open existing, save separately; restore/merge thuộc luồng phù hợp.
+- `save separately` yêu cầu confirmation gắn với contact signature mới nhất và reason.
+- Audit override với candidate IDs, reason và request ID; không lặp contact nhạy cảm không cần thiết.
+- Duplicate query tiếp tục áp dụng data scope.
+
+### Ngoài phạm vi
+
+- Không unique tuyệt đối email/phone vì hệ thống cho phép lưu riêng.
+- Không tự merge Lead.
+- Không thêm Company/Contact/Opportunity.
+
+### Tiêu chí nghiệm thu
+
+- Gọi Service trực tiếp vẫn bắt buộc duplicate decision.
+- Đổi contact làm confirmation cũ mất hiệu lực.
+- Lưu riêng có reason và audit.
+- Không lộ candidate ngoài data scope.
+
+### Checklist thủ công
+
+1. Thử email khác hoa/thường.
+2. Thử số `+84`, `0084`, dấu cách/gạch.
+3. Xác nhận rồi đổi contact sang duplicate khác.
+4. Lưu riêng và kiểm tra audit.
+
+### Checkpoint
+
+Dừng sau P3-T02 để kiểm thử create/edit duplicate trước trash conflict.
+
+---
+
+## P3-T03 — Trash/restore conflict handling
+
+### Mục đích
+
+Không để restore Lead cũ âm thầm tạo xung đột với Lead active mới có cùng contact.
+
+### Phạm vi triển khai
+
+- Restore chạy duplicate preflight với active Lead.
+- Nếu có conflict: mở Lead active, hủy restore hoặc restore riêng có xác nhận/reason.
+- Merge chỉ định nghĩa contract; không triển khai khi chưa chốt tag/history/converted relations.
+- Owner inactive và duplicate conflict được xử lý trong transaction an toàn.
+- Giữ tag, assignment/status history và audit.
+- Không hard delete qua UI.
+
+### Tiêu chí nghiệm thu
+
+- Restore duplicate active phải dừng và hiển thị lựa chọn.
+- Restore riêng có reason/audit/request ID.
+- Owner inactive được unassign theo rule hiện tại.
+- Không thấy Lead trash ngoài data scope.
+
+### Checklist thủ công
+
+1. Xóa Lead A.
+2. Tạo Lead B active cùng email/số điện thoại.
+3. Restore Lead A và kiểm tra conflict UI.
+4. Kiểm tra cancel/restore riêng và audit.
+5. Xác nhận tag/history vẫn còn.
+
+### Checkpoint
+
+Dừng sau P3-T03 để kiểm thử trash/restore trước khi chỉnh Lead UI.
+
+---
+
+## P3-T04 — UI states và form Lead
+
+### Mục đích
+
+Chuẩn hóa feedback và modal/form của Lead mà không ép form dài vào modal.
+
+### Phạm vi triển khai
+
+- Áp dụng loading, skeleton, empty, filtered-empty, error/retry và success state dùng chung.
+- Lead create/edit tiếp tục full page vì dài, có nhiều section và URL riêng; ghi rõ quyết định.
+- Delete/restore/assign/status/duplicate decision dùng modal.
+- Validation thuộc Form Object; mutation thuộc Service.
+- Chống duplicate submit và reset modal state/error đúng cách.
+- Đảm bảo responsive, dark mode và keyboard cơ bản.
+
+### Tiêu chí nghiệm thu
+
+- List/detail/editor/trash có state nhất quán.
+- Không tạo mutation trùng khi double-click.
+- Modal không giữ state cũ.
+- Full-page Lead form có rationale trong tài liệu.
+
+### Checklist thủ công
+
+1. Throttle network để xem loading/skeleton.
+2. Kiểm tra filtered-empty và error/retry.
+3. Double-click Save/Delete/Restore.
+4. Mở/đóng các modal nhiều lần.
+5. Kiểm tra mobile/dark mode/keyboard.
+
+### Checkpoint
+
+Dừng sau P3-T04 để nghiệm thu toàn bộ remediation P3.
+
+---
+
+# Phần D — Checkpoint xuyên suốt
+
+## TR-01 — Test và quality checkpoint toàn hệ thống
+
+### Mục đích
+
+Chứng minh remediation P1/P2/P3 hoạt động cùng nhau và không làm hồi quy nghiệp vụ đã hoàn tất.
+
+### Phạm vi triển khai
+
+- Bổ sung/hoàn thiện test cho Repository boundary, request context, logging redaction, session ownership/revoke, audit correlation, duplicate/restore conflict, navigation và UI state quan trọng.
+- Chạy test riêng theo feature và toàn bộ suite.
+- Chạy Pint, PHPStan, Vite build, migration status và Docker health.
+- Không sử dụng database development cho automated test.
 
 ### Quality commands dự kiến
 
@@ -524,35 +681,84 @@ docker compose exec app php artisan migrate:status
 docker compose ps
 ```
 
-Nếu môi trường không có Docker/PHP, phải ghi rõ blocker và không đánh dấu hoàn tất.
-
 ### Tiêu chí nghiệm thu
 
-- Test liên quan và toàn bộ suite đạt.
-- Pint, PHPStan và Vite build đạt.
-- Không còn link tài liệu bị hỏng trong README/phase plan.
-- Requirement và skill chuẩn có mặt trên branch.
-- `PROJECT_PHASES.md` chỉ còn thông tin điều phối cần thiết; nhật ký cũ vẫn truy cập được.
-- Mỗi P3-T01..P3-T07 có checkpoint, kết quả lệnh và manual checklist thực tế.
-
-### Checklist thủ công
-
-1. Chạy toàn bộ quality commands trong Docker.
-2. Mở các link từ README và phase plan.
-3. Kiểm tra ngẫu nhiên checkpoint P2/P3 sau khi tách file.
-4. Chạy lại luồng Login → Session → Lead duplicate → Trash/Restore → Audit.
-5. Xác nhận commit history không bị rewrite và dữ liệu local không bị xóa ngoài chủ ý.
+- Test/Pint/PHPStan/build đạt.
+- Docker services cần thiết healthy.
+- Nếu môi trường thiếu Docker/PHP phải ghi blocker và chưa được đánh dấu hoàn tất.
+- Manual smoke flow Login → Session → User → Lead → Trash/Restore → Audit đạt.
 
 ### Checkpoint
 
-Dừng sau P3-T07 để chủ dự án nghiệm thu toàn bộ technical remediation. Chỉ sau xác nhận mới bắt đầu P3-09.
+Dừng sau TR-01 để chủ dự án xác nhận quality baseline trước khi chỉnh tài liệu lớn.
 
 ---
 
-## 6. Mẫu nhật ký phải cập nhật sau mỗi feature
+## TR-02 — Khôi phục và đồng bộ tài liệu
+
+### Mục đích
+
+Đưa tài liệu về cùng trạng thái với code đã được kiểm chứng.
+
+### Phạm vi triển khai
+
+- Xác định branch/commit chuẩn và khôi phục `docs/requirements.md` cùng skill dự án.
+- Cập nhật README đúng checkpoint remediation.
+- Cập nhật architecture, security, session, audit/request ID, logging, Repository boundary và Lead duplicate/trash.
+- Ghi rationale full-page/modal và package decision.
+- Kiểm tra toàn bộ link nội bộ.
+
+### Tiêu chí nghiệm thu
+
+- Requirement và skill chuẩn tồn tại trên branch.
+- README không còn nói dự án dừng ở phase cũ.
+- Documentation khớp code và kết quả TR-01.
+- Không có link tài liệu bị hỏng.
+
+### Checkpoint
+
+Dừng sau TR-02 để chủ dự án đọc requirement/docs trước khi tách phase log.
+
+---
+
+## TR-03 — Tách và chuẩn hóa phase log
+
+### Mục đích
+
+Giữ `PROJECT_PHASES.md` dễ đọc mà không làm mất lịch sử triển khai.
+
+### Phạm vi triển khai
+
+- `PROJECT_PHASES.md` chỉ giữ mã, tên, dependency, branch, status và checkpoint link.
+- Chuyển nhật ký chi tiết sang:
+
+```text
+docs/checkpoints/P1/
+docs/checkpoints/P2/
+docs/checkpoints/P3/
+docs/checkpoints/technical/
+```
+
+- Giữ nguyên nội dung lịch sử và lệnh đã chạy; không rewrite Git history.
+- File này trở thành index remediation hoặc được archive dưới `docs/checkpoints/technical/` sau nghiệm thu.
+
+### Tiêu chí nghiệm thu
+
+- Roadmap chính gọn và tra cứu nhanh.
+- Mọi checkpoint cũ vẫn truy cập được.
+- Link giữa roadmap, remediation và checkpoint hoạt động.
+- P3-09 chỉ bắt đầu sau khi TR-03 được xác nhận.
+
+### Checkpoint
+
+Dừng sau TR-03 để nghiệm thu toàn bộ technical remediation trước P3-09.
+
+---
+
+## 6. Mẫu nhật ký sau mỗi feature
 
 ````markdown
-### Nhật ký P3-Txx — Tên feature
+### Nhật ký Pn-Txx/TR-xx — Tên feature
 
 Trạng thái: **hoàn tất triển khai, chờ chủ dự án kiểm thử**.
 
@@ -588,26 +794,31 @@ Checklist thủ công:
 
 Commit đề xuất:
 
-`(feature-p3-txx): tiêu đề ngắn`
+`(feature-pn-txx): tiêu đề ngắn`
 
-Checkpoint P3-Txx: dừng tại đây để chủ dự án kiểm thử.
+Checkpoint: dừng tại đây để chủ dự án kiểm thử.
 ````
 
-## 7. Definition of Done cho từng feature kỹ thuật
+## 7. Definition of Done
 
-- Đúng phạm vi của một feature và không kéo theo feature kế tiếp.
+- Đúng phạm vi một feature và không kéo theo feature kế tiếp.
 - Backend cưỡng chế authorization, ownership, data scope và validation.
-- Không làm rò rỉ Builder/secret/session ID qua layer hoặc log.
-- Có test cho happy path, permission denied, validation và edge case quan trọng.
-- Test liên quan, toàn bộ test, Pint, PHPStan và frontend build đạt hoặc có blocker được chứng minh.
-- UI có loading, error và duplicate-submit guard nếu feature có tương tác.
-- Audit và request ID được áp dụng cho mutation nếu use case yêu cầu.
-- Tài liệu/checkpoint được cập nhật đúng kết quả thực tế.
+- Không rò rỉ Builder/secret/session ID qua layer hoặc log.
+- Có test happy path, permission denied, validation và edge case quan trọng.
+- Test liên quan, toàn suite, Pint, PHPStan và frontend build đạt hoặc có blocker được chứng minh.
+- UI có loading/error và duplicate-submit guard khi có tương tác.
+- Mutation quan trọng có audit và request ID sau P2-T02.
+- Tài liệu/checkpoint ghi đúng kết quả thực tế.
 - Có commit title/body đề xuất.
 - Đã dừng để chủ dự án nghiệm thu.
 
 ## 8. Trạng thái hiện tại
 
-Technical remediation đang ở trạng thái: **đã lập kế hoạch, chưa bắt đầu P3-T01**.
+- Giai đoạn P1 remediation: **chưa bắt đầu**.
+- Giai đoạn P2 remediation: **chưa bắt đầu**.
+- Giai đoạn P3 remediation: **chưa bắt đầu**.
+- Checkpoint xuyên suốt: **chưa bắt đầu**.
 
-Feature bắt đầu đề xuất: **P3-T01 — Chuẩn hóa Repository boundary**.
+Feature bắt đầu đề xuất: **P1-T01 — Request context và structured logging**.
+
+Branch cần tạo đầu tiên: **`feature/p1-t01-request-context-logging` từ `develop` mới nhất**.
