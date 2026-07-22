@@ -33,3 +33,7 @@ All references from `leads` use `ON DELETE SET NULL`, preserving the business re
 Lead status and priority are stored as indexed strings and cast to `LeadStatus` and `LeadPriority` backed enums. This keeps PostgreSQL queries portable while giving application code typed values. Email and phone are indexed but intentionally not unique because duplicate detection is a P3-08 business workflow.
 
 `owner_id` is the canonical assignment column so `DataScopeService` can apply owned and department scopes consistently. `converted_company_id` and `converted_contact_id` are deferred until their target tables exist; P5-09 will add those foreign keys with the conversion transaction.
+
+## Lead demo data
+
+P3-05 adds an idempotent `DemoLeadSeeder` for local development. It maintains 30 records identified by fixed `lead.demoNN@salesflow.test` addresses: 18 belong to the Sales department and 12 to Marketing. The dataset cycles through every Lead status and priority, assigns an active source and exactly two tags, and uses existing demo users as owners so policy and data-scope behavior can be inspected in the UI. Running the root `DatabaseSeeder` again updates these records rather than duplicating them.

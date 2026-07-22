@@ -950,7 +950,7 @@ Mục tiêu: hoàn thiện vòng đời Lead từ tiếp nhận đến chuyển 
 | P3-02 | ✅ Lead schema và domain | `feature/p3-02-lead-domain` | P3-01 | BIGINT tự tăng, owner, department, source, contact fields, indexes, factory và pivot `lead_tag` |
 | P3-03 | ✅ Repository và bộ lọc Lead | `feature/p3-03-lead-query-filters` | P3-02 | Search, filter, sort, pagination và reusable data-scope query |
 | P3-04 | ✅ Lead policy và visibility | `feature/p3-04-lead-authorization` | P2-04, P3-03 | Policy CRUD/assign/convert/restore đúng permission matrix |
-| P3-05 | Danh sách Lead | `feature/p3-05-lead-list` | P3-03, P3-04 | Livewire table responsive, URL filters, bulk selection foundation và empty states |
+| P3-05 | ✅ Danh sách Lead | `feature/p3-05-lead-list` | P3-03, P3-04 | Livewire table responsive, URL filters, bulk selection foundation và empty states |
 | P3-06 | Form và chi tiết Lead | `feature/p3-06-lead-form-detail` | P3-05 | Create/edit/detail, validation, source/tags/owner và audit cơ bản |
 | P3-07 | Assignment và status history | `feature/p3-07-lead-assignment-status` | P3-06 | Gán owner, chuyển trạng thái hợp lệ, lịch sử và event |
 | P3-08 | Duplicate, soft delete và restore | `feature/p3-08-lead-duplicate-delete` | P3-06 | Phát hiện email/phone trùng, cảnh báo/merge decision, trash/restore |
@@ -1195,6 +1195,73 @@ Checklist kiểm thử:
 7. P3-04 chưa có trang Lead; route và navigation sẽ được nối với Policy ở P3-05.
 
 Checkpoint P3-04: dừng tại đây để chủ dự án kiểm thử authorization trước khi bắt đầu P3-05.
+
+### Nhật ký feature P3-05 — Danh sách Lead
+
+Trạng thái: **hoàn tất triển khai, chờ chủ dự án kiểm thử**.
+
+Đã triển khai:
+
+- Thêm route `GET /leads`, `LeadController` và navigation có điều kiện theo `LeadPolicy::viewAny`.
+- Tạo `LeadDirectoryService` làm lớp điều phối giữa Livewire và repository; không đặt truy vấn nghiệp vụ trực tiếp trong component/view.
+- Tạo Livewire `LeadList` với tìm kiếm, trạng thái, ưu tiên, nguồn, tag, owner, phòng ban, khoảng ngày, sắp xếp và số dòng mỗi trang.
+- Đồng bộ toàn bộ filter/sort/pagination vào URL để có thể tải lại hoặc chia sẻ đúng trạng thái danh sách; giá trị URL không hợp lệ được chuẩn hóa theo allowlist.
+- Dữ liệu, tùy chọn owner và phòng ban đều được giới hạn bằng data scope của người đang đăng nhập.
+- Hiển thị bảng trên desktop và card trên mobile, có loading indicator, tổng số Lead trong phạm vi và hai empty state riêng biệt.
+- Thêm nền tảng bulk selection cho trang hiện tại; lựa chọn bị xóa khi đổi trang hoặc đổi filter và ID ngoài phạm vi trang bị loại bỏ ở backend.
+- Tạo `DemoLeadSeeder` idempotent gồm 30 Lead, phân bổ 18 Lead cho Sales và 12 Lead cho Marketing, phủ đủ trạng thái/ưu tiên và gán 2 tag mỗi Lead.
+- Không thêm migration hoặc package. P3-05 chỉ đọc dữ liệu; create/edit/detail và bulk action thực tế thuộc các feature tiếp theo.
+
+Luồng chạy:
+
+1. Trình duyệt gọi `GET /leads`; `LeadController` kiểm tra `LeadPolicy::viewAny` rồi render trang chứa Livewire component.
+2. `LeadList` đọc và chuẩn hóa trạng thái URL, sau đó chuyển state sang `LeadDirectoryService`.
+3. Service tạo `LeadFilterData` typed và gọi `LeadRepository`; repository áp dụng data scope trước filter, sort allowlist và pagination.
+4. Livewire render bảng/card từ paginator đã eager-load; thao tác filter hoặc phân trang chỉ cập nhật component qua Livewire và giữ URL đồng bộ.
+5. Bulk selection chỉ chấp nhận ID nằm trên trang dữ liệu hiện tại của actor, tạo nền an toàn cho action ở P3-07/P3-08.
+
+File chính:
+
+- `app/Http/Controllers/LeadController.php`
+- `app/Livewire/Leads/LeadList.php`
+- `app/Services/LeadDirectoryService.php`
+- `resources/views/leads/index.blade.php`
+- `resources/views/livewire/leads/lead-list.blade.php`
+- `database/seeders/DemoLeadSeeder.php`
+- `tests/Feature/LeadListTest.php`
+- `tests/Feature/DemoLeadSeederTest.php`
+
+Kết quả xác minh:
+
+- Test riêng P3-05: **7 test đạt, 93 assertions**.
+- Toàn dự án: **119 test đạt, 756 assertions**.
+- PostgreSQL local có đúng **30 Lead demo**: Sales 18, Marketing 12 và 60 liên kết tag.
+- Pint đạt trên 132 file; PHPStan/Larastan không có lỗi.
+- Vite production build đạt; toàn bộ 10 service Docker đang chạy và các service có healthcheck đều `healthy`.
+
+Lệnh đã chạy:
+
+```bash
+docker compose exec app php artisan migrate --seed --force
+docker compose exec app php artisan test tests/Feature/DemoLeadSeederTest.php tests/Feature/LeadListTest.php
+docker compose exec app php artisan test
+docker compose exec app ./vendor/bin/pint --test
+docker compose exec app ./vendor/bin/phpstan analyse --memory-limit=512M --no-progress
+docker compose exec vite npm run build
+docker compose ps
+```
+
+Checklist kiểm thử thủ công:
+
+1. Đăng nhập `admin@salesflow.test`, mở `/leads` và xác nhận thấy 30 Lead demo.
+2. Thử kết hợp tìm kiếm, trạng thái, ưu tiên, nguồn và bộ lọc nâng cao; tải lại trang và xác nhận filter vẫn nằm trong URL.
+3. Đăng nhập tài khoản Sales Manager, Sales và Viewer để xác nhận danh sách/owner/phòng ban chỉ hiện đúng data scope.
+4. Thu nhỏ trình duyệt để xác nhận bảng chuyển thành card mobile mà không tràn ngang.
+5. Chọn một số Lead, chọn toàn trang, chuyển trang hoặc đổi filter và xác nhận selection được xóa.
+6. Chọn một bộ lọc không có kết quả rồi xóa bộ lọc; xác nhận hai empty state hiển thị đúng ngữ cảnh.
+7. P3-05 chưa có nút tạo/sửa/xóa Lead; các thao tác này được triển khai từ P3-06 trở đi.
+
+Checkpoint P3-05: dừng tại đây để chủ dự án kiểm thử danh sách Lead trước khi bắt đầu P3-06.
 
 ## Giai đoạn 4 — Companies và Contacts
 

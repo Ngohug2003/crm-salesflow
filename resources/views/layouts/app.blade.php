@@ -24,6 +24,9 @@
                 </div>
                 <nav class="mt-8 space-y-1">
                     <a href="{{ route('dashboard') }}" wire:navigate.hover @class(['nav-link', 'nav-link-active' => request()->routeIs('dashboard')])><span>⌂</span><span x-show="sidebar">Dashboard</span></a>
+                    @can('viewAny', \App\Models\Lead::class)
+                        <a href="{{ route('leads.index') }}" wire:navigate.hover @class(['nav-link', 'nav-link-active' => request()->routeIs('leads.*')])><span>◎</span><span x-show="sidebar">Khách hàng tiềm năng</span></a>
+                    @endcan
                     @can('viewAny', \App\Models\User::class)
                         <a href="{{ route('users.index') }}" wire:navigate.hover @class(['nav-link', 'nav-link-active' => request()->routeIs('users.*')])><span>♙</span><span x-show="sidebar">Người dùng</span></a>
                     @endcan
@@ -33,7 +36,7 @@
                     @can('viewAny', \Spatie\Activitylog\Models\Activity::class)
                         <a href="{{ route('audit-logs.index') }}" wire:navigate.hover @class(['nav-link', 'nav-link-active' => request()->routeIs('audit-logs.*')])><span>◴</span><span x-show="sidebar">Nhật ký kiểm toán</span></a>
                     @endcan
-                    @foreach (['Leads' => '◎', 'Companies' => '▦', 'Contacts' => '♙', 'Opportunities' => '◇', 'Pipelines' => '◫', 'Activities' => '◷', 'Tasks' => '✓', 'Reports' => '⌁'] as $label => $icon)
+                    @foreach (['Companies' => '▦', 'Contacts' => '♙', 'Opportunities' => '◇', 'Pipelines' => '◫', 'Activities' => '◷', 'Tasks' => '✓', 'Reports' => '⌁'] as $label => $icon)
                         <span class="nav-link cursor-not-allowed opacity-55" title="Có trong phase tiếp theo"><span>{{ $icon }}</span><span x-show="sidebar">{{ $label }}</span></span>
                     @endforeach
                     <a href="{{ route('help.roles') }}" wire:navigate.hover @class(['nav-link', 'nav-link-active' => request()->routeIs('help.roles')])><span>?</span><span x-show="sidebar">Vai trò & quyền</span></a>
