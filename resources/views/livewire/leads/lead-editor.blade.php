@@ -60,7 +60,9 @@
                 @else
                     <div class="rounded-xl border border-slate-200 px-4 py-3 dark:border-slate-800">
                         <p class="text-sm font-medium">Người phụ trách</p>
-                        <p class="mt-1 text-sm text-slate-500">Lead được giữ cho chính bạn vì tài khoản không có quyền phân công.</p>
+                        <p class="mt-1 text-sm text-slate-500">
+                            {{ $leadId === null ? 'Lead được giữ cho chính bạn vì tài khoản không có quyền phân công.' : 'Thay đổi người phụ trách tại trang chi tiết để hệ thống lưu đầy đủ lịch sử.' }}
+                        </p>
                     </div>
                 @endif
             </div>

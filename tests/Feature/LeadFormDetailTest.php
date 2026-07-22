@@ -164,12 +164,10 @@ it('limits manager assignment to active users in the same department', function 
         ->assertForbidden();
 });
 
-it('updates lead fields tags assignment and audit without changing status', function (): void {
+it('updates lead fields and tags without bypassing assignment or status workflow', function (): void {
     $departmentA = Department::factory()->create();
-    $departmentB = Department::factory()->create();
     $admin = p306Actor('admin');
     $oldOwner = p306Actor('sales', $departmentA);
-    $newOwner = p306Actor('sales', $departmentB);
     $oldTag = Tag::factory()->create();
     $newTags = Tag::factory()->count(2)->create();
     $lead = Lead::factory()->ownedBy($oldOwner)->create([
@@ -184,7 +182,6 @@ it('updates lead fields tags assignment and audit without changing status', func
         ->test(LeadEditor::class, ['leadId' => $lead->getKey()])
         ->assertSet('form.fullName', 'Tên cũ')
         ->set('form.fullName', 'Tên đã cập nhật')
-        ->set('form.ownerId', (string) $newOwner->getKey())
         ->set('form.tagIds', $newTags->modelKeys())
         ->set('form.notes', 'Nội dung mới')
         ->call('save')
@@ -193,8 +190,8 @@ it('updates lead fields tags assignment and audit without changing status', func
     $lead->refresh();
 
     expect($lead->full_name)->toBe('Tên đã cập nhật')
-        ->and($lead->owner_id)->toBe($newOwner->getKey())
-        ->and($lead->department_id)->toBe($departmentB->getKey())
+        ->and($lead->owner_id)->toBe($oldOwner->getKey())
+        ->and($lead->department_id)->toBe($departmentA->getKey())
         ->and($lead->status)->toBe(LeadStatus::Qualified)
         ->and($lead->updated_by)->toBe($admin->getKey())
         ->and($lead->tags()->pluck('tags.id')->sort()->values()->all())->toBe($newTags->modelKeys());
@@ -203,7 +200,7 @@ it('updates lead fields tags assignment and audit without changing status', func
 
     expect($activity->event)->toBe('updated')
         ->and($activity->properties->get('old')['owner_id'])->toBe($oldOwner->getKey())
-        ->and($activity->properties->get('new')['owner_id'])->toBe($newOwner->getKey())
+        ->and($activity->properties->get('new')['owner_id'])->toBe($oldOwner->getKey())
         ->and($activity->properties->get('new')['status'])->toBe(LeadStatus::Qualified->value);
 });
 

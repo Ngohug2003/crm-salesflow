@@ -76,7 +76,7 @@ final class LeadEditor extends Component
     #[Computed]
     public function canAssign(): bool
     {
-        return $this->currentUser()->can('leads.assign');
+        return $this->leadId === null && $this->currentUser()->can('leads.assign');
     }
 
     public function save(): mixed

@@ -71,6 +71,8 @@ P3-03 applies this rule to `EloquentLeadRepository`: all, department, owned and 
 
 P3-06 enforces assignment again inside `LeadManagementService`, not only through form visibility. A Sales user creating a Lead is the narrow exception: the service ignores an empty owner and self-assigns the new Lead, but rejects any different owner. Sales Manager can assign only an active user visible inside the same department. Admin/Super Admin can assign an active visible user globally. On update, every owner change requires `leads.assign`, and `department_id` is derived from the resulting owner so a crafted request cannot create an inconsistent scope pair.
 
+From P3-07 onward, owner changes on an existing Lead are rejected by the general editor even for an Admin. They must pass through `LeadAssignmentService`, which applies `LeadPolicy::assign`, a scoped row lock, active-owner validation and immutable history. Status changes similarly pass through `LeadStatusTransitionService` and `LeadPolicy::update`; hiding unavailable options in Livewire is only UX, while the backend transition matrix remains authoritative. Viewer/read-only scope cannot invoke either mutation.
+
 ## Role assignment safeguards
 
 P2-07 permits multiple roles per user; `DataScopeResolver` continues to choose the broadest effective scope. Every managed user must have at least one configured role.

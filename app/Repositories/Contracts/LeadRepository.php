@@ -27,6 +27,8 @@ interface LeadRepository
 
     public function findVisibleOrFail(User $actor, int $leadId): Lead;
 
+    public function findVisibleForUpdateOrFail(User $actor, int $leadId): Lead;
+
     /** @param array<string, mixed> $attributes */
     public function create(array $attributes): Lead;
 
