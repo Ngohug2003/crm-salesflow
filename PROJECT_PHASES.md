@@ -947,7 +947,7 @@ Mục tiêu: hoàn thiện vòng đời Lead từ tiếp nhận đến chuyển 
 | Mã | Feature | Branch đề xuất | Phụ thuộc | Kết quả cần đạt |
 |---|---|---|---|---|
 | P3-01 | ✅ Lead sources và tags | `feature/p3-01-lead-taxonomy` | P2-08 | Schema/model/factory/seed nguồn Lead và Tag, chuẩn bị contract many-to-many |
-| P3-02 | Lead schema và domain | `feature/p3-02-lead-domain` | P3-01 | BIGINT tự tăng, owner, department, source, contact fields, indexes, factory và pivot `lead_tag` |
+| P3-02 | ✅ Lead schema và domain | `feature/p3-02-lead-domain` | P3-01 | BIGINT tự tăng, owner, department, source, contact fields, indexes, factory và pivot `lead_tag` |
 | P3-03 | Repository và bộ lọc Lead | `feature/p3-03-lead-query-filters` | P3-02 | Search, filter, sort, pagination và reusable data-scope query |
 | P3-04 | Lead policy và visibility | `feature/p3-04-lead-authorization` | P2-04, P3-03 | Policy CRUD/assign/convert/restore đúng permission matrix |
 | P3-05 | Danh sách Lead | `feature/p3-05-lead-list` | P3-03, P3-04 | Livewire table responsive, URL filters, bulk selection foundation và empty states |
@@ -1011,9 +1011,72 @@ Checklist kiểm thử thủ công:
 3. Mở `tags`; xác nhận có 6 bản ghi và các slug như `moi`, `tiem-nang-cao`, `vip`.
 4. Chạy lại seeder và xác nhận số lượng vẫn là 8 nguồn, 6 tag.
 5. Chạy `docker compose exec app php artisan test tests/Feature/LeadTaxonomyDomainTest.php`.
-6. Xác nhận chưa có bảng `lead_tag`; bảng này thuộc phạm vi P3-02.
+6. Trên branch P3-01 chưa có `lead_tag`; từ P3-02 bảng này được tạo cùng `leads`.
 
 Checkpoint P3-01: dừng tại đây để chủ dự án kiểm thử taxonomy trước khi bắt đầu P3-02.
+
+### Nhật ký feature P3-02 — Lead schema và domain
+
+Trạng thái: **hoàn tất triển khai, chờ chủ dự án kiểm thử**.
+
+Đã triển khai:
+
+- Tạo bảng `leads` dùng khóa chính `BIGINT` tự tăng và Soft Delete.
+- Lead liên kết nullable với nguồn, người phụ trách, phòng ban, người tạo và người cập nhật; xóa kỹ thuật bản ghi liên quan sẽ đặt foreign key về `NULL`, không làm mất Lead.
+- Dùng `owner_id` thay cho `assigned_to` để tương thích trực tiếp với `DataScopeService` và repository của các module CRM.
+- Lưu đầy đủ thông tin liên hệ: họ tên, email, điện thoại chính/phụ, công ty, chức vụ, website và địa chỉ.
+- Có giá trị dự kiến `DECIMAL(15,2)`, ghi chú, thời điểm chuyển đổi và metadata người tạo/cập nhật.
+- `LeadStatus` có 6 trạng thái `new/contacted/qualified/unqualified/converted/lost`; `LeadPriority` có 4 mức `low/medium/high/urgent`, kèm label tiếng Việt.
+- Tạo pivot `lead_tag` có timestamps, unique cặp Lead–Tag và cascade khi force delete; Soft Delete Lead vẫn giữ tag để khôi phục nguyên trạng.
+- Hoàn thiện quan hệ Eloquent hai chiều trên Lead, Source, Tag, User và Department.
+- `LeadFactory` hỗ trợ owner/phòng ban đồng nhất, actor tạo/cập nhật, status, priority và converted state.
+- Tạo 11 index PostgreSQL phục vụ status, owner, department, source, priority, email, phone, thời gian tạo và audit users.
+- Chưa tạo `converted_company_id`/`converted_contact_id` vì bảng đích chỉ có ở Giai đoạn 4; P5-09 sẽ thêm foreign key và transaction chuyển đổi sau khi đủ schema.
+- Chưa tạo dữ liệu Lead demo hoặc UI; các phần này thuộc feature danh sách/form tiếp theo.
+
+File chính:
+
+- `database/migrations/2026_07_22_220000_create_leads_table.php`
+- `app/Models/Lead.php`
+- `app/Enums/LeadStatus.php`, `app/Enums/LeadPriority.php`
+- `database/factories/LeadFactory.php`
+- `app/Models/LeadSource.php`, `app/Models/Tag.php`, `app/Models/User.php`, `app/Models/Department.php`
+- `tests/Feature/LeadDomainTest.php`
+- `docs/database.md`, `docs/architecture.md`
+
+Kết quả xác minh:
+
+- Test riêng P3-02: **9 test đạt, 50 assertions**.
+- Nhóm domain P3-01/P3-02: **16 test đạt, 70 assertions**.
+- Toàn dự án: **99 test đạt, 547 assertions**.
+- Pint đạt trên 120 file; PHPStan/Larastan không có lỗi.
+- Migration P3-02 đã chạy trên PostgreSQL; `leads`, `lead_tag` và 11 index tồn tại đúng thiết kế.
+- Vite production build đạt; toàn bộ 10 service Docker đang chạy và các service có healthcheck đều `healthy`.
+- Không cài thêm Composer/NPM package và không cần build lại image Docker.
+
+Lệnh đã chạy:
+
+```bash
+docker compose exec app php artisan migrate --force
+docker compose exec app php artisan test tests/Feature/LeadTaxonomyDomainTest.php tests/Feature/LeadDomainTest.php
+docker compose exec app php artisan test
+docker compose exec app ./vendor/bin/pint --test
+docker compose exec app ./vendor/bin/phpstan analyse --memory-limit=512M --no-progress
+docker compose exec vite npm run build
+docker compose exec app php artisan migrate:status
+docker compose ps
+```
+
+Checklist kiểm thử thủ công:
+
+1. Chạy `docker compose exec app php artisan migrate --force` và xác nhận không còn migration pending.
+2. Trong DBeaver, mở bảng `leads`; xác nhận ID là `bigint`, `estimated_value` là `numeric(15,2)` và có `deleted_at`.
+3. Mở `lead_tag`; xác nhận có `lead_id`, `tag_id`, timestamps và unique constraint cho cặp Lead–Tag.
+4. Kiểm tra Foreign Keys của `leads` đều dùng `ON DELETE SET NULL`; hai foreign key pivot dùng `ON DELETE CASCADE`.
+5. Chạy `docker compose exec app php artisan test tests/Feature/LeadDomainTest.php` và xác nhận 9 test đạt.
+6. Bảng `leads` chưa có dữ liệu demo là đúng phạm vi P3-02; dùng factory trong test cho đến khi feature danh sách/form bổ sung seed trực quan.
+
+Checkpoint P3-02: dừng tại đây để chủ dự án kiểm thử schema/domain trước khi bắt đầu P3-03.
 
 ## Giai đoạn 4 — Companies và Contacts
 
