@@ -4,7 +4,7 @@ SalesFlow CRM is a modular-monolith Laravel application for managing leads, cust
 
 ## Current checkpoint
 
-Phase 1 establishes Laravel 12, Livewire 3, Flux UI, Fortify, Sanctum, PostgreSQL, Redis, Horizon, Reverb and the Docker runtime. CRM modules are added only after the current phase is accepted.
+Phase 2 has implemented Departments, Users, the five-role RBAC catalog, backend data scopes, audit logs and realtime audit updates. The project is stopped at checkpoint P2-08 for authorization acceptance before Lead development begins.
 
 ## Stack
 

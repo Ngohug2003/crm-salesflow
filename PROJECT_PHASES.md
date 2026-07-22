@@ -333,7 +333,7 @@ Mục tiêu: hoàn thiện tổ chức người dùng và ranh giới phân quy�
 | P2-07 | ✅ Gán phòng ban và role | `feature/p2-07-user-role-assignment` | P2-03, P2-06 | UI gán role/phòng ban, chống tự khóa admin cuối cùng, audit thay đổi |
 | P2-07-01 | ✅ Audit log toàn hệ thống | `feature/p2-07-user-role-assignment` | P2-07 | Audit dùng chung, màn hình bảng/log, lọc và giới hạn truy cập cho Super Admin/Admin IT |
 | P2-07-02 | ✅ Realtime Audit Log | `feature/p2-07-user-role-assignment` | P2-07-01 | Private Reverb channel, Echo client và Livewire tự cập nhật log mới |
-| P2-08 | Authorization test và checkpoint | `feature/p2-08-authorization-checkpoint` | P2-02..P2-07-02 | Test đủ 5 role, navigation theo quyền, seed demo và checklist nghiệm thu |
+| P2-08 | ✅ Authorization test và checkpoint | `feature/p2-08-authorization-checkpoint` | P2-02..P2-07-02 | Test đủ 5 role, navigation theo quyền, seed demo và checklist nghiệm thu |
 
 ### Nhật ký feature P2-01 — Department schema và domain
 
@@ -890,7 +890,55 @@ Checklist kiểm thử thủ công:
 
 Checkpoint P2-07-02: dừng để chủ dự án kiểm thử bằng hai phiên trình duyệt trước khi bắt đầu P2-08.
 
-Checkpoint: dừng để kiểm thử đăng nhập, quản lý user/department và toàn bộ ma trận quyền trước P3.
+### Nhật ký feature P2-08 — Authorization test và checkpoint
+
+Trạng thái: **hoàn tất triển khai, chờ chủ dự án nghiệm thu Giai đoạn 2**.
+
+Mục tiêu đã đạt:
+
+- Có bộ test checkpoint độc lập chạy trên dữ liệu thật của `DatabaseSeeder`, bao phủ đủ 5 role: `super-admin`, `admin`, `sales-manager`, `sales` và `viewer`.
+- Mỗi role được kiểm tra cả route trực tiếp và link navigation; việc ẩn menu không được dùng thay cho authorization backend.
+- Ma trận Gate kiểm tra quyền tạo/sửa/xóa User và Department; Sales Manager chỉ đọc User/Department trong phạm vi phòng ban.
+- Audit Log chỉ mở cho Super Admin hoặc Admin thuộc phòng IT; Admin ngoài IT bị chặn cả route, Gate và navigation.
+- Tài khoản inactive bị đăng xuất khỏi phiên hiện có; tài khoản chưa xác minh email bị chuyển đến trang xác minh.
+- Policy User được gia cố để Admin thường không thể sửa hoặc xóa Super Admin.
+- Seeder có tài khoản active, verified cho đủ 5 role và có thể chạy lại không tạo dữ liệu trùng.
+
+Tài khoản kiểm thử local (mật khẩu chung: `SalesFlow@123`):
+
+| Role | Email | Phòng ban | Kỳ vọng chính |
+|---|---|---|---|
+| Super Admin | `admin@salesflow.test` | MANAGEMENT | Toàn quyền, xem Audit Log |
+| Admin | `it.admin@salesflow.test` | IT | Quản lý User/Department, xem Audit Log |
+| Sales Manager | `demo03@salesflow.test` | SALES | Xem User/Department trong phòng ban, không được ghi |
+| Sales | `demo04@salesflow.test` | SALES | Không thấy trang quản trị User/Department/Audit |
+| Viewer | `demo12@salesflow.test` | SALES | Chỉ đọc các module CRM được cấp quyền |
+
+Trường hợp kiểm thử bổ sung:
+
+- `demo01@salesflow.test`: Admin ngoài IT, không được xem Audit Log.
+- `demo07@salesflow.test`: chưa xác minh email.
+- `demo08@salesflow.test`: tài khoản đã khóa.
+
+File chính:
+
+- `tests/Feature/AuthorizationCheckpointTest.php`
+- `app/Policies/UserPolicy.php`
+- `docs/authorization-checkpoint.md`
+- `docs/permissions.md`
+
+Kết quả xác minh:
+
+- Test checkpoint riêng: **15 test đạt, 115 assertions**.
+- Nhóm tích hợp authorization Giai đoạn 2: **58 test đạt, 337 assertions**.
+- Toàn dự án: **83 test đạt, 477 assertions**.
+- Pint đạt trên 107 file; PHPStan/Larastan không có lỗi.
+- Vite production build đạt; toàn bộ 10 service Docker đang chạy và các service có healthcheck đều `healthy`.
+- Ma trận bao phủ route, navigation, Gate backend, data scope, trạng thái tài khoản, audit, realtime và seed demo.
+
+Checklist nghiệm thu đầy đủ và lệnh thực hiện nằm tại `docs/authorization-checkpoint.md`.
+
+Checkpoint P2-08: dừng tại đây để chủ dự án kiểm thử; chỉ bắt đầu P3-01 sau khi checkpoint Giai đoạn 2 được xác nhận.
 
 ## Giai đoạn 3 — Leads
 

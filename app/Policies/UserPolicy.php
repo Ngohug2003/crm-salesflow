@@ -40,6 +40,11 @@ final readonly class UserPolicy
 
     public function delete(User $actor, User $target): bool
     {
+        if ($target->hasRole((string) config('crm.rbac.super_admin_role'))
+            && ! $actor->hasRole((string) config('crm.rbac.super_admin_role'))) {
+            return false;
+        }
+
         return $this->dataScope->canWrite($actor)
             && $actor->can('users.delete')
             && $this->withinScope($actor, $target);

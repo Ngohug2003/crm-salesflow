@@ -56,8 +56,11 @@ The current foundation is exercised on `UserPolicy`, `DepartmentPolicy` and `Elo
 P2-07 permits multiple roles per user; `DataScopeResolver` continues to choose the broadest effective scope. Every managed user must have at least one configured role.
 
 - Only a `super-admin` may assign, remove or edit a user carrying the `super-admin` role. A regular `admin` may assign `admin`, `sales-manager`, `sales` and `viewer`.
+- A regular `admin` is also denied by `UserPolicy::delete` for a Super Admin target, so a future deletion endpoint cannot bypass the same protection.
 - The system must retain at least one active user carrying either `super-admin` or `admin`. Locking or demoting the last such user is rejected inside the same database transaction as the account update.
 - User attributes and roles are updated atomically. Successful create/update operations write an `activity_log` entry with actor, target, old/new name, email, department, active state and roles.
 - Audit properties never contain a plaintext password or password hash; they only contain a `password_changed` boolean.
 - Audit viewing is restricted to `super-admin`, or an `admin` carrying `audit-logs.view` whose department code is `IT`. This condition is enforced by `AuditLogPolicy`, not only by navigation visibility.
 - Only `super-admin` may add, remove or edit IT department members, preventing a regular admin from granting itself audit access.
+
+The executable acceptance matrix for these rules is in `tests/Feature/AuthorizationCheckpointTest.php`. The manual checkpoint procedure and seeded test accounts are documented in `docs/authorization-checkpoint.md`.
