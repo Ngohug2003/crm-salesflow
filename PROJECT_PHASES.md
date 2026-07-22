@@ -1,5 +1,7 @@
 # SalesFlow CRM — Kế hoạch giai đoạn và nhật ký triển khai
 
+> **Nguồn requirement chuẩn:** [`docs/requirements.md`](docs/requirements.md). File này chỉ quản lý phạm vi feature, dependency, checkpoint và nhật ký thực hiện. Khi có xung đột, áp dụng thứ tự ưu tiên tại mục 1.1 của requirement.
+
 Tài liệu này là checkpoint chính của dự án. Quy ước làm việc từ ngày 20/07/2026:
 
 1. Chỉ triển khai đúng phạm vi của **một giai đoạn**.
@@ -14,8 +16,8 @@ Tài liệu này là checkpoint chính của dự án. Quy ước làm việc t�
 |---|---|---|---|
 | 0 | Phân tích kiến trúc và dữ liệu | Hoàn tất tài liệu ban đầu | Chưa xác nhận |
 | 1 | Khởi tạo nền tảng và Docker | Hoàn tất triển khai | Chờ chủ dự án kiểm thử |
-| 2 | Users, Departments, Roles, Permissions | Đang làm — P2-01 đến P2-07 hoàn tất | Chờ kiểm thử P2-07 |
-| 3 | Leads | Chưa bắt đầu | — |
+| 2 | Users, Departments, Roles, Permissions | Hoàn tất P2-01 đến P2-08 | Đã qua checkpoint |
+| 3 | Leads | Đang làm — P3-01 đến P3-08 hoàn tất | P3-09 là feature tiếp theo |
 | 4 | Companies và Contacts | Chưa bắt đầu | — |
 | 5 | Pipelines và Opportunities | Chưa bắt đầu | — |
 | 6 | Activities và Tasks | Chưa bắt đầu | — |
