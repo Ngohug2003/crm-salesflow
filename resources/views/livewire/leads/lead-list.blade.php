@@ -7,6 +7,9 @@
         </div>
         <div class="flex items-center gap-2">
             <flux:badge color="emerald">{{ $this->visibleTotal }} Lead trong phạm vi</flux:badge>
+            @can('create', \App\Models\Lead::class)
+                <flux:button :href="route('leads.create')" wire:navigate variant="primary" icon="plus">Tạo Lead</flux:button>
+            @endcan
         </div>
     </div>
 
@@ -201,13 +204,19 @@
                                     </flux:table.cell>
                                     <flux:table.cell>
                                         <div class="flex min-w-32 flex-col items-start gap-1.5">
-                                            <flux:badge :color="$this->statusColor($lead->status)" size="sm">{{ $lead->status->label() }}</flux:badge>
-                                            <flux:badge :color="$this->priorityColor($lead->priority)" size="sm">{{ $lead->priority->label() }}</flux:badge>
+                                            <flux:badge :color="$lead->status->color()" size="sm">{{ $lead->status->label() }}</flux:badge>
+                                            <flux:badge :color="$lead->priority->color()" size="sm">{{ $lead->priority->label() }}</flux:badge>
                                         </div>
                                     </flux:table.cell>
                                     <flux:table.cell align="end">
                                         <p class="font-medium">{{ $lead->estimated_value !== null ? number_format((float) $lead->estimated_value, 0, ',', '.').' ₫' : '—' }}</p>
                                         <p class="mt-1 text-xs text-slate-500">{{ $lead->created_at?->format('d/m/Y') }}</p>
+                                        <div class="mt-2 flex justify-end gap-1">
+                                            <flux:button :href="route('leads.show', $lead)" wire:navigate size="sm" variant="ghost">Xem</flux:button>
+                                            @can('update', $lead)
+                                                <flux:button :href="route('leads.edit', $lead)" wire:navigate size="sm" variant="ghost">Sửa</flux:button>
+                                            @endcan
+                                        </div>
                                     </flux:table.cell>
                                 </flux:table.row>
                             @endforeach
@@ -232,7 +241,7 @@
                                             <h3 class="font-semibold">{{ $lead->full_name }}</h3>
                                             <p class="mt-1 text-sm text-slate-500">{{ $lead->company_name ?: 'Chưa có công ty' }}</p>
                                         </div>
-                                        <flux:badge :color="$this->statusColor($lead->status)" size="sm">{{ $lead->status->label() }}</flux:badge>
+                                        <flux:badge :color="$lead->status->color()" size="sm">{{ $lead->status->label() }}</flux:badge>
                                     </div>
 
                                     <div class="mt-3 grid gap-2 text-sm sm:grid-cols-2">
@@ -243,13 +252,20 @@
                                     </div>
 
                                     <div class="mt-3 flex flex-wrap gap-1.5">
-                                        <flux:badge :color="$this->priorityColor($lead->priority)" size="sm">{{ $lead->priority->label() }}</flux:badge>
+                                        <flux:badge :color="$lead->priority->color()" size="sm">{{ $lead->priority->label() }}</flux:badge>
                                         @if ($lead->source)
                                             <flux:badge size="sm">{{ $lead->source->name }}</flux:badge>
                                         @endif
                                         @foreach ($lead->tags as $leadTag)
                                             <flux:badge size="sm" color="zinc">{{ $leadTag->name }}</flux:badge>
                                         @endforeach
+                                    </div>
+
+                                    <div class="mt-4 flex justify-end gap-2 border-t border-slate-100 pt-3 dark:border-slate-800">
+                                        <flux:button :href="route('leads.show', $lead)" wire:navigate size="sm" variant="ghost">Xem chi tiết</flux:button>
+                                        @can('update', $lead)
+                                            <flux:button :href="route('leads.edit', $lead)" wire:navigate size="sm" variant="ghost">Sửa</flux:button>
+                                        @endcan
                                     </div>
                                 </div>
                             </div>

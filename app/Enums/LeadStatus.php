@@ -24,4 +24,16 @@ enum LeadStatus: string
             self::Lost => 'Đã mất',
         };
     }
+
+    public function color(): string
+    {
+        return match ($this) {
+            self::New => 'blue',
+            self::Contacted => 'amber',
+            self::Qualified => 'emerald',
+            self::Unqualified => 'zinc',
+            self::Converted => 'violet',
+            self::Lost => 'red',
+        };
+    }
 }

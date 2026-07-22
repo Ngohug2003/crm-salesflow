@@ -117,6 +117,25 @@ final readonly class EloquentLeadRepository implements LeadRepository
             ->findOrFail($leadId);
     }
 
+    public function create(array $attributes): Lead
+    {
+        return Lead::query()->create($attributes);
+    }
+
+    public function update(Lead $lead, array $attributes): Lead
+    {
+        $lead->fill($attributes)->save();
+
+        return $lead->refresh();
+    }
+
+    public function syncTags(Lead $lead, array $tagIds): Lead
+    {
+        $lead->tags()->sync($tagIds);
+
+        return $lead->load($this->relations());
+    }
+
     /** @return list<string> */
     private function relations(): array
     {
@@ -125,6 +144,8 @@ final readonly class EloquentLeadRepository implements LeadRepository
             'owner:id,name,email',
             'department:id,name,code',
             'tags:id,name,slug,color',
+            'createdBy:id,name,email',
+            'updatedBy:id,name,email',
         ];
     }
 }

@@ -74,6 +74,8 @@ P3-03 adds the reusable Lead read path: UI/service consumers construct a typed `
 
 P3-05 connects this read path to the web UI without moving query logic into Livewire. `LeadController` enforces the route boundary, `LeadList` owns URL and presentation state, `LeadDirectoryService` converts untrusted strings into typed filter data, and `LeadRepository` remains responsible for scoped querying. Current-page selection is revalidated against the scoped paginator before being retained, so later bulk actions start from an actor-visible identifier set.
 
+P3-06 adds the Lead write path: `LeadForm` normalizes and validates server-side input, `LeadEditor` owns presentation state, and `LeadManagementService` re-authorizes the operation, resolves assignment scope and controls a transaction around repository persistence, tag synchronization and system audit. Department assignment is derived from the selected owner instead of trusting a separate client field. Sales creation is automatically self-owned; department-scoped creation stays in the actor's department. Status is deliberately excluded from this general editor so P3-07 can introduce an explicit transition service and history without a bypass path.
+
 ## 4. Delivery plan and estimate
 
 | Phase | Deliverable | Estimate |
