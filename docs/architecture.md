@@ -72,6 +72,8 @@ The Lead aggregate uses nullable `owner_id` and `department_id` for unassigned i
 
 P3-03 adds the reusable Lead read path: UI/service consumers construct a typed `LeadFilterData`, then `LeadRepository` applies `DataScopeService` before search, filters, allowlisted sorting and pagination. Relationship eager loading is owned by the repository. This query boundary prevents consumers from accidentally omitting owner/department scope. P3-04 adds `LeadPolicy` as a separate permission boundary for view, create, update, delete, restore, assign and convert; permanent deletion remains Super Admin-only through the global Gate bypass.
 
+P3-05 connects this read path to the web UI without moving query logic into Livewire. `LeadController` enforces the route boundary, `LeadList` owns URL and presentation state, `LeadDirectoryService` converts untrusted strings into typed filter data, and `LeadRepository` remains responsible for scoped querying. Current-page selection is revalidated against the scoped paginator before being retained, so later bulk actions start from an actor-visible identifier set.
+
 ## 4. Delivery plan and estimate
 
 | Phase | Deliverable | Estimate |

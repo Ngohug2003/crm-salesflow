@@ -45,6 +45,9 @@ class DatabaseSeeder extends Seeder
         ]);
         $itAdmin->syncRoles('admin');
 
-        $this->call(DemoUserSeeder::class);
+        $this->call([
+            DemoUserSeeder::class,
+            DemoLeadSeeder::class,
+        ]);
     }
 }
