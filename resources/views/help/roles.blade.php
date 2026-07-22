@@ -44,14 +44,23 @@
         <p class="mt-1 text-sm text-slate-500">Chọn một vai trò để xem chi tiết các nhóm quyền. Quyền luôn được kiểm tra ở backend cùng với phạm vi dữ liệu.</p>
     </div>
 
-    <div class="space-y-4">
+    @php($currentRoleName = collect($currentUserSummary['roles'])->pluck('name')->first())
+
+    <div class="space-y-4" x-data="{ activeRole: @js($currentRoleName) }">
         @foreach ($roleCatalog as $role)
             @php($isCurrentRole = collect($currentUserSummary['roles'])->contains('name', $role['name']))
-            <details @class([
-                'crm-card group p-0! overflow-hidden',
+            <section @class([
+                'crm-card overflow-hidden p-0!',
                 'border-emerald-300! dark:border-emerald-800!' => $isCurrentRole,
-            ]) @if ($isCurrentRole) open @endif>
-                <summary class="flex cursor-pointer list-none flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+            ])>
+                <button
+                    type="button"
+                    class="flex w-full cursor-pointer flex-col gap-4 p-5 text-left sm:flex-row sm:items-center sm:justify-between"
+                    x-on:click="activeRole = activeRole === @js($role['name']) ? null : @js($role['name'])"
+                    x-bind:aria-expanded="activeRole === @js($role['name'])"
+                    aria-controls="role-panel-{{ $role['name'] }}"
+                    id="role-heading-{{ $role['name'] }}"
+                >
                     <div>
                         <div class="flex flex-wrap items-center gap-2">
                             <h3 class="font-semibold">{{ $role['label'] }}</h3>
@@ -64,31 +73,44 @@
                     </div>
                     <div class="flex shrink-0 items-center gap-3 text-sm">
                         <span class="rounded-lg bg-slate-100 px-3 py-2 font-medium dark:bg-slate-800">{{ $role['scope'] }}</span>
-                        <span class="transition group-open:rotate-180" aria-hidden="true">⌄</span>
+                        <span
+                            class="transition-transform duration-200"
+                            x-bind:class="{ 'rotate-180': activeRole === @js($role['name']) }"
+                            aria-hidden="true"
+                        >⌄</span>
                     </div>
-                </summary>
+                </button>
 
-                <div class="border-t border-slate-200 p-5 dark:border-slate-800">
-                    @if ($role['is_super_admin'])
-                        <flux:callout variant="success" heading="Toàn quyền hệ thống">
-                            Super Admin vượt qua Laravel Gate cho mọi quyền hiện tại và những quyền được bổ sung trong tương lai.
-                        </flux:callout>
-                    @endif
+                <div
+                    x-cloak
+                    x-show="activeRole === @js($role['name'])"
+                    x-collapse.duration.200ms
+                    id="role-panel-{{ $role['name'] }}"
+                    role="region"
+                    aria-labelledby="role-heading-{{ $role['name'] }}"
+                >
+                    <div class="border-t border-slate-200 p-5 dark:border-slate-800">
+                        @if ($role['is_super_admin'])
+                            <flux:callout variant="success" heading="Toàn quyền hệ thống">
+                                Super Admin vượt qua Laravel Gate cho mọi quyền hiện tại và những quyền được bổ sung trong tương lai.
+                            </flux:callout>
+                        @endif
 
-                    <div class="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                        @foreach ($role['groups'] as $group)
-                            <div class="rounded-xl border border-slate-200 p-4 dark:border-slate-800">
-                                <h4 class="text-sm font-semibold">{{ $group['label'] }}</h4>
-                                <ul class="mt-3 space-y-2 text-sm text-slate-600 dark:text-slate-300">
-                                    @foreach ($group['permissions'] as $permission)
-                                        <li class="flex gap-2"><span class="text-emerald-500">✓</span><span>{{ $permission }}</span></li>
-                                    @endforeach
-                                </ul>
-                            </div>
-                        @endforeach
+                        <div class="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                            @foreach ($role['groups'] as $group)
+                                <div class="rounded-xl border border-slate-200 p-4 dark:border-slate-800">
+                                    <h4 class="text-sm font-semibold">{{ $group['label'] }}</h4>
+                                    <ul class="mt-3 space-y-2 text-sm text-slate-600 dark:text-slate-300">
+                                        @foreach ($group['permissions'] as $permission)
+                                            <li class="flex gap-2"><span class="text-emerald-500">✓</span><span>{{ $permission }}</span></li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            @endforeach
+                        </div>
                     </div>
                 </div>
-            </details>
+            </section>
         @endforeach
     </div>
 @endsection
