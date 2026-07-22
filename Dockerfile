@@ -7,8 +7,8 @@ RUN composer install --no-interaction --prefer-dist --no-progress --no-scripts -
 
 FROM node:22-alpine AS assets
 WORKDIR /app
-COPY package.json ./
-RUN npm install
+COPY package.json package-lock.json ./
+RUN npm ci --no-audit --no-fund
 COPY --from=vendor /app/vendor ./vendor
 COPY resources ./resources
 COPY vite.config.js ./

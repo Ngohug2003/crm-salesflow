@@ -15,7 +15,7 @@ Phase 1 establishes Laravel 12, Livewire 3, Flux UI, Fortify, Sanctum, PostgreSQ
 - Pest / Pint / Larastan
 - Nginx / Mailpit / MinIO / Docker Compose
 
-## Start with Docker
+## Start local development with Docker
 
 Prerequisites: Docker Desktop with WSL 2 integration enabled (Windows) or Docker Engine + Compose on Linux.
 
@@ -27,6 +27,23 @@ docker compose up -d --build
 docker compose exec app php artisan migrate --seed
 docker compose ps
 ```
+
+`compose.override.yaml` is loaded automatically for local development. It bind-mounts the source code into PHP/Nginx, enables timestamp-aware OPcache and starts Vite at `http://localhost:5173`, so changes work as follows:
+
+- PHP, routes, Livewire and Blade: available immediately; refresh the browser if the page does not reload itself.
+- Tailwind CSS and JavaScript: updated by Vite HMR without rebuilding the PHP or Nginx image.
+- Internal navigation uses Livewire Navigate with hover prefetch, so Dashboard and Departments switch without a full browser reload.
+- Composer or system dependency changes: run `docker compose build app nginx` and recreate the containers.
+- NPM dependency changes: restart `vite`; it runs `npm ci` only when `package-lock.json` has changed.
+
+For normal daily development, use only:
+
+```bash
+docker compose up -d
+docker compose logs -f vite
+```
+
+Do not add `--build` after editing application code. The immutable, production-like stack can still be started without the local override by using `docker compose -f compose.yaml up -d --build`.
 
 Application endpoints:
 
@@ -69,10 +86,10 @@ docker compose exec app ./vendor/bin/phpstan analyse
 docker compose exec app composer audit --no-interaction
 ```
 
-The runtime image contains built frontend assets. If running `npm run build` interactively is required, use a Node container until a dedicated development override is added:
+The runtime image contains built frontend assets. The local override runs Vite automatically; a production asset build can still be verified with:
 
 ```bash
-docker run --rm -u 1000:1000 -v "$PWD:/app" -w /app node:22-alpine sh -lc "npm install && npm run build"
+docker compose exec vite npm run build
 ```
 
 ## Architecture
@@ -85,7 +102,7 @@ docker run --rm -u 1000:1000 -v "$PWD:/app" -w /app node:22-alpine sh -lc "npm i
 
 ## Docker services
 
-The Compose topology includes `app`, `nginx`, `postgres`, `redis`, `horizon`, `scheduler`, `reverb`, `mailpit` and `minio`. App processes share one PHP image, while Nginx uses the immutable Vite output copied from the asset build stage.
+The Compose topology includes `app`, `nginx`, `vite`, `postgres`, `redis`, `horizon`, `scheduler`, `reverb`, `mailpit` and `minio`. App processes share one PHP image. Local development uses bind mounts and Vite HMR; the base Compose file keeps the immutable built assets for deployment-like runs.
 
 ## License
 

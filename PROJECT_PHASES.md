@@ -14,7 +14,7 @@ Tài liệu này là checkpoint chính của dự án. Quy ước làm việc t�
 |---|---|---|---|
 | 0 | Phân tích kiến trúc và dữ liệu | Hoàn tất tài liệu ban đầu | Chưa xác nhận |
 | 1 | Khởi tạo nền tảng và Docker | Hoàn tất triển khai | Chờ chủ dự án kiểm thử |
-| 2 | Users, Departments, Roles, Permissions | Đang làm — P2-01 hoàn tất | Chờ kiểm thử P2-01 |
+| 2 | Users, Departments, Roles, Permissions | Đang làm — P2-01, P2-02 hoàn tất | Chờ kiểm thử P2-02 |
 | 3 | Leads | Chưa bắt đầu | — |
 | 4 | Companies và Contacts | Chưa bắt đầu | — |
 | 5 | Pipelines và Opportunities | Chưa bắt đầu | — |
@@ -325,7 +325,7 @@ Mục tiêu: hoàn thiện tổ chức người dùng và ranh giới phân quy�
 | Mã | Feature | Branch đề xuất | Phụ thuộc | Kết quả cần đạt |
 |---|---|---|---|---|
 | P2-01 | ✅ Department schema và domain | `feature/p2-01-department-schema` | P1 | Migration/model/factory/seed phòng ban, quan hệ cha-con và trạng thái hoạt động |
-| P2-02 | Quản lý phòng ban | `feature/p2-02-department-management` | P2-01 | Livewire list/create/edit/disable phòng ban, validation và test |
+| P2-02 | ✅ Quản lý phòng ban | `feature/p2-02-department-management` | P2-01 | Livewire list/create/edit/disable phòng ban, validation và test |
 | P2-03 | Danh mục quyền và role seeder | `feature/p2-03-rbac-catalog-seeder` | P2-01 | `config/crm.php`, 5 role mặc định, permission idempotent và super-admin bypass |
 | P2-04 | Data scope và policies nền tảng | `feature/p2-04-data-scope-policies` | P2-03 | Scope all/department/owned/read-only được cưỡng chế ở backend |
 | P2-05 | Danh sách người dùng | `feature/p2-05-user-list` | P2-01, P2-04 | Tìm kiếm, lọc phòng ban/role/trạng thái, phân trang và URL state |
@@ -375,6 +375,76 @@ Kết quả cuối:
 - Pest: 13 test đạt, 33 assertions; riêng P2-01 có 6 test/15 assertions.
 - Pint: 55 file đạt; PHPStan/Larastan level 5 không có lỗi.
 - Lần migration ULID đầu tiên lỗi self-referencing foreign key trên PostgreSQL và đã rollback toàn bộ. Sau yêu cầu của chủ dự án, schema được đổi sang `BIGINT` tự tăng và migrate thành công; không có bảng ULID dở dang.
+
+### Nhật ký feature P2-02 — Quản lý phòng ban
+
+Trạng thái: **hoàn tất triển khai, chờ chủ dự án kiểm thử**.
+
+Đã triển khai:
+
+- Màn hình Livewire tại `/settings/departments`, được bảo vệ bởi đăng nhập, email đã xác minh và tài khoản đang hoạt động.
+- Danh sách phòng ban hiển thị phòng ban cha, số người dùng, `sort_order` và trạng thái; có tìm kiếm theo tên/mã và lọc active/inactive.
+- Form dùng chung cho tạo và chỉnh sửa; chuẩn hóa mã sang chữ hoa, kiểm tra mã duy nhất và chỉ cho chọn phòng ban cha đang hoạt động.
+- Chặn vòng lặp cây phòng ban khi chỉnh sửa (tự chọn chính nó hoặc một hậu duệ làm cha).
+- Khi thay đổi trạng thái, chặn tắt phòng ban còn phòng ban con hoạt động và chặn bật phòng ban có cha đang tắt.
+- Có xóa phòng ban qua hộp thoại xác nhận; chỉ cho xóa khi phòng ban không còn phòng ban con và không có người dùng để tránh làm mất liên kết tổ chức.
+- Menu **Departments** được thêm vào sidebar. Phân quyền chi tiết theo role chưa nằm trong P2-02 và sẽ được bổ sung ở P2-03/P2-04.
+- Mã P2-02 được tách theo Controller → Livewire/Form → Service → Repository; component Livewire chỉ giữ state và điều phối giao diện.
+- Local Docker dùng bind mount, OPcache kiểm tra timestamp ở mọi request và Vite HMR ở cổng `5173`; sửa PHP/Blade/CSS/JS không cần build lại image.
+- Navbar dùng Livewire Navigate với hover prefetch và transition ngắn; chuyển Dashboard ↔ Phòng ban không còn tải lại toàn bộ document.
+- Audit dependency đã gỡ Axios, Concurrently, Laravel Sail và Laravel Pail; dự án dùng Livewire request, Docker Compose và Docker logs nên bốn package này không còn vai trò. Các package còn lại có usage hoặc nằm trong roadmap đã duyệt.
+- Docker frontend build dùng `package-lock.json` + `npm ci`; Vite local chỉ cài lại dependency khi lock thay đổi.
+- Vite entrypoint cài optional native dependency theo Alpine `musl`, tránh restart loop do binary Lightning CSS sai libc.
+- 9 test feature bao phủ quyền truy cập nền tảng, tạo, validation, chỉnh sửa, chống cycle, quy tắc trạng thái, tìm kiếm, bộ lọc, xác nhận xóa và chặn xóa khi còn liên kết.
+
+File chính:
+
+- `app/Http/Controllers/DepartmentController.php`
+- `app/Livewire/Departments/DepartmentManagement.php`
+- `app/Livewire/Forms/DepartmentForm.php`
+- `app/Services/DepartmentService.php`
+- `app/Repositories/Contracts/DepartmentRepository.php`
+- `app/Repositories/EloquentDepartmentRepository.php`
+- `resources/views/livewire/departments/department-management.blade.php`
+- `resources/views/departments/index.blade.php`
+- `resources/views/layouts/app.blade.php`
+- `routes/web.php`
+- `tests/Feature/DepartmentManagementTest.php`
+- `compose.override.yaml`, `docker/php/local.ini`, `vite.config.js`
+
+Lệnh kiểm chứng:
+
+```bash
+docker compose up -d --force-recreate app nginx vite
+docker compose ps app nginx vite
+docker compose exec -T app php artisan test
+docker compose exec -T app ./vendor/bin/pint --test
+docker compose exec -T app ./vendor/bin/phpstan analyse --memory-limit=512M
+docker compose exec -T --user node vite npm run build
+curl -sS -o /dev/null -w '%{http_code}' http://127.0.0.1/settings/departments
+curl -sS -o /dev/null -w '%{http_code}' http://127.0.0.1:5173/@vite/client
+```
+
+Kết quả cuối:
+
+- Docker: `app`, `nginx` và `vite` đều ở trạng thái `healthy`; container PHP đọc trực tiếp source bind-mount.
+- Pest: 22 test đạt, 92 assertions; riêng P2-02 có 9 test/59 assertions.
+- Pint: 63 file đạt; PHPStan/Larastan không có lỗi.
+- Composer audit và NPM audit không có lỗ hổng; production Docker build `app`/`nginx` đạt.
+- Vite production build đạt; JavaScript giảm từ 46,31 kB xuống 0,40 kB, HMR endpoint trả `200` và `public/hot` trỏ tới `http://localhost:5173`.
+- HTTP smoke test ứng dụng trả `302`, đúng với route yêu cầu đăng nhập khi gọi ở trạng thái guest.
+- P2-02 không tạo migration mới và không thay đổi schema đã hoàn tất ở P2-01.
+
+Checklist kiểm thử tay:
+
+1. Đăng nhập rồi mở `http://localhost/settings/departments` hoặc chọn **Departments** trên sidebar.
+2. Tạo một phòng ban, thử nhập mã chữ thường để xác nhận mã được chuẩn hóa thành chữ hoa.
+3. Sửa tên, phòng ban cha, mô tả và `sort_order`; thử chọn một hậu duệ làm cha để xác nhận hệ thống chặn cycle.
+4. Thử tìm kiếm theo tên/mã và lần lượt chọn bộ lọc active/inactive.
+5. Thử tắt phòng ban còn phòng ban con active; sau đó tắt các phòng ban con trước và kiểm tra lại.
+6. Thử xóa phòng ban trống và xác nhận bản ghi biến mất; thử xóa phòng ban còn phòng ban con hoặc người dùng để xác nhận hệ thống chặn.
+
+Checkpoint P2-02: dừng tại đây để chủ dự án kiểm thử; chỉ bắt đầu P2-03 sau khi nhận xác nhận.
 
 Checkpoint: dừng để kiểm thử đăng nhập, quản lý user/department và toàn bộ ma trận quyền trước P3.
 

@@ -16,14 +16,15 @@
                :class="mobileNav ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'">
             <div class="flex h-full flex-col">
                 <div class="flex items-center justify-between gap-3 px-2 py-2">
-                    <a href="{{ route('dashboard') }}" class="flex min-w-0 items-center gap-3">
+                    <a href="{{ route('dashboard') }}" wire:navigate.hover class="flex min-w-0 items-center gap-3">
                         <span class="grid size-10 shrink-0 place-items-center rounded-xl bg-emerald-400 font-black text-slate-950">SF</span>
                         <span x-show="sidebar" class="truncate font-semibold">SalesFlow CRM</span>
                     </a>
                     <button class="lg:hidden" @click="mobileNav=false" aria-label="Đóng menu">✕</button>
                 </div>
                 <nav class="mt-8 space-y-1">
-                    <a href="{{ route('dashboard') }}" class="nav-link nav-link-active"><span>⌂</span><span x-show="sidebar">Dashboard</span></a>
+                    <a href="{{ route('dashboard') }}" wire:navigate.hover @class(['nav-link', 'nav-link-active' => request()->routeIs('dashboard')])><span>⌂</span><span x-show="sidebar">Dashboard</span></a>
+                    <a href="{{ route('departments.index') }}" wire:navigate.hover @class(['nav-link', 'nav-link-active' => request()->routeIs('departments.*')])><span>▤</span><span x-show="sidebar">Phòng ban</span></a>
                     @foreach (['Leads' => '◎', 'Companies' => '▦', 'Contacts' => '♙', 'Opportunities' => '◇', 'Pipelines' => '◫', 'Activities' => '◷', 'Tasks' => '✓', 'Reports' => '⌁'] as $label => $icon)
                         <span class="nav-link cursor-not-allowed opacity-55" title="Có trong phase tiếp theo"><span>{{ $icon }}</span><span x-show="sidebar">{{ $label }}</span></span>
                     @endforeach
@@ -51,7 +52,13 @@
                     <form method="POST" action="{{ route('logout') }}">@csrf<flux:button type="submit" variant="ghost">Đăng xuất</flux:button></form>
                 </div>
             </header>
-            <main class="p-4 sm:p-6 lg:p-8">{{ $slot }}</main>
+            <main class="p-4 sm:p-6 lg:p-8">
+                @isset($slot)
+                    {{ $slot }}
+                @else
+                    @yield('content')
+                @endisset
+            </main>
         </div>
     </div>
     <div x-show="mobileNav" x-transition.opacity @click="mobileNav=false" class="fixed inset-0 z-30 bg-slate-950/50 lg:hidden"></div>
