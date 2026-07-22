@@ -5,7 +5,9 @@
             <h1 class="mt-1 text-3xl font-semibold tracking-tight">Phòng ban</h1>
             <p class="mt-2 max-w-2xl text-slate-500">Quản lý cấu trúc phòng ban, cấp cha và trạng thái sử dụng trong SalesFlow CRM.</p>
         </div>
-        <flux:button variant="primary" icon="plus" wire:click="openCreate">Tạo phòng ban</flux:button>
+        @can('create', \App\Models\Department::class)
+            <flux:button variant="primary" icon="plus" wire:click="openCreate">Tạo phòng ban</flux:button>
+        @endcan
     </div>
 
     @if ($notice)
@@ -119,13 +121,17 @@
                             </flux:table.cell>
                             <flux:table.cell align="end">
                                 <div class="flex justify-end gap-2">
-                                    <flux:button size="sm" variant="ghost" wire:click="openEdit({{ $department->id }})">Sửa</flux:button>
-                                    <flux:button size="sm" variant="ghost" wire:click="toggleActive({{ $department->id }})">
-                                        {{ $department->is_active ? 'Tắt' : 'Bật' }}
-                                    </flux:button>
-                                    <flux:button size="sm" variant="ghost" class="text-red-600! hover:text-red-700! dark:text-red-400!" wire:click="openDelete({{ $department->id }})">
-                                        Xóa
-                                    </flux:button>
+                                    @can('update', $department)
+                                        <flux:button size="sm" variant="ghost" wire:click="openEdit({{ $department->id }})">Sửa</flux:button>
+                                        <flux:button size="sm" variant="ghost" wire:click="toggleActive({{ $department->id }})">
+                                            {{ $department->is_active ? 'Tắt' : 'Bật' }}
+                                        </flux:button>
+                                    @endcan
+                                    @can('delete', $department)
+                                        <flux:button size="sm" variant="ghost" class="text-red-600! hover:text-red-700! dark:text-red-400!" wire:click="openDelete({{ $department->id }})">
+                                            Xóa
+                                        </flux:button>
+                                    @endcan
                                 </div>
                             </flux:table.cell>
                         </flux:table.row>

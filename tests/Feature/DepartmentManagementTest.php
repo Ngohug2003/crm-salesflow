@@ -5,15 +5,21 @@ use App\Models\Department;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use Spatie\Permission\Models\Role;
 
 uses(RefreshDatabase::class);
 
 function departmentManager(): User
 {
-    return User::factory()->create([
+    $user = User::factory()->create([
         'email_verified_at' => now(),
         'is_active' => true,
     ]);
+
+    Role::findOrCreate('super-admin', 'web');
+    $user->assignRole('super-admin');
+
+    return $user;
 }
 
 it('protects the department management route', function (): void {
