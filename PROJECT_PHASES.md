@@ -949,7 +949,7 @@ Mục tiêu: hoàn thiện vòng đời Lead từ tiếp nhận đến chuyển 
 | P3-01 | ✅ Lead sources và tags | `feature/p3-01-lead-taxonomy` | P2-08 | Schema/model/factory/seed nguồn Lead và Tag, chuẩn bị contract many-to-many |
 | P3-02 | ✅ Lead schema và domain | `feature/p3-02-lead-domain` | P3-01 | BIGINT tự tăng, owner, department, source, contact fields, indexes, factory và pivot `lead_tag` |
 | P3-03 | ✅ Repository và bộ lọc Lead | `feature/p3-03-lead-query-filters` | P3-02 | Search, filter, sort, pagination và reusable data-scope query |
-| P3-04 | Lead policy và visibility | `feature/p3-04-lead-authorization` | P2-04, P3-03 | Policy CRUD/assign/convert/restore đúng permission matrix |
+| P3-04 | ✅ Lead policy và visibility | `feature/p3-04-lead-authorization` | P2-04, P3-03 | Policy CRUD/assign/convert/restore đúng permission matrix |
 | P3-05 | Danh sách Lead | `feature/p3-05-lead-list` | P3-03, P3-04 | Livewire table responsive, URL filters, bulk selection foundation và empty states |
 | P3-06 | Form và chi tiết Lead | `feature/p3-06-lead-form-detail` | P3-05 | Create/edit/detail, validation, source/tags/owner và audit cơ bản |
 | P3-07 | Assignment và status history | `feature/p3-07-lead-assignment-status` | P3-06 | Gán owner, chuyển trạng thái hợp lệ, lịch sử và event |
@@ -1137,6 +1137,64 @@ Checklist kiểm thử:
 6. P3-03 chưa có trang web để kiểm thử thủ công; repository sẽ được nối vào Lead List ở P3-05 sau khi P3-04 khóa Policy.
 
 Checkpoint P3-03: dừng tại đây để chủ dự án kiểm thử repository trước khi bắt đầu P3-04.
+
+### Nhật ký feature P3-04 — Lead policy và visibility
+
+Trạng thái: **hoàn tất triển khai, chờ chủ dự án kiểm thử**.
+
+Đã triển khai:
+
+- Tạo `LeadPolicy` và đăng ký tường minh với Laravel Gate trong `AuthServiceProvider`.
+- `viewAny` yêu cầu `leads.view`; `view` kết hợp permission này với data scope của bản ghi.
+- `create` yêu cầu `leads.create` và scope có quyền ghi.
+- `update`, `delete`, `assign`, `convert` lần lượt yêu cầu permission tương ứng, scope ghi và Lead nằm trong phạm vi actor.
+- `restore` dùng `leads.delete` theo catalog quyền gốc và vẫn kiểm tra owner/department lưu trên Lead đã soft delete.
+- `forceDelete` bị Policy từ chối; chỉ Super Admin được Global Gate bypass.
+- Super Admin không cần direct permission; Admin quản lý toàn bộ Lead nhưng không force delete.
+- Sales Manager quản lý trong phòng ban. `leads.view-all` và `leads.update-all` không cho phép vượt khỏi data scope phòng ban.
+- Sales chỉ thao tác Lead có `owner_id` là chính mình, có thể convert nhưng không có quyền assign.
+- Viewer xem được dữ liệu theo read-only scope nhưng mọi mutation bị chặn kể cả khi được gán nhầm direct write permission.
+- User không có role/permission hợp lệ bị từ chối tất cả Lead abilities.
+- `DataScopeService::allows()` chấp nhận owner nullable; Lead chưa phân công không thể lọt vào scope `owned`.
+- Không thêm permission mới, migration, package, route hoặc UI trong feature này.
+
+File chính:
+
+- `app/Policies/LeadPolicy.php`
+- `app/Providers/AuthServiceProvider.php`
+- `app/Services/Authorization/DataScopeService.php`
+- `tests/Feature/LeadPolicyTest.php`
+- `docs/permissions.md`, `docs/architecture.md`
+
+Kết quả xác minh:
+
+- Test riêng P3-04: **6 test đạt, 89 assertions**.
+- Toàn dự án: **112 test đạt, 663 assertions**.
+- Pint đạt trên 126 file; PHPStan/Larastan không có lỗi.
+- Vite production build đạt; toàn bộ 10 service Docker đang chạy và các service có healthcheck đều `healthy`.
+
+Lệnh đã chạy:
+
+```bash
+docker compose exec app php artisan test tests/Feature/LeadPolicyTest.php
+docker compose exec app php artisan test
+docker compose exec app ./vendor/bin/pint --test
+docker compose exec app ./vendor/bin/phpstan analyse --memory-limit=512M --no-progress
+docker compose exec vite npm run build
+docker compose ps
+```
+
+Checklist kiểm thử:
+
+1. Chạy `docker compose exec app php artisan test tests/Feature/LeadPolicyTest.php` và xác nhận 6 test đạt.
+2. Xác nhận Super Admin có toàn bộ ability gồm force delete; Admin có toàn bộ ability trừ force delete.
+3. Xác nhận Sales Manager không view/update Lead phòng ban khác dù có `view-all/update-all`.
+4. Xác nhận Sales chỉ view/update/delete/restore/convert Lead sở hữu và không assign.
+5. Xác nhận Viewer được gán nhầm quyền ghi vẫn bị `DataScope::ReadOnly` chặn mutation.
+6. Xác nhận Lead đã soft delete chỉ được restore bởi actor còn quyền trên owner/department gốc.
+7. P3-04 chưa có trang Lead; route và navigation sẽ được nối với Policy ở P3-05.
+
+Checkpoint P3-04: dừng tại đây để chủ dự án kiểm thử authorization trước khi bắt đầu P3-05.
 
 ## Giai đoạn 4 — Companies và Contacts
 
