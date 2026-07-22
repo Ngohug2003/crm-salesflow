@@ -11,6 +11,7 @@ use App\Repositories\Contracts\LeadRepository;
 use App\Services\Authorization\DataScopeService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 
 final readonly class EloquentLeadRepository implements LeadRepository
 {
@@ -124,6 +125,88 @@ final readonly class EloquentLeadRepository implements LeadRepository
             ->findOrFail($leadId);
     }
 
+    public function trashedVisibleTo(User $actor): Builder
+    {
+        return $this->dataScope->apply(
+            Lead::query()->onlyTrashed(),
+            $actor,
+            'owner_id',
+            'department_id',
+        );
+    }
+
+    public function paginateTrashedVisibleTo(User $actor, string $search, int $perPage = 15): LengthAwarePaginator
+    {
+        $search = trim($search);
+
+        return $this->trashedVisibleTo($actor)
+            ->with($this->relations())
+            ->when($search !== '', function (Builder $query) use ($search): void {
+                $like = "%{$search}%";
+
+                $query->where(function (Builder $query) use ($like): void {
+                    $query->whereLike('full_name', $like, caseSensitive: false)
+                        ->orWhereLike('email', $like, caseSensitive: false)
+                        ->orWhereLike('phone', $like, caseSensitive: false)
+                        ->orWhereLike('company_name', $like, caseSensitive: false);
+                });
+            })
+            ->latest('deleted_at')
+            ->latest('id')
+            ->paginate(max(1, min(100, $perPage)));
+    }
+
+    public function findTrashedVisibleOrFail(User $actor, int $leadId): Lead
+    {
+        return $this->trashedVisibleTo($actor)
+            ->with($this->relations())
+            ->findOrFail($leadId);
+    }
+
+    public function findTrashedVisibleForUpdateOrFail(User $actor, int $leadId): Lead
+    {
+        return $this->trashedVisibleTo($actor)
+            ->lockForUpdate()
+            ->findOrFail($leadId);
+    }
+
+    public function duplicateCandidates(
+        User $actor,
+        ?string $email,
+        array $phones,
+        ?int $excludeLeadId = null,
+    ): Collection {
+        $phones = array_values(array_unique(array_filter($phones)));
+
+        if ($email === null && $phones === []) {
+            return new Collection;
+        }
+
+        return $this->dataScope->apply(
+            Lead::query()->withTrashed(),
+            $actor,
+            'owner_id',
+            'department_id',
+        )
+            ->when($excludeLeadId !== null, fn (Builder $query): Builder => $query->whereKeyNot($excludeLeadId))
+            ->where(function (Builder $query) use ($email, $phones): void {
+                $query
+                    ->when($email !== null, fn (Builder $query): Builder => $query->where('email_normalized', $email))
+                    ->when($phones !== [], function (Builder $query) use ($phones, $email): void {
+                        $method = $email === null ? 'where' : 'orWhere';
+
+                        $query->{$method}(function (Builder $query) use ($phones): void {
+                            $query->whereIn('phone_normalized', $phones)
+                                ->orWhereIn('secondary_phone_normalized', $phones);
+                        });
+                    });
+            })
+            ->with($this->relations())
+            ->orderBy('id')
+            ->limit(10)
+            ->get();
+    }
+
     public function create(array $attributes): Lead
     {
         return Lead::query()->create($attributes);
@@ -141,6 +224,20 @@ final readonly class EloquentLeadRepository implements LeadRepository
         $lead->tags()->sync($tagIds);
 
         return $lead->load($this->relations());
+    }
+
+    public function softDelete(Lead $lead): Lead
+    {
+        $lead->delete();
+
+        return $lead;
+    }
+
+    public function restore(Lead $lead): Lead
+    {
+        $lead->restore();
+
+        return $lead->refresh()->load($this->relations());
     }
 
     /** @return list<string> */

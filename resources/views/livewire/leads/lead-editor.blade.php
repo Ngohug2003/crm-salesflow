@@ -113,4 +113,46 @@
             </flux:button>
         </div>
     </form>
+
+    <flux:modal name="duplicate-lead-warning" wire:model="showDuplicateWarning" class="md:w-[42rem]" wire:close="dismissDuplicateWarning">
+        <div class="space-y-5">
+            <div>
+                <flux:heading size="lg">Phát hiện Lead có thể bị trùng</flux:heading>
+                <flux:text class="mt-2">Hệ thống tìm thấy email hoặc số điện thoại giống Lead bạn đang nhập. Hãy kiểm tra trước khi quyết định lưu riêng.</flux:text>
+            </div>
+
+            <div class="max-h-80 space-y-3 overflow-y-auto">
+                @foreach ($duplicateCandidates as $candidate)
+                    <div class="rounded-xl border border-amber-200 bg-amber-50/70 p-4 dark:border-amber-900 dark:bg-amber-950/20">
+                        <div class="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
+                            <div>
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <p class="font-semibold">{{ $candidate['full_name'] }}</p>
+                                    @if ($candidate['trashed'])
+                                        <flux:badge color="red" size="sm">Trong thùng rác</flux:badge>
+                                    @else
+                                        <flux:badge color="amber" size="sm">Trùng {{ implode(', ', $candidate['matched_fields']) }}</flux:badge>
+                                    @endif
+                                </div>
+                                <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">{{ $candidate['email'] ?: 'Chưa có email' }} · {{ $candidate['phone'] ?: 'Chưa có SĐT' }}</p>
+                                <p class="mt-1 text-xs text-slate-500">{{ $candidate['status'] }} · {{ $candidate['owner'] }} · {{ $candidate['department'] }}</p>
+                            </div>
+                            @if (! $candidate['trashed'])
+                                <flux:button :href="route('leads.show', $candidate['id'])" wire:navigate size="sm" variant="ghost">Mở Lead hiện có</flux:button>
+                            @endif
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+
+            <flux:callout variant="warning" heading="Không tự động gộp dữ liệu">
+                Chọn “Vẫn lưu riêng” chỉ xác nhận đây là hai Lead nghiệp vụ khác nhau. Dữ liệu Lead hiện có sẽ không bị thay đổi.
+            </flux:callout>
+
+            <div class="flex flex-col-reverse justify-end gap-3 sm:flex-row">
+                <flux:button variant="ghost" wire:click="dismissDuplicateWarning" x-on:click="$flux.modal('duplicate-lead-warning').close()">Quay lại chỉnh sửa</flux:button>
+                <flux:button variant="primary" wire:click="confirmDuplicateSave" wire:loading.attr="disabled" wire:target="confirmDuplicateSave">Vẫn lưu riêng</flux:button>
+            </div>
+        </div>
+    </flux:modal>
 </div>

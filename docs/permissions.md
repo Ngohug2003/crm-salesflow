@@ -73,6 +73,8 @@ P3-06 enforces assignment again inside `LeadManagementService`, not only through
 
 From P3-07 onward, owner changes on an existing Lead are rejected by the general editor even for an Admin. They must pass through `LeadAssignmentService`, which applies `LeadPolicy::assign`, a scoped row lock, active-owner validation and immutable history. Status changes similarly pass through `LeadStatusTransitionService` and `LeadPolicy::update`; hiding unavailable options in Livewire is only UX, while the backend transition matrix remains authoritative. Viewer/read-only scope cannot invoke either mutation.
 
+P3-08 adds `viewTrash`: the actor must have `leads.view`, `leads.delete` and a writable data scope. Trash queries still apply the original owner/department scope retained by Soft Delete. `restore` continues to use `leads.delete` plus record scope. Duplicate candidates use the same visibility query before active and trashed records are combined, so contact information from another department/owner scope is never exposed in the warning UI.
+
 ## Role assignment safeguards
 
 P2-07 permits multiple roles per user; `DataScopeResolver` continues to choose the broadest effective scope. Every managed user must have at least one configured role.

@@ -70,6 +70,11 @@ final readonly class EloquentUserRepository implements UserRepository
         return $this->visibleTo($actor)->findOrFail($userId);
     }
 
+    public function activeExists(int $userId): bool
+    {
+        return User::query()->whereKey($userId)->where('is_active', true)->exists();
+    }
+
     public function create(array $attributes): User
     {
         return User::query()->create($attributes);

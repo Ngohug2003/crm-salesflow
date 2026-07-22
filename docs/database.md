@@ -32,6 +32,8 @@ All references from `leads` use `ON DELETE SET NULL`, preserving the business re
 
 Lead status and priority are stored as indexed strings and cast to `LeadStatus` and `LeadPriority` backed enums. This keeps PostgreSQL queries portable while giving application code typed values. Email and phone are indexed but intentionally not unique because duplicate detection is a P3-08 business workflow.
 
+P3-08 adds nullable indexed `email_normalized`, `phone_normalized` and `secondary_phone_normalized` columns. Email normalization is lowercase plus trim. Phone normalization removes formatting and maps Vietnamese `+84`/`0084` prefixes to a leading zero. These columns are intentionally not unique: duplicate candidates trigger an explicit UI decision and authorized users may confirm that two records are legitimately separate. The migration backfills existing Lead rows without modifying their business timestamps.
+
 `owner_id` is the canonical assignment column so `DataScopeService` can apply owned and department scopes consistently. `converted_company_id` and `converted_contact_id` are deferred until their target tables exist; P5-09 will add those foreign keys with the conversion transaction.
 
 ## Lead demo data

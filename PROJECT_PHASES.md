@@ -953,7 +953,7 @@ Mục tiêu: hoàn thiện vòng đời Lead từ tiếp nhận đến chuyển 
 | P3-05 | ✅ Danh sách Lead | `feature/p3-05-lead-list` | P3-03, P3-04 | Livewire table responsive, URL filters, bulk selection foundation và empty states |
 | P3-06 | ✅ Form và chi tiết Lead | `feature/p3-06-lead-form-detail` | P3-05 | Create/edit/detail, validation, source/tags/owner và audit cơ bản |
 | P3-07 | ✅ Assignment và status history | `feature/p3-07-lead-assignment-status` | P3-06 | Gán owner, chuyển trạng thái hợp lệ, lịch sử và event |
-| P3-08 | Duplicate, soft delete và restore | `feature/p3-08-lead-duplicate-delete` | P3-06 | Phát hiện email/phone trùng, cảnh báo/merge decision, trash/restore |
+| P3-08 | ✅ Duplicate, soft delete và restore | `feature/p3-08-lead-duplicate-delete` | P3-06 | Phát hiện email/phone trùng, cảnh báo/merge decision, trash/restore |
 | P3-09 | Conversion eligibility và contract | `feature/p3-09-conversion-contract` | P3-07, P3-08 | Rule đủ điều kiện, DTO/action contract, chống convert lặp và test contract; chưa tạo Opportunity |
 | P3-10 | Lead test và checkpoint | `feature/p3-10-lead-checkpoint` | P3-01..P3-09 | Feature/policy/transaction tests và checklist vòng đời Lead |
 
@@ -1434,6 +1434,93 @@ Checklist kiểm thử thủ công:
 8. Dùng Super Admin/Admin phòng IT kiểm tra Audit Log có event `assigned` và `status_changed`, đúng actor/reason/old/new.
 
 Checkpoint P3-07: dừng tại đây để chủ dự án kiểm thử assignment, transition và timeline trước khi bắt đầu P3-08.
+
+### Nhật ký feature P3-08 — Duplicate, soft delete và restore
+
+Trạng thái: **hoàn tất triển khai, chờ chủ dự án kiểm thử**.
+
+Đã triển khai:
+
+- Thêm `email_normalized`, `phone_normalized`, `secondary_phone_normalized` cùng 3 index vào bảng `leads`.
+- Migration backfill dữ liệu cũ; PostgreSQL local hiện có đủ 30/30 email và 30/30 số điện thoại demo đã chuẩn hóa.
+- `LeadContactNormalizer` chuyển email về lowercase/trim và số Việt Nam `+84`, `0084`, dấu cách/gạch/chấm về cùng dạng `0xxxxxxxxx`.
+- Model `Lead` tự cập nhật normalized contact ở sự kiện `saving`, bảo đảm form, factory, seeder và import sau này dùng chung quy tắc.
+- `DuplicateLeadService` tìm theo email hoặc cả số chính/số phụ, gồm Lead active và soft-deleted, loại trừ Lead đang edit.
+- Duplicate query luôn áp dụng data scope trước khi trả candidate; không tiết lộ Lead ngoài phạm vi người dùng.
+- Form create/edit chặn lưu lần đầu khi có candidate và hiển thị modal: trường trùng, owner, phòng ban, trạng thái, active/trash state.
+- Người dùng có thể mở Lead hiện có, quay lại chỉnh sửa hoặc xác nhận `Vẫn lưu riêng`; P3-08 không tự động merge/ghi đè dữ liệu.
+- Xác nhận lưu riêng gắn với hash của email/số điện thoại hiện tại. Thay contact sau cảnh báo bắt buộc chạy duplicate check lại.
+- Thêm `LeadPolicy::viewTrash`, route `/leads/trash`, Livewire `LeadTrash`, tìm kiếm, phân trang và scoped restore.
+- Thêm nút `Đưa vào thùng rác` trên chi tiết Lead, modal xác nhận và lý do tối đa 500 ký tự.
+- `LeadLifecycleService` soft-delete/restore trong transaction có row lock, Policy và audit `deleted`/`restored`.
+- Soft delete giữ nguyên tag, assignment history, status history và activity log; danh sách chính tự động loại Lead đã xóa.
+- Restore giữ lại phòng ban/lịch sử. Nếu owner đã bị khóa, hệ thống bỏ assignment, ghi thêm assignment history và dispatch `LeadAssigned` sau commit.
+- Viewer không được mở thùng rác hoặc mutation; Manager/Sales chỉ thấy và khôi phục Lead đúng data scope.
+- Không cung cấp force-delete trên UI; giới hạn Super Admin trong Policy vẫn giữ nguyên.
+- Không thêm package hoặc seed mới.
+
+Luồng duplicate:
+
+1. `LeadForm` validate input; `LeadEditor` tạo contact signature.
+2. `DuplicateLeadService` chuẩn hóa lần nữa ở backend và gọi scoped repository query trên active + trash.
+3. Không có candidate thì lưu bình thường; có candidate thì dừng và mở cảnh báo, chưa ghi database.
+4. `Vẫn lưu riêng` chỉ có hiệu lực khi signature không đổi; dữ liệu contact thay đổi sẽ tạo cảnh báo mới.
+
+Luồng delete/restore:
+
+1. Livewire component kiểm tra UI-level Policy, service tải lại và khóa Lead bằng scoped repository.
+2. Delete/restore Policy được kiểm tra trong transaction; request ID ngoài scope trả 404 hoặc 403.
+3. Lead state và audit cùng commit; tag/workflow history không bị xóa bởi Soft Delete.
+4. Restore owner không hoạt động tự bỏ owner và append assignment history trong cùng transaction.
+
+File chính:
+
+- `database/migrations/2026_07_22_231000_add_normalized_contacts_to_leads_table.php`
+- `app/Support/LeadContactNormalizer.php`
+- `app/Services/DuplicateLeadService.php`
+- `app/Services/LeadLifecycleService.php`
+- `app/Livewire/Leads/LeadEditor.php`
+- `app/Livewire/Leads/LeadLifecycle.php`
+- `app/Livewire/Leads/LeadTrash.php`
+- `resources/views/livewire/leads/lead-lifecycle.blade.php`
+- `resources/views/livewire/leads/lead-trash.blade.php`
+- `tests/Feature/LeadDuplicateLifecycleTest.php`
+
+Kết quả xác minh:
+
+- Test riêng P3-08: **8 test đạt, 58 assertions**.
+- Toàn bộ nhóm Lead P3-01..P3-08: **58 test đạt, 483 assertions**.
+- Toàn dự án: **142 test đạt, 968 assertions**.
+- Migration/backfill P3-08 đã chạy trên PostgreSQL; 3 normalized index tồn tại đúng thiết kế.
+- Pint đạt trên 156 file; PHPStan/Larastan không có lỗi; Blade template compile thành công.
+- Vite production build đạt; toàn bộ 10 service Docker đang chạy và các service có healthcheck đều `healthy`.
+
+Lệnh đã chạy:
+
+```bash
+docker compose exec app php artisan migrate --force
+docker compose exec app php artisan test tests/Feature/LeadDuplicateLifecycleTest.php
+docker compose exec app php artisan test tests/Feature/LeadDuplicateLifecycleTest.php tests/Feature/LeadWorkflowTest.php tests/Feature/LeadFormDetailTest.php tests/Feature/LeadListTest.php tests/Feature/LeadPolicyTest.php tests/Feature/LeadRepositoryTest.php tests/Feature/LeadDomainTest.php tests/Feature/LeadTaxonomyDomainTest.php
+docker compose exec app php artisan test
+docker compose exec app ./vendor/bin/pint --test
+docker compose exec app ./vendor/bin/phpstan analyse --memory-limit=512M --no-progress
+docker compose exec app php artisan view:cache
+docker compose exec vite npm run build
+docker compose ps
+```
+
+Checklist kiểm thử thủ công:
+
+1. Tạo Lead với email khác hoa/thường so với Lead hiện có; xác nhận modal duplicate xuất hiện và database chưa lưu.
+2. Nhập cùng số dưới dạng `+84`, `0084`, có dấu cách/gạch; xác nhận vẫn phát hiện trùng.
+3. Trong cảnh báo, thử mở Lead hiện có, quay lại sửa và `Vẫn lưu riêng`; xác nhận chỉ lựa chọn cuối tạo bản ghi thứ hai.
+4. Sau khi cảnh báo, đổi contact sang một contact trùng khác rồi xác nhận; hệ thống phải cảnh báo lại thay vì dùng xác nhận cũ.
+5. Xóa một Lead có tag/timeline, mở `/leads/trash`, xác nhận Lead không còn ở danh sách chính nhưng lịch sử vẫn giữ.
+6. Khôi phục Lead và kiểm tra tag, owner/phòng ban, workflow history cùng Audit Log `deleted`/`restored`.
+7. Khóa owner rồi restore bằng Admin; xác nhận Lead được bỏ owner và timeline có assignment history tự động.
+8. Đăng nhập Manager/Sales/Viewer để xác nhận data scope của trash và Viewer không có quyền truy cập.
+
+Checkpoint P3-08: dừng tại đây để chủ dự án kiểm thử duplicate warning, soft delete và restore trước khi bắt đầu P3-09.
 
 ## Giai đoạn 4 — Companies và Contacts
 

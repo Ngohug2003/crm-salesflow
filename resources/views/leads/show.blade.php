@@ -15,6 +15,7 @@
         </div>
         <div class="flex flex-wrap gap-2">
             <flux:button :href="route('leads.index')" wire:navigate variant="ghost" icon="arrow-left">Danh sách</flux:button>
+            <livewire:leads.lead-lifecycle :lead-id="$lead->id" />
             @can('update', $lead)
                 <flux:button :href="route('leads.edit', $lead)" wire:navigate variant="primary" icon="pencil-square">Chỉnh sửa</flux:button>
             @endcan

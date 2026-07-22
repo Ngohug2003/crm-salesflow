@@ -7,6 +7,9 @@
         </div>
         <div class="flex items-center gap-2">
             <flux:badge color="emerald">{{ $this->visibleTotal }} Lead trong phạm vi</flux:badge>
+            @can('viewTrash', \App\Models\Lead::class)
+                <flux:button :href="route('leads.trash')" wire:navigate variant="ghost" icon="trash">Thùng rác</flux:button>
+            @endcan
             @can('create', \App\Models\Lead::class)
                 <flux:button :href="route('leads.create')" wire:navigate variant="primary" icon="plus">Tạo Lead</flux:button>
             @endcan
