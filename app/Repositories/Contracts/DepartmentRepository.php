@@ -43,6 +43,8 @@ interface DepartmentRepository
 
     public function hasUsers(Department $department): bool;
 
+    public function hasCode(?int $departmentId, string $code): bool;
+
     /** @param array{name: string, code: string, description: ?string, parent_id: ?int, sort_order: int, is_active: bool} $attributes */
     public function save(Department $department, array $attributes): Department;
 

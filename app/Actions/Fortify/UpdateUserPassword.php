@@ -3,6 +3,7 @@
 namespace App\Actions\Fortify;
 
 use App\Models\User;
+use App\Services\SystemAuditService;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
@@ -11,6 +12,8 @@ use Laravel\Fortify\Contracts\UpdatesUserPasswords;
 class UpdateUserPassword implements UpdatesUserPasswords
 {
     use PasswordValidationRules;
+
+    public function __construct(private readonly SystemAuditService $audit) {}
 
     /**
      * Validate and update the user's password.
@@ -31,5 +34,15 @@ class UpdateUserPassword implements UpdatesUserPasswords
         $user->forceFill([
             'password' => Hash::make($input['password']),
         ])->save();
+
+        $this->audit->record(
+            $user,
+            $user,
+            'password-changed',
+            'Thay đổi mật khẩu cá nhân',
+            null,
+            null,
+            ['password_changed' => true],
+        );
     }
 }

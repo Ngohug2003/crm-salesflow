@@ -35,7 +35,7 @@ it('shows the current role scope and permissions from the backend catalog', func
         ->assertSee('Quyền hiện tại của bạn')
         ->assertSee('Sales Manager')
         ->assertSee('Dữ liệu trong phòng ban')
-        ->assertSee('40 quyền')
+        ->assertSee('39 quyền')
         ->assertSee('Xem người dùng')
         ->assertSee('Gán người phụ trách lead')
         ->assertSee('Vai trò của bạn')
@@ -64,7 +64,7 @@ it('documents super admin gate bypass and keeps role counts aligned with config'
     $superAdmin = guideUserWithRole('super-admin');
     $catalog = app(RoleGuideService::class)->catalog();
 
-    expect(array_column($catalog, 'permission_count'))->toBe([45, 45, 40, 30, 8]);
+    expect(array_column($catalog, 'permission_count'))->toBe([45, 45, 39, 30, 8]);
 
     $this->actingAs($superAdmin)
         ->get('/help/roles')

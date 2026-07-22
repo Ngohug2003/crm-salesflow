@@ -3,6 +3,7 @@
 namespace App\Actions\Fortify;
 
 use App\Models\User;
+use App\Services\SystemAuditService;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -10,6 +11,8 @@ use Laravel\Fortify\Contracts\UpdatesUserProfileInformation;
 
 class UpdateUserProfileInformation implements UpdatesUserProfileInformation
 {
+    public function __construct(private readonly SystemAuditService $audit) {}
+
     /**
      * Validate and update the given user's profile information.
      *
@@ -31,6 +34,12 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
             ],
         ])->validateWithBag('updateProfileInformation');
 
+        $old = [
+            'name' => $user->name,
+            'email' => $user->email,
+            'email_verified_at' => $user->email_verified_at === null ? null : (string) $user->email_verified_at,
+        ];
+
         if ($input['email'] !== $user->email) {
             $this->updateVerifiedUser($user, $input);
         } else {
@@ -38,6 +47,17 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
                 'name' => $input['name'],
                 'email' => $input['email'],
             ])->save();
+        }
+
+        $user->refresh();
+        $new = [
+            'name' => $user->name,
+            'email' => $user->email,
+            'email_verified_at' => $user->email_verified_at === null ? null : (string) $user->email_verified_at,
+        ];
+
+        if ($old !== $new) {
+            $this->audit->record($user, $user, 'updated', 'Cập nhật hồ sơ cá nhân', $old, $new);
         }
     }
 

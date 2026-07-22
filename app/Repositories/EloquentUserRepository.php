@@ -81,4 +81,25 @@ final readonly class EloquentUserRepository implements UserRepository
 
         return $user->refresh();
     }
+
+    public function syncRoles(User $user, array $roles): User
+    {
+        $user->syncRoles($roles);
+
+        return $user->load('roles:id,name');
+    }
+
+    public function lockActiveAdministratorIds(array $administratorRoles): array
+    {
+        return User::query()
+            ->where('is_active', true)
+            ->whereHas(
+                'roles',
+                fn (Builder $query): Builder => $query->whereIn('name', $administratorRoles),
+            )
+            ->lockForUpdate()
+            ->pluck('id')
+            ->map(fn (int|string $id): int => (int) $id)
+            ->all();
+    }
 }

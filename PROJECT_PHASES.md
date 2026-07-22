@@ -14,7 +14,7 @@ Tài liệu này là checkpoint chính của dự án. Quy ước làm việc t�
 |---|---|---|---|
 | 0 | Phân tích kiến trúc và dữ liệu | Hoàn tất tài liệu ban đầu | Chưa xác nhận |
 | 1 | Khởi tạo nền tảng và Docker | Hoàn tất triển khai | Chờ chủ dự án kiểm thử |
-| 2 | Users, Departments, Roles, Permissions | Đang làm — P2-01 đến P2-06 hoàn tất | Chờ kiểm thử P2-06 |
+| 2 | Users, Departments, Roles, Permissions | Đang làm — P2-01 đến P2-07 hoàn tất | Chờ kiểm thử P2-07 |
 | 3 | Leads | Chưa bắt đầu | — |
 | 4 | Companies và Contacts | Chưa bắt đầu | — |
 | 5 | Pipelines và Opportunities | Chưa bắt đầu | — |
@@ -330,8 +330,9 @@ Mục tiêu: hoàn thiện tổ chức người dùng và ranh giới phân quy�
 | P2-04 | ✅ Data scope và policies nền tảng | `feature/p2-04-data-scope-policies` | P2-03 | Scope all/department/owned/read-only được cưỡng chế ở backend |
 | P2-05 | ✅ Danh sách người dùng | `feature/p2-05-user-list` | P2-01, P2-04 | Tìm kiếm, lọc phòng ban/role/trạng thái, phân trang và URL state |
 | P2-06 | ✅ Tạo và chỉnh sửa người dùng | `feature/p2-06-user-form` | P2-05 | Form tạo/sửa, active/locked state, email uniqueness và password rule |
-| P2-07 | Gán phòng ban và role | `feature/p2-07-user-role-assignment` | P2-03, P2-06 | UI gán role/phòng ban, chống tự khóa admin cuối cùng, audit thay đổi |
-| P2-08 | Authorization test và checkpoint | `feature/p2-08-authorization-checkpoint` | P2-02..P2-07 | Test đủ 5 role, navigation theo quyền, seed demo và checklist nghiệm thu |
+| P2-07 | ✅ Gán phòng ban và role | `feature/p2-07-user-role-assignment` | P2-03, P2-06 | UI gán role/phòng ban, chống tự khóa admin cuối cùng, audit thay đổi |
+| P2-07-01 | ✅ Audit log toàn hệ thống | `feature/p2-07-user-role-assignment` | P2-07 | Audit dùng chung, màn hình bảng/log, lọc và giới hạn truy cập cho Super Admin/Admin IT |
+| P2-08 | Authorization test và checkpoint | `feature/p2-08-authorization-checkpoint` | P2-02..P2-07-01 | Test đủ 5 role, navigation theo quyền, seed demo và checklist nghiệm thu |
 
 ### Nhật ký feature P2-01 — Department schema và domain
 
@@ -725,6 +726,124 @@ Checklist kiểm thử:
 8. Xác nhận role hiện có không đổi sau khi sửa; việc gán role mới chỉ bắt đầu ở P2-07.
 
 Checkpoint P2-06: dừng tại đây để chủ dự án kiểm thử; chỉ bắt đầu P2-07 sau khi nhận xác nhận.
+
+### Nhật ký feature P2-07 — Gán phòng ban, role và audit thay đổi
+
+Trạng thái: **hoàn tất triển khai, chờ chủ dự án kiểm thử**.
+
+Đã triển khai:
+
+- Mở rộng form người dùng với danh sách checkbox role; bắt buộc ít nhất một role và chỉ chấp nhận key tồn tại trong `config/crm.php`.
+- Cho phép nhiều role trên cùng user; `DataScopeResolver` tiếp tục chọn scope rộng nhất theo thứ tự all/department/owned/read-only.
+- Mỗi lựa chọn role hiển thị tên, mô tả và data scope. Super Admin thấy đủ 5 role; Admin thường chỉ thấy admin/sales-manager/sales/viewer.
+- Admin thường không thể gán role `super-admin` bằng request sửa thủ công và không được sửa user đang mang role `super-admin`; quy tắc được cưỡng chế ở Policy và Service.
+- Thêm `administrator_roles` vào catalog cấu hình, hiện gồm `super-admin` và `admin`.
+- Một quản trị viên hoạt động được định nghĩa là `is_active = true` và mang ít nhất một role trong `administrator_roles`.
+- `UserManagementService` chạy update user, sync role và audit trong cùng database transaction; query khóa các Admin active bằng `lockForUpdate` trước khi quyết định.
+- Nếu khóa hoặc hạ quyền làm hệ thống không còn Admin active, toàn bộ transaction bị từ chối; thông tin user, role và audit đều không thay đổi.
+- Khi còn một Admin active khác, hệ thống cho phép khóa/hạ quyền Admin mục tiêu.
+- Mọi create/update user thành công ghi `activity_log`: actor, subject, event, old/new của tên, email, phòng ban, trạng thái và role.
+- Audit không lưu mật khẩu plain text hoặc password hash; chỉ ghi cờ boolean `password_changed`.
+- Role và phòng ban mới có hiệu lực ngay trên danh sách, UserPolicy và data scope backend.
+- Không tạo migration mới vì bảng Spatie Permission và `activity_log` đã có; không cài package mới và chưa tạo UI xem audit log.
+
+File chính:
+
+- `config/crm.php`
+- `app/Exceptions/UserOperationException.php`
+- `app/Livewire/Forms/UserForm.php`
+- `app/Livewire/Users/UserList.php`
+- `app/Policies/UserPolicy.php`
+- `app/Services/UserManagementService.php`
+- `app/Services/UserDirectoryService.php`
+- `app/Repositories/Contracts/UserRepository.php`
+- `app/Repositories/EloquentUserRepository.php`
+- `resources/views/livewire/users/user-list.blade.php`
+- `tests/Feature/UserFormTest.php`
+- `tests/Feature/UserRoleAssignmentTest.php`
+- `docs/permissions.md`
+
+Lệnh đã chạy:
+
+```bash
+docker compose exec -T app php artisan test tests/Feature/UserFormTest.php tests/Feature/UserRoleAssignmentTest.php
+docker compose exec -T app ./vendor/bin/pint --test
+docker compose exec -T app ./vendor/bin/phpstan analyse --memory-limit=512M
+docker compose exec -T app php artisan test
+docker compose exec -T --user node vite npm run build
+docker compose ps
+```
+
+Kết quả cuối:
+
+- Riêng P2-07: 7 test đạt, 49 assertions; bao phủ role visibility, multi-role/data scope, privilege escalation, Admin cuối cùng, demotion hợp lệ, audit bảo mật và role không hợp lệ.
+- Nhóm form P2-06/P2-07: 15 test đạt, 97 assertions.
+- Toàn dự án: 57 test đạt, 317 assertions.
+- Pint: 91 file đạt; PHPStan/Larastan không có lỗi.
+- Vite production build đạt; CSS 245,40 kB và JavaScript 0,40 kB trước gzip.
+- Tất cả service Docker đang chạy; service có healthcheck đều ở trạng thái `healthy`.
+
+Checklist kiểm thử:
+
+1. Chạy `docker compose exec app php artisan test tests/Feature/UserRoleAssignmentTest.php` và xác nhận 7 test/49 assertions đạt.
+2. Đăng nhập `admin@salesflow.test`, mở **Người dùng**, sửa một user demo và chọn nhiều role; lưu rồi xác nhận các badge role/data scope thay đổi.
+3. Dùng một tài khoản role `admin` thường và xác nhận form không có lựa chọn Super Admin, đồng thời không có nút sửa trên tài khoản `admin@salesflow.test` đang mang role `super-admin`.
+4. Không khóa/hạ quyền toàn bộ Admin trên database local. Dùng test `--filter="last active administrator"` để kiểm tra an toàn quy tắc Admin cuối cùng trong database test cô lập.
+5. Sau khi sửa role/phòng ban/trạng thái, mở bảng `activity_log` trong DBeaver; kiểm tra `causer_id`, `subject_id`, `event` và JSON `properties.old/new`.
+6. Đổi mật khẩu một user thử nghiệm và xác nhận `properties` chỉ có `password_changed: true`, không chứa mật khẩu hoặc hash.
+7. Chạy `docker compose exec app php artisan test tests/Feature/UserRoleAssignmentTest.php --filter="regular admins"` để xác nhận privilege escalation bị trả `403`.
+
+Checkpoint P2-07: dừng tại đây để chủ dự án kiểm thử; chỉ bắt đầu P2-08 sau khi nhận xác nhận.
+
+### Nhật ký feature P2-07-01 — Audit log toàn hệ thống
+
+Trạng thái: **hoàn tất triển khai, chờ chủ dự án kiểm thử**.
+
+Đã triển khai:
+
+- Tạo `SystemAuditService` dùng chung, tự loại bỏ password, password hash, token, secret và remember token kể cả khi nằm trong mảng lồng nhau.
+- Ghi actor, subject, event, mô tả, dữ liệu cũ/mới và metadata cho thao tác tạo/sửa user; tạo/sửa/bật-tắt/xóa phòng ban; đăng ký, đăng nhập, đăng xuất, cập nhật hồ sơ, đổi và đặt lại mật khẩu.
+- Metadata đăng nhập có IP đã che bớt octet, user agent và cờ remember; không lưu credential hoặc session token.
+- Toàn hệ thống dùng `Asia/Ho_Chi_Minh`: Laravel tạo timestamp theo giờ Việt Nam, session PostgreSQL cùng timezone và migration chuyển dữ liệu UTC cũ thêm 7 giờ; bộ lọc audit query trực tiếp theo ngày Việt Nam.
+- Tạo trang `/settings/audit-logs` dạng chỉ đọc, có tìm kiếm, lọc phân hệ/sự kiện/người thực hiện/ngày và phân trang với URL state.
+- Bộ lọc được gom thành panel responsive: trường tìm kiếm ưu tiên chiều rộng, label rõ ràng, ràng buộc khoảng ngày, badge tóm tắt điều kiện và nút đặt lại theo trạng thái.
+- Có hai chế độ xem: **Bảng** để tra cứu và **Dòng log** nền console theo ảnh mẫu; chế độ xem được lưu vào query `view=log`.
+- Mỗi bản ghi cho phép mở dữ liệu trước–sau và metadata; không có action sửa hoặc xóa audit trên giao diện.
+- Chỉ `super-admin` hoặc user có role `admin`, permission `audit-logs.view` và thuộc department code `IT` được mở route, mount Livewire và nhìn thấy menu.
+- Seeder tạo phòng `IT` và tài khoản local `it.admin@salesflow.test` / `SalesFlow@123`; Sales Manager không còn permission xem audit.
+- Chỉ Super Admin được chuyển user vào/ra phòng IT hoặc sửa một thành viên IT, tránh Admin ngoài IT tự nâng quyền truy cập audit.
+- Không cài package UI mới: Flux Free hiện tại không có Tabs, nên bộ chuyển dạng dùng Livewire + Tailwind nhẹ và accessible.
+
+File chính:
+
+- `app/Services/SystemAuditService.php`
+- `app/Listeners/AuditAuthenticationActivity.php`
+- `app/Policies/AuditLogPolicy.php`
+- `app/Repositories/EloquentAuditLogRepository.php`
+- `app/Services/AuditLogService.php`
+- `app/Livewire/AuditLogs/AuditLogList.php`
+- `resources/views/livewire/audit-logs/audit-log-list.blade.php`
+- `resources/views/livewire/audit-logs/partials/details.blade.php`
+- `tests/Feature/AuditLogAccessTest.php`
+- `tests/Feature/AuthenticationAuditTest.php`
+
+Kết quả xác minh:
+
+- Toàn dự án: **63 test đạt**; gồm kiểm tra quyền xem audit, hai chế độ bảng/log, che dữ liệu nhạy cảm, login/logout, bảo vệ thành viên IT và biên lọc ngày theo giờ Việt Nam.
+- Pint đạt trên 103 file; PHPStan/Larastan không có lỗi.
+- Vite production build đạt; CSS 247,39 kB và JavaScript 0,40 kB trước gzip.
+- Database local đã seed phòng `IT` và Admin IT; toàn bộ service Docker có healthcheck đều `healthy`.
+
+Checklist kiểm thử thủ công:
+
+1. Chạy `docker compose exec app php artisan db:seed --force`, đăng nhập `it.admin@salesflow.test` bằng mật khẩu `SalesFlow@123`.
+2. Mở **Nhật ký kiểm toán**, chuyển giữa **Bảng** và **Dòng log**; tải lại URL có `?view=log` và xác nhận kiểu xem được giữ nguyên.
+3. Thử tìm kiếm và lọc theo phân hệ, sự kiện, actor, ngày; mở một dòng để so sánh dữ liệu trước–sau.
+4. Đăng nhập bằng Admin ngoài IT hoặc Sales Manager IT và xác nhận menu không xuất hiện, truy cập trực tiếp route trả `403`.
+5. Tạo/sửa user hoặc phòng ban, đăng xuất/đăng nhập lại rồi xác nhận các sự kiện mới xuất hiện.
+6. Kiểm tra JSON không có password, hash, token hoặc secret; IP đăng nhập được che một phần.
+
+Checkpoint P2-07-01: dừng để chủ dự án kiểm thử audit trước khi bắt đầu P2-08.
 
 Checkpoint: dừng để kiểm thử đăng nhập, quản lý user/department và toàn bộ ma trận quyền trước P3.
 

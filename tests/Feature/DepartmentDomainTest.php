@@ -49,11 +49,16 @@ it('seeds the default department tree idempotently and assigns the demo admin', 
 
     $management = Department::query()->where('code', 'MANAGEMENT')->sole();
     $sales = Department::query()->where('code', 'SALES')->sole();
+    $it = Department::query()->where('code', 'IT')->sole();
     $admin = User::query()->where('email', 'admin@salesflow.test')->sole();
+    $itAdmin = User::query()->where('email', 'it.admin@salesflow.test')->sole();
 
-    expect(Department::query()->count())->toBe(3)
+    expect(Department::query()->count())->toBe(4)
         ->and($sales->parent->is($management))->toBeTrue()
-        ->and($admin->department->is($management))->toBeTrue();
+        ->and($it->parent->is($management))->toBeTrue()
+        ->and($admin->department->is($management))->toBeTrue()
+        ->and($itAdmin->department->is($it))->toBeTrue()
+        ->and($itAdmin->hasRole('admin'))->toBeTrue();
 });
 
 it('nulls hierarchy and user references if a department is removed technically', function (): void {

@@ -7,6 +7,7 @@ namespace App\Livewire\Departments;
 use App\Exceptions\DepartmentOperationException;
 use App\Livewire\Forms\DepartmentForm;
 use App\Models\Department;
+use App\Models\User;
 use App\Repositories\Contracts\DepartmentRepository;
 use App\Services\DepartmentService;
 use Illuminate\Contracts\View\View;
@@ -108,7 +109,7 @@ final class DepartmentManagement extends Component
 
         try {
             $isCreating = $this->form->departmentId === null;
-            $this->service()->save($this->form->departmentId, $this->form->validatedPayload());
+            $this->service()->save($this->currentUser(), $this->form->departmentId, $this->form->validatedPayload());
         } catch (DepartmentOperationException $exception) {
             $this->addError("form.{$exception->field}", $exception->getMessage());
 
@@ -126,7 +127,7 @@ final class DepartmentManagement extends Component
         Gate::authorize('update', $this->repository()->findOrFail($departmentId));
 
         try {
-            $department = $this->service()->toggleActive($departmentId);
+            $department = $this->service()->toggleActive($this->currentUser(), $departmentId);
         } catch (DepartmentOperationException $exception) {
             $this->notice = $exception->getMessage();
             $this->noticeType = 'error';
@@ -172,7 +173,7 @@ final class DepartmentManagement extends Component
         Gate::authorize('delete', $this->repository()->findOrFail($this->pendingDeleteId));
 
         try {
-            $this->service()->delete($this->pendingDeleteId);
+            $this->service()->delete($this->currentUser(), $this->pendingDeleteId);
         } catch (DepartmentOperationException $exception) {
             $this->deleteError = $exception->getMessage();
 
@@ -227,5 +228,14 @@ final class DepartmentManagement extends Component
     private function service(): DepartmentService
     {
         return app(DepartmentService::class);
+    }
+
+    private function currentUser(): User
+    {
+        $user = auth()->user();
+
+        abort_unless($user instanceof User, 401);
+
+        return $user;
     }
 }

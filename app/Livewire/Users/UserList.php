@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Livewire\Users;
 
 use App\Data\UserListFilters;
+use App\Exceptions\UserOperationException;
 use App\Livewire\Forms\UserForm;
 use App\Models\Department;
 use App\Models\User;
@@ -83,6 +84,13 @@ final class UserList extends Component
         );
     }
 
+    /** @return array<string, array{label: string, description: string, scope: string}> */
+    #[Computed]
+    public function roleAssignmentOptions(): array
+    {
+        return $this->service()->roleAssignmentOptions($this->currentUser());
+    }
+
     public function openCreate(): void
     {
         Gate::authorize('create', User::class);
@@ -121,7 +129,14 @@ final class UserList extends Component
         }
 
         $isCreating = $user === null;
-        $savedUser = $this->managementService()->save($actor, $user, $this->form->validatedPayload());
+
+        try {
+            $savedUser = $this->managementService()->save($actor, $user, $this->form->validatedPayload());
+        } catch (UserOperationException $exception) {
+            $this->addError("form.{$exception->field}", $exception->getMessage());
+
+            return;
+        }
 
         $this->notice = $isCreating
             ? "Đã tạo người dùng {$savedUser->name}."

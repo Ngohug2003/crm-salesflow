@@ -124,6 +124,14 @@ final class EloquentDepartmentRepository implements DepartmentRepository
         return $department->users()->exists();
     }
 
+    public function hasCode(?int $departmentId, string $code): bool
+    {
+        return $departmentId !== null && Department::query()
+            ->whereKey($departmentId)
+            ->where('code', $code)
+            ->exists();
+    }
+
     public function save(Department $department, array $attributes): Department
     {
         $department->fill($attributes)->save();

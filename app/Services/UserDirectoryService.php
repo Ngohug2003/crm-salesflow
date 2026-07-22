@@ -65,4 +65,31 @@ final readonly class UserDirectoryService
             $roles,
         );
     }
+
+    /** @return array<string, array{label: string, description: string, scope: string}> */
+    public function roleAssignmentOptions(User $actor): array
+    {
+        /** @var array<string, array{label: string, description: string, data_scope: string}> $roles */
+        $roles = config('crm.rbac.roles', []);
+        $superAdminRole = (string) config('crm.rbac.super_admin_role');
+
+        if (! $actor->hasRole($superAdminRole)) {
+            unset($roles[$superAdminRole]);
+        }
+
+        return array_map(
+            static fn (array $role): array => [
+                'label' => $role['label'],
+                'description' => $role['description'],
+                'scope' => match ($role['data_scope']) {
+                    'all' => 'Toàn bộ dữ liệu',
+                    'department' => 'Trong phòng ban',
+                    'owned' => 'Dữ liệu sở hữu',
+                    'read-only' => 'Chỉ đọc',
+                    default => $role['data_scope'],
+                },
+            ],
+            $roles,
+        );
+    }
 }

@@ -41,5 +41,16 @@ class DepartmentSeeder extends Seeder
                 'sort_order' => 30,
             ],
         );
+
+        Department::query()->updateOrCreate(
+            ['code' => 'IT'],
+            [
+                'parent_id' => $management->getKey(),
+                'name' => 'Phòng Công nghệ thông tin',
+                'description' => 'Quản trị hệ thống, bảo mật và nhật ký kiểm toán.',
+                'is_active' => true,
+                'sort_order' => 40,
+            ],
+        );
     }
 }

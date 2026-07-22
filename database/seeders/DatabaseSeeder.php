@@ -34,6 +34,16 @@ class DatabaseSeeder extends Seeder
 
         $admin->syncRoles((string) config('crm.rbac.super_admin_role'));
 
+        $itDepartment = Department::query()->where('code', 'IT')->firstOrFail();
+        $itAdmin = User::query()->updateOrCreate(['email' => 'it.admin@salesflow.test'], [
+            'department_id' => $itDepartment->getKey(),
+            'name' => 'SalesFlow IT Admin',
+            'email_verified_at' => now(),
+            'password' => Hash::make('SalesFlow@123'),
+            'is_active' => true,
+        ]);
+        $itAdmin->syncRoles('admin');
+
         $this->call(DemoUserSeeder::class);
     }
 }

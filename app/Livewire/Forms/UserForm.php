@@ -29,6 +29,9 @@ final class UserForm extends Form
 
     public string $passwordConfirmation = '';
 
+    /** @var list<string> */
+    public array $roles = [];
+
     /** @return array<string, list<mixed>> */
     protected function rules(): array
     {
@@ -63,6 +66,8 @@ final class UserForm extends Form
                 $this->password === '' ? 'nullable' : 'required',
                 'same:password',
             ],
+            'roles' => ['required', 'array', 'min:1'],
+            'roles.*' => ['string', Rule::in(array_keys((array) config('crm.rbac.roles', [])))],
         ];
     }
 
@@ -76,6 +81,7 @@ final class UserForm extends Form
             'isActive' => 'trạng thái',
             'password' => 'mật khẩu',
             'passwordConfirmation' => 'xác nhận mật khẩu',
+            'roles' => 'vai trò',
         ];
     }
 
@@ -95,10 +101,13 @@ final class UserForm extends Form
             'password.min' => 'Mật khẩu phải có ít nhất 8 ký tự.',
             'passwordConfirmation.required' => 'Vui lòng xác nhận mật khẩu.',
             'passwordConfirmation.same' => 'Xác nhận mật khẩu không khớp.',
+            'roles.required' => 'Vui lòng chọn ít nhất một vai trò.',
+            'roles.min' => 'Vui lòng chọn ít nhất một vai trò.',
+            'roles.*.in' => 'Vai trò được chọn không hợp lệ.',
         ];
     }
 
-    /** @return array{name: string, email: string, department_id: ?int, is_active: bool, password?: string} */
+    /** @return array{name: string, email: string, department_id: ?int, is_active: bool, roles: list<string>, password?: string} */
     public function validatedPayload(): array
     {
         $this->name = trim($this->name);
@@ -109,6 +118,7 @@ final class UserForm extends Form
             'email' => $validated['email'],
             'department_id' => $validated['departmentId'] === '' ? null : (int) $validated['departmentId'],
             'is_active' => (bool) $validated['isActive'],
+            'roles' => array_values(array_unique($validated['roles'])),
         ];
 
         if ($validated['password'] !== '') {
@@ -128,6 +138,7 @@ final class UserForm extends Form
         $this->isActive = $user->is_active;
         $this->password = '';
         $this->passwordConfirmation = '';
+        $this->roles = $user->getRoleNames()->sort()->values()->all();
     }
 
     public function clear(): void

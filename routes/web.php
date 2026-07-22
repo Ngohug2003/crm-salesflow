@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\RoleGuideController;
 use App\Http\Controllers\UserController;
@@ -12,5 +13,6 @@ Route::middleware(['auth', 'verified', 'account.active'])->group(function (): vo
     Route::get('/dashboard', DashboardOverview::class)->name('dashboard');
     Route::get('/settings/users', [UserController::class, 'index'])->name('users.index');
     Route::get('/settings/departments', [DepartmentController::class, 'index'])->name('departments.index');
+    Route::get('/settings/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
     Route::get('/help/roles', RoleGuideController::class)->name('help.roles');
 });
