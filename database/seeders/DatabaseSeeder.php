@@ -17,16 +17,21 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->call(DepartmentSeeder::class);
+        $this->call([
+            DepartmentSeeder::class,
+            RolePermissionSeeder::class,
+        ]);
 
         $managementDepartment = Department::query()->where('code', 'MANAGEMENT')->firstOrFail();
 
-        User::query()->updateOrCreate(['email' => 'admin@salesflow.test'], [
+        $admin = User::query()->updateOrCreate(['email' => 'admin@salesflow.test'], [
             'department_id' => $managementDepartment->getKey(),
             'name' => 'SalesFlow Admin',
             'email_verified_at' => now(),
             'password' => Hash::make('SalesFlow@123'),
             'is_active' => true,
         ]);
+
+        $admin->syncRoles((string) config('crm.rbac.super_admin_role'));
     }
 }

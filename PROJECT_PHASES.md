@@ -14,7 +14,7 @@ Tài liệu này là checkpoint chính của dự án. Quy ước làm việc t�
 |---|---|---|---|
 | 0 | Phân tích kiến trúc và dữ liệu | Hoàn tất tài liệu ban đầu | Chưa xác nhận |
 | 1 | Khởi tạo nền tảng và Docker | Hoàn tất triển khai | Chờ chủ dự án kiểm thử |
-| 2 | Users, Departments, Roles, Permissions | Đang làm — P2-01, P2-02 hoàn tất | Chờ kiểm thử P2-02 |
+| 2 | Users, Departments, Roles, Permissions | Đang làm — P2-01, P2-02, P2-03 hoàn tất | Chờ kiểm thử P2-03 |
 | 3 | Leads | Chưa bắt đầu | — |
 | 4 | Companies và Contacts | Chưa bắt đầu | — |
 | 5 | Pipelines và Opportunities | Chưa bắt đầu | — |
@@ -326,7 +326,7 @@ Mục tiêu: hoàn thiện tổ chức người dùng và ranh giới phân quy�
 |---|---|---|---|---|
 | P2-01 | ✅ Department schema và domain | `feature/p2-01-department-schema` | P1 | Migration/model/factory/seed phòng ban, quan hệ cha-con và trạng thái hoạt động |
 | P2-02 | ✅ Quản lý phòng ban | `feature/p2-02-department-management` | P2-01 | Livewire list/create/edit/disable phòng ban, validation và test |
-| P2-03 | Danh mục quyền và role seeder | `feature/p2-03-rbac-catalog-seeder` | P2-01 | `config/crm.php`, 5 role mặc định, permission idempotent và super-admin bypass |
+| P2-03 | ✅ Danh mục quyền và role seeder | `feature/p2-03-rbac-catalog-seeder` | P2-01 | `config/crm.php`, 5 role mặc định, permission idempotent và super-admin bypass |
 | P2-04 | Data scope và policies nền tảng | `feature/p2-04-data-scope-policies` | P2-03 | Scope all/department/owned/read-only được cưỡng chế ở backend |
 | P2-05 | Danh sách người dùng | `feature/p2-05-user-list` | P2-01, P2-04 | Tìm kiếm, lọc phòng ban/role/trạng thái, phân trang và URL state |
 | P2-06 | Tạo và chỉnh sửa người dùng | `feature/p2-06-user-form` | P2-05 | Form tạo/sửa, active/locked state, email uniqueness và password rule |
@@ -445,6 +445,65 @@ Checklist kiểm thử tay:
 6. Thử xóa phòng ban trống và xác nhận bản ghi biến mất; thử xóa phòng ban còn phòng ban con hoặc người dùng để xác nhận hệ thống chặn.
 
 Checkpoint P2-02: dừng tại đây để chủ dự án kiểm thử; chỉ bắt đầu P2-03 sau khi nhận xác nhận.
+
+### Nhật ký feature P2-03 — Danh mục quyền và role seeder
+
+Trạng thái: **hoàn tất triển khai, chờ chủ dự án kiểm thử**.
+
+Đã triển khai:
+
+- `config/crm.php` là nguồn cấu hình duy nhất cho 45 permission đúng theo prompt, được chia thành 11 nhóm có nhãn tiếng Việt.
+- Tạo 5 role mặc định: `super-admin`, `admin`, `sales-manager`, `sales`, `viewer`.
+- Phạm vi mặc định lần lượt là `all`, `all`, `department`, `owned`, `read-only`; việc cưỡng chế scope ở repository/policy thuộc P2-04.
+- `admin` có đủ 45 permission; `sales-manager` có 40; `sales` có 30; `viewer` có 8 quyền chỉ đọc.
+- `super-admin` không được gán trực tiếp toàn bộ permission; `Gate::before` trả quyền cho mọi ability nhằm tránh phải đồng bộ lại role này khi module mới bổ sung permission.
+- `RolePermissionSeeder` dùng `findOrCreate` và `syncPermissions`: chạy lặp lại không tạo dữ liệu trùng, đồng thời sửa lại permission của role nếu ma trận bị thay đổi thủ công.
+- Seeder kiểm tra permission trùng, permission không tồn tại, role super-admin bị thiếu và data scope không hợp lệ trước khi ghi database.
+- `DatabaseSeeder` gọi RBAC seeder và gán duy nhất role `super-admin` cho tài khoản demo `admin@salesflow.test` theo cách idempotent.
+- Cập nhật `docs/permissions.md` với số quyền, data scope, ma trận module và lưu ý phải gọi `$user->can(...)`/Gate/Policy để super-admin bypass có hiệu lực.
+- Xóa quy tắc `.gitignore` bỏ qua `tests/Feature`, bảo đảm các feature test mới được Git theo dõi.
+- Không cài package mới, không dùng component UI mới và không tạo migration; `spatie/laravel-permission`, `HasRoles`, bảng RBAC đã có từ Giai đoạn 1.
+
+File chính:
+
+- `config/crm.php`
+- `database/seeders/RolePermissionSeeder.php`
+- `database/seeders/DatabaseSeeder.php`
+- `app/Providers/AppServiceProvider.php`
+- `tests/Feature/RbacCatalogSeederTest.php`
+- `docs/permissions.md`
+- `.gitignore`
+
+Lệnh đã chạy:
+
+```bash
+docker compose exec -T app php artisan test tests/Feature/RbacCatalogSeederTest.php
+docker compose exec -T app php artisan db:seed --force
+docker compose exec -T -e XDG_CONFIG_HOME=/tmp app php artisan tinker --execute="dump(['roles' => Spatie\\Permission\\Models\\Role::count(), 'permissions' => Spatie\\Permission\\Models\\Permission::count(), 'admin_is_super_admin' => App\\Models\\User::where('email', 'admin@salesflow.test')->firstOrFail()->hasRole('super-admin')]);"
+docker compose exec -T app php artisan test
+docker compose exec -T app ./vendor/bin/pint --test
+docker compose exec -T app ./vendor/bin/phpstan analyse --memory-limit=512M
+docker compose exec -T --user node vite npm run build
+```
+
+Kết quả cuối:
+
+- PostgreSQL local có đúng 5 role, 45 permission; tài khoản demo mang role `super-admin`.
+- P2-03: 4 test đạt, 29 assertions; bao phủ catalog, idempotency, sửa ma trận khi seed lại, Gate bypass và tài khoản demo.
+- Toàn dự án: 26 test đạt, 121 assertions.
+- Pint: 66 file đạt; PHPStan/Larastan không có lỗi.
+- Vite production build đạt; CSS 242,64 kB và JavaScript 0,40 kB trước gzip.
+- Lần test đầu phát hiện PHP không cho spread mảng có string key vào `array_merge`; đã chuẩn hóa bằng `array_values` trước khi merge.
+- Tinker mặc định không ghi được `/var/www/.config/psysh`; lệnh kiểm tra dùng `XDG_CONFIG_HOME=/tmp`, không ảnh hưởng runtime ứng dụng.
+
+Checklist kiểm thử:
+
+1. Chạy `docker compose exec app php artisan db:seed --force` lần thứ hai và xác nhận không báo duplicate.
+2. Chạy `docker compose exec app php artisan test tests/Feature/RbacCatalogSeederTest.php` và xác nhận 4 test đạt.
+3. Chạy `docker compose exec app php artisan permission:show` để xem 5 role và permission đã gán; cột `super-admin` hiển thị dấu chấm là đúng vì role này dùng Gate bypass thay vì gán trực tiếp.
+4. Đăng nhập tài khoản demo và xác nhận Dashboard/Phòng ban vẫn truy cập bình thường; UI quản lý role chưa thuộc phạm vi P2-03.
+
+Checkpoint P2-03: dừng tại đây để chủ dự án kiểm thử; chỉ bắt đầu P2-04 sau khi nhận xác nhận.
 
 Checkpoint: dừng để kiểm thử đăng nhập, quản lý user/department và toàn bộ ma trận quyền trước P3.
 
