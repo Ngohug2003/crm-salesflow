@@ -25,6 +25,54 @@ Tài liệu này là checkpoint chính của dự án. Quy ước làm việc t�
 | 8 | Import, Export, Notifications và Audit | Chưa bắt đầu | — |
 | 9 | Hoàn thiện, CI/CD và deployment | Chưa bắt đầu | — |
 
+## Technical remediation sau P3-08
+
+Kế hoạch chi tiết và thứ tự branch nằm tại [`TECHNICAL_REMEDIATION_PHASES.md`](TECHNICAL_REMEDIATION_PHASES.md). Remediation được phân loại về đúng giai đoạn P1/P2/P3; không thay đổi trạng thái hoàn tất nghiệp vụ của các phase cũ.
+
+| Mã | Phạm vi | Branch | Trạng thái | Requirement/gap |
+|---|---|---|---|---|
+| P1-T01 | Request context và structured logging | `feature/p1-t01-request-context-logging` | Hoàn tất triển khai — chờ kiểm thử | §9, §9.1, §11.2, §12; `GAP-PLATFORM-001` |
+| P1-T02 | Quản lý phiên đăng nhập | `feature/p1-t02-session-management` | Chưa bắt đầu | MOD-AUTH |
+
+### Nhật ký P1-T01 — Request context và structured logging
+
+Mục tiêu và quyết định:
+
+- Mỗi HTTP request có một `X-Request-ID` hợp lệ xuyên request attribute, Laravel Context, response và operational log.
+- JSON log có `request_id`, `user_id`, route, `module`, `action`, method, path, status và duration khi phù hợp.
+- Dữ liệu nhạy cảm trong context lồng nhau được che; không dùng operational log thay cho Audit.
+- Docker có sidecar `logs` riêng: đọc JSON log dạng read-only, chỉ in các trường an toàn theo một dòng ngắn để xem realtime mà không trộn với PHP-FPM ở `app-1`.
+- Audit database chưa đổi schema trong P1-T01; request correlation của Audit thuộc P2-T02.
+- Không cài package và không có migration.
+
+File chính:
+
+- `app/Support/RequestContext.php`
+- `app/Http/Middleware/AssignRequestId.php`
+- `app/Http/Middleware/EnrichAuthenticatedRequestContext.php`
+- `app/Logging/ConfigureStructuredLogging.php`
+- `app/Logging/RedactSensitiveData.php`
+- `app/Console/Commands/TailApplicationLog.php`
+- `app/Support/ApplicationLogLineFormatter.php`
+- `bootstrap/app.php`, `config/logging.php`, `.env.example`
+- `compose.yaml`, `compose.override.yaml`
+- `resources/views/errors/500.blade.php`
+- `tests/Feature/RequestContextTest.php`, `tests/Feature/ApplicationLogViewerCommandTest.php`
+- `tests/Unit/RedactSensitiveDataTest.php`, `tests/Unit/ApplicationLogLineFormatterTest.php`
+
+Quality gate cuối sau khi bổ sung module/action và traceability:
+
+- Test riêng: 10 test đạt, 45 assertions.
+- Toàn dự án: 154 test đạt, 1019 assertions.
+- Pint: đạt trên 167 file.
+- PHPStan: không có lỗi.
+- Vite production build: đạt.
+- Docker: 11 service đang chạy, gồm sidecar `logs`; các service có healthcheck đều healthy.
+
+Checklist thủ công và commit đề xuất được ghi chi tiết trong `TECHNICAL_REMEDIATION_PHASES.md`.
+
+Checkpoint P1-T01: dừng để chủ dự án kiểm thử; chưa bắt đầu P1-T02.
+
 ## Giai đoạn 0 — Phân tích kiến trúc và dữ liệu
 
 ### Mục tiêu

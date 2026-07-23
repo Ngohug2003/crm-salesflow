@@ -36,6 +36,9 @@
                     @can('viewAny', \Spatie\Activitylog\Models\Activity::class)
                         <a href="{{ route('audit-logs.index') }}" wire:navigate.hover @class(['nav-link', 'nav-link-active' => request()->routeIs('audit-logs.*')])><span>◴</span><span x-show="sidebar">Nhật ký kiểm toán</span></a>
                     @endcan
+                    @can('system-console.view')
+                        <a href="{{ route('system-console.index') }}" wire:navigate.hover @class(['nav-link', 'nav-link-active' => request()->routeIs('system-console.*')])><span>⌘</span><span x-show="sidebar">System Console</span></a>
+                    @endcan
                     @foreach (['Companies' => '▦', 'Contacts' => '♙', 'Opportunities' => '◇', 'Pipelines' => '◫', 'Activities' => '◷', 'Tasks' => '✓', 'Reports' => '⌁'] as $label => $icon)
                         <span class="nav-link cursor-not-allowed opacity-55" title="Có trong phase tiếp theo"><span>{{ $icon }}</span><span x-show="sidebar">{{ $label }}</span></span>
                     @endforeach

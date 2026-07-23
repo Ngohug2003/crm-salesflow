@@ -24,6 +24,8 @@ final class AuthServiceProvider extends ServiceProvider
         Gate::policy(Activity::class, AuditLogPolicy::class);
         Gate::policy(User::class, UserPolicy::class);
 
+        Gate::define('system-console.view', static fn (User $user): bool => $user->hasRole('admin'));
+
         Gate::before(static function (User $user, string $ability): ?bool {
             return $user->hasRole((string) config('crm.rbac.super_admin_role')) ? true : null;
         });

@@ -56,7 +56,7 @@ Ngày cập nhật cấu trúc: **23/07/2026**.
 
 | Mã | Feature | Branch đề xuất | Phụ thuộc | Trạng thái | Kết quả cần đạt |
 |---|---|---|---|---|---|
-| P1-T01 | Request context và structured logging | `feature/p1-t01-request-context-logging` | P1 | Chưa bắt đầu | Một request ID xuyên suốt response và application/security log |
+| P1-T01 | Request context và structured logging | `feature/p1-t01-request-context-logging` | P1 | Hoàn tất triển khai — chờ kiểm thử | Một request ID xuyên suốt response và application/security log |
 | P1-T02 | Quản lý phiên đăng nhập | `feature/p1-t02-session-management` | P1-T01 | Chưa bắt đầu | User xem/thu hồi session đúng ownership và có audit foundation |
 | P1-T03 | Chuẩn hóa App shell | `feature/p1-t03-app-shell` | P1-T01 | Chưa bắt đầu | Layout responsive, navigation mượt và platform slots nhất quán |
 | P1-T04 | Quality foundation | `feature/p1-t04-quality-foundation` | P1-T01..P1-T03 | Chưa bắt đầu | Một lệnh quality chuẩn và test nền tảng P1 |
@@ -210,6 +210,95 @@ Thiết lập nền tảng truy vết dùng chung cho mọi HTTP request trướ
 ### Checkpoint
 
 Dừng sau P1-T01 để kiểm tra request header và log trước khi làm session/audit.
+
+### Nhật ký P1-T01 — Request context và structured logging
+
+Trạng thái: **hoàn tất triển khai, chờ chủ dự án kiểm thử**.
+
+Đã triển khai:
+
+- Middleware toàn cục sinh UUID khi request không có `X-Request-ID`, giữ inbound ID hợp lệ và loại bỏ ID có ký tự không an toàn hoặc dài quá 100 ký tự.
+- Request ID được gắn vào request attribute, Laravel Context, JSON log và response header; response lỗi 500 cũng trả cùng header.
+- Context được enrich sau khi Laravel resolve route và sau authentication để log có route name/user ID khi có thể.
+- Structured context có `module` và `action` được suy ra từ route name; route không có tên dùng path/method an toàn làm fallback.
+- Tạo channel `application` và `security` dạng JSON, daily rotation; `single`/`daily` cũ cũng dùng JSON/redaction để local `.env` hiện tại không bị bỏ sót bảo vệ.
+- Tạo sidecar Docker `logs` chỉ đọc named volume log; formatter allowlist chuyển JSON thành một dòng gồm thời gian Việt Nam, level, module/action, status, user, duration, request ID và event.
+- Structured log không còn trộn trong `app-1`; Docker Desktop xem riêng tại container `salesflow-crm-logs-1`, còn JSON gốc vẫn được giữ để truy vết đầy đủ.
+- Processor redaction che dữ liệu nhạy cảm lồng nhau theo key: authorization, cookie, password, secret, session, token và API/private/client key.
+- HTTP success ghi ở mức `debug`, lỗi client ghi `warning`, lỗi server ghi `error`; bỏ qua access log thành công của `/up` để healthcheck không làm đầy log.
+- Tạo trang lỗi 500 tiếng Việt hiển thị mã tra cứu request ID.
+- Chưa sửa schema/activity log; liên kết request ID vào Audit database thuộc P2-T02.
+
+Requirement/gap áp dụng:
+
+- `docs/requirements.md`: mục 9, 9.1, 11.2 và 12.
+- Quyết định `DEC-004`, `DEC-007`, `DEC-008`.
+- Gap `GAP-PLATFORM-001`; P1-T01 xử lý HTTP/log context, phần Audit correlation còn lại ở P2-T02.
+
+File đã tạo/sửa:
+
+- `app/Support/RequestContext.php`
+- `app/Http/Middleware/AssignRequestId.php`
+- `app/Http/Middleware/EnrichAuthenticatedRequestContext.php`
+- `app/Logging/ConfigureStructuredLogging.php`
+- `app/Logging/RedactSensitiveData.php`
+- `app/Console/Commands/TailApplicationLog.php`
+- `app/Support/ApplicationLogLineFormatter.php`
+- `bootstrap/app.php`
+- `config/logging.php`
+- `.env.example`
+- `compose.yaml`, `compose.override.yaml`
+- `routes/web.php`, `routes/api.php`
+- `resources/views/errors/500.blade.php`
+- `tests/Feature/RequestContextTest.php`
+- `tests/Feature/ApplicationLogViewerCommandTest.php`
+- `tests/Unit/RedactSensitiveDataTest.php`
+- `tests/Unit/ApplicationLogLineFormatterTest.php`
+
+Migration/package:
+
+- Không có migration.
+- Không cài Composer/NPM package mới; sử dụng Laravel Context và Monolog đã có trong framework.
+
+Lệnh đã chạy:
+
+```bash
+docker compose exec -T -e LOG_APPLICATION_STACK=application_file app php artisan test tests/Feature/RequestContextTest.php tests/Feature/ApplicationLogViewerCommandTest.php tests/Unit/RedactSensitiveDataTest.php tests/Unit/ApplicationLogLineFormatterTest.php
+docker compose exec -T -e LOG_APPLICATION_STACK=application_file app php artisan test --compact
+docker compose exec -T app ./vendor/bin/pint --test
+docker compose exec -T app ./vendor/bin/phpstan analyse --memory-limit=512M --no-progress
+docker compose exec -T vite npm run build
+docker compose exec -T app curl -sS -D - -o /dev/null http://nginx/up
+docker compose logs -f logs
+docker compose ps
+```
+
+Kết quả xác minh:
+
+- Test riêng P1-T01: **10 test đạt, 45 assertions**.
+- Toàn dự án: **154 test đạt, 1019 assertions**.
+- Pint: **đạt trên 167 file**.
+- PHPStan: **không có lỗi**.
+- Vite production build: **đạt**.
+- Docker: **11 service đang chạy; sidecar `logs` và các service có healthcheck đều healthy**.
+- Smoke test Nginx: response `/up` có `X-Request-ID`; JSON application log dùng cùng ID trong lần smoke trước khi loại access log healthcheck.
+- Smoke test sidecar: request `dedicated-log-viewer-002` xuất hiện realtime ở `logs-1` dưới dạng đã lọc; `app-1` chỉ còn access log PHP-FPM.
+
+Checklist kiểm thử thủ công:
+
+1. Mở DevTools → Network, tải Dashboard và xác nhận response có `X-Request-ID`.
+2. Chạy `docker compose logs -f logs`, chuyển giữa các trang và đối chiếu request ID trên container riêng.
+3. Nếu cần JSON gốc, chạy `docker compose exec app tail -f storage/logs/application-2026-07-23.log`.
+4. Dùng curl gửi `X-Request-ID: manual-request-001`; xác nhận response và log giữ nguyên mã này.
+5. Gửi ID có khoảng trắng/ký tự `/`; xác nhận server thay bằng UUID.
+6. Kiểm tra một response lỗi 500 ở môi trường test và xác nhận trang hiển thị “Mã tra cứu”.
+7. Không bắt đầu P1-T02 cho đến khi checklist trên được xác nhận.
+
+Commit đề xuất:
+
+`(feature-p1-t01): thêm request context và structured logging`
+
+Checkpoint P1-T01: **dừng tại đây để chủ dự án kiểm thử trước khi bắt đầu P1-T02**.
 
 ---
 
@@ -814,11 +903,13 @@ Checkpoint: dừng tại đây để chủ dự án kiểm thử.
 
 ## 8. Trạng thái hiện tại
 
-- Giai đoạn P1 remediation: **chưa bắt đầu**.
+- Giai đoạn P1 remediation: **P1-T01 hoàn tất triển khai, chờ chủ dự án kiểm thử**.
 - Giai đoạn P2 remediation: **chưa bắt đầu**.
 - Giai đoạn P3 remediation: **chưa bắt đầu**.
 - Checkpoint xuyên suốt: **chưa bắt đầu**.
 
-Feature bắt đầu đề xuất: **P1-T01 — Request context và structured logging**.
+Feature hiện tại: **P1-T01 — Request context và structured logging**.
 
-Branch cần tạo đầu tiên: **`feature/p1-t01-request-context-logging` từ `develop` mới nhất**.
+Branch hiện tại: **`feature/p1-t01-request-context-logging`**.
+
+Feature tiếp theo sau khi P1-T01 được xác nhận và merge: **P1-T02 — Quản lý phiên đăng nhập**.
