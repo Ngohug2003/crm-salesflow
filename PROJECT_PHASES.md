@@ -32,7 +32,7 @@ Kế hoạch chi tiết và thứ tự branch nằm tại [`TECHNICAL_REMEDIATIO
 | Mã | Phạm vi | Branch | Trạng thái | Requirement/gap |
 |---|---|---|---|---|
 | P1-T01 | Request context và structured logging | `feature/p1-t01-request-context-logging` | Hoàn tất triển khai — chờ kiểm thử | §9, §9.1, §11.2, §12; `GAP-PLATFORM-001` |
-| P1-T02 | Quản lý phiên đăng nhập | `feature/p1-t02-session-management` | Chưa bắt đầu | MOD-AUTH |
+| P1-T02 | Quản lý phiên đăng nhập | `feature/p1-t02-session-management` | Hoàn tất triển khai — chờ chạy test Docker | MOD-AUTH; §6.1, §9, §11 |
 
 ### Nhật ký P1-T01 — Request context và structured logging
 
@@ -72,6 +72,45 @@ Quality gate cuối sau khi bổ sung module/action và traceability:
 Checklist thủ công và commit đề xuất được ghi chi tiết trong `TECHNICAL_REMEDIATION_PHASES.md`.
 
 Checkpoint P1-T01: dừng để chủ dự án kiểm thử; chưa bắt đầu P1-T02.
+
+### Nhật ký P1-T02 — Quản lý phiên đăng nhập
+
+Mục tiêu và quyết định:
+
+- Người dùng tự xem và thu hồi các phiên đăng nhập thuộc tài khoản của chính mình.
+- Màn quản lý session dùng bảng `sessions`; local/demo cần `SESSION_DRIVER=database` để có dữ liệu query và revoke rõ ràng.
+- UI không hiển thị session ID nguyên bản; thao tác revoke dùng token mã hóa, còn audit chỉ lưu fingerprint rút gọn, IP đã che và metadata thiết bị.
+- Thao tác thu hồi yêu cầu mật khẩu đã được xác nhận gần đây qua cơ chế `password.confirm` của Fortify/Laravel.
+- Chưa làm Admin xem session toàn hệ thống và chưa tự động thu hồi session khi khóa user/đổi mật khẩu; phần đó thuộc P2-T03.
+
+File chính:
+
+- `app/Data/SessionInfo.php`
+- `app/Livewire/Settings/SessionManager.php`
+- `app/Repositories/Contracts/SessionRepository.php`
+- `app/Repositories/EloquentSessionRepository.php`
+- `app/Services/SessionManagementService.php`
+- `resources/views/livewire/settings/session-manager.blade.php`
+- `app/Providers/RepositoryServiceProvider.php`, `routes/web.php`, `resources/views/layouts/app.blade.php`, `.env.example`
+- `tests/Feature/SessionManagementTest.php`
+
+Quality gate:
+
+- Test yêu cầu chạy theo chỉ đạo chủ dự án: `docker compose exec -T app php artisan test tests/Feature/SessionManagementTest.php`.
+- Chưa chạy được vì Docker CLI trong WSL báo: `The command 'docker' could not be found in this WSL 2 distro`.
+- `git diff --check`: đạt, không có whitespace error.
+
+Checklist thủ công:
+
+1. Bật Docker Desktop WSL integration rồi recreate app với `SESSION_DRIVER=database`.
+2. Đăng nhập cùng tài khoản trên hai trình duyệt.
+3. Vào `Cài đặt / Phiên đăng nhập`; xác nhận thấy Chrome/thiết bị, IP đã che và nhãn “Phiên hiện tại”.
+4. Chưa xác nhận mật khẩu thì thao tác thu hồi chuyển sang màn xác nhận mật khẩu.
+5. Thu hồi trình duyệt còn lại; trình duyệt đó bị yêu cầu đăng nhập lại ở request kế tiếp.
+6. Thử gửi token phiên của user khác; backend phải từ chối và không xóa session.
+7. Kiểm tra Audit không chứa session ID nguyên bản.
+
+Checkpoint P1-T02: dừng để chủ dự án bật Docker, chạy test file mới và kiểm thử bằng ít nhất hai trình duyệt.
 
 ## Giai đoạn 0 — Phân tích kiến trúc và dữ liệu
 
