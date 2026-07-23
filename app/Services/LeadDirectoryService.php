@@ -15,6 +15,8 @@ use App\Models\Tag;
 use App\Models\User;
 use App\Repositories\Contracts\DepartmentRepository;
 use App\Repositories\Contracts\LeadRepository;
+use App\Repositories\Contracts\LeadSourceRepository;
+use App\Repositories\Contracts\TagRepository;
 use App\Repositories\Contracts\UserRepository;
 use App\Services\Authorization\DataScopeService;
 use Carbon\CarbonImmutable;
@@ -28,6 +30,8 @@ final readonly class LeadDirectoryService
         private LeadRepository $leads,
         private UserRepository $users,
         private DepartmentRepository $departments,
+        private LeadSourceRepository $sources,
+        private TagRepository $tags,
         private DataScopeService $dataScope,
     ) {}
 
@@ -42,7 +46,7 @@ final readonly class LeadDirectoryService
 
     public function visibleTotal(User $actor): int
     {
-        return $this->leads->visibleTo($actor)->count();
+        return $this->leads->countVisibleTo($actor);
     }
 
     public function makeFilters(
@@ -76,19 +80,13 @@ final readonly class LeadDirectoryService
     /** @return Collection<int, LeadSource> */
     public function sourceOptions(): Collection
     {
-        return LeadSource::query()
-            ->active()
-            ->ordered()
-            ->get(['id', 'name', 'code', 'color']);
+        return $this->sources->activeOrdered();
     }
 
     /** @return Collection<int, Tag> */
     public function tagOptions(): Collection
     {
-        return Tag::query()
-            ->active()
-            ->ordered()
-            ->get(['id', 'name', 'slug', 'color']);
+        return $this->tags->activeOrdered();
     }
 
     /** @return Collection<int, User> */

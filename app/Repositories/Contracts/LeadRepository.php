@@ -8,16 +8,11 @@ use App\Data\LeadFilterData;
 use App\Models\Lead;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 
 interface LeadRepository
 {
-    /** @return Builder<Lead> */
-    public function visibleTo(User $actor): Builder;
-
-    /** @return Builder<Lead> */
-    public function filteredVisibleTo(User $actor, LeadFilterData $filters): Builder;
+    public function countVisibleTo(User $actor): int;
 
     /** @return LengthAwarePaginator<int, Lead> */
     public function paginateVisibleTo(
@@ -29,9 +24,6 @@ interface LeadRepository
     public function findVisibleOrFail(User $actor, int $leadId): Lead;
 
     public function findVisibleForUpdateOrFail(User $actor, int $leadId): Lead;
-
-    /** @return Builder<Lead> */
-    public function trashedVisibleTo(User $actor): Builder;
 
     /** @return LengthAwarePaginator<int, Lead> */
     public function paginateTrashedVisibleTo(User $actor, string $search, int $perPage = 15): LengthAwarePaginator;

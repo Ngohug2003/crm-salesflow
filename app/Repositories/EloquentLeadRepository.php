@@ -26,7 +26,13 @@ final readonly class EloquentLeadRepository implements LeadRepository
 
     public function __construct(private DataScopeService $dataScope) {}
 
-    public function visibleTo(User $actor): Builder
+    public function countVisibleTo(User $actor): int
+    {
+        return $this->visibleTo($actor)->count();
+    }
+
+    /** @return Builder<Lead> */
+    private function visibleTo(User $actor): Builder
     {
         return $this->dataScope->apply(
             Lead::query(),
@@ -36,7 +42,8 @@ final readonly class EloquentLeadRepository implements LeadRepository
         );
     }
 
-    public function filteredVisibleTo(User $actor, LeadFilterData $filters): Builder
+    /** @return Builder<Lead> */
+    private function filteredVisibleTo(User $actor, LeadFilterData $filters): Builder
     {
         $search = trim($filters->search);
         $sortColumn = self::SORT_COLUMNS[$filters->sortBy] ?? self::SORT_COLUMNS['created_at'];
@@ -125,7 +132,8 @@ final readonly class EloquentLeadRepository implements LeadRepository
             ->findOrFail($leadId);
     }
 
-    public function trashedVisibleTo(User $actor): Builder
+    /** @return Builder<Lead> */
+    private function trashedVisibleTo(User $actor): Builder
     {
         return $this->dataScope->apply(
             Lead::query()->onlyTrashed(),

@@ -64,7 +64,7 @@ Ngày cập nhật cấu trúc: **23/07/2026**.
 | P2-T02 | Audit correlation với Request ID | `feature/p2-t02-audit-request-correlation` | P1-T01, P2-07-02 | Hoàn tất triển khai — chờ kiểm thử | Audit, realtime và response dùng cùng request ID |
 | P2-T03 | Account và session lifecycle | `feature/p2-t03-account-session-lifecycle` | P1-T02, P2-07 | Hoàn tất triển khai — chờ kiểm thử | Khóa user/đổi mật khẩu thu hồi session đúng rule |
 | P2-T04 | UI states và form quản trị | `feature/p2-t04-admin-ui-states` | P1-T03, P2-T01..P2-T03 | Hoàn tất triển khai — chờ kiểm thử | User/Department/Audit có state, modal/form thống nhất |
-| P3-T01 | Chuẩn hóa Lead Repository boundary | `feature/p3-t01-lead-repository-boundary` | P2-T01, P3-08 | Chưa bắt đầu | Lead query thuộc Repository; taxonomy không query trong Service |
+| P3-T01 | Chuẩn hóa Lead Repository boundary | `feature/p3-t01-lead-repository-boundary` | P2-T01, P3-08 | Hoàn tất triển khai — chờ kiểm thử | Lead query thuộc Repository; taxonomy không query trong Service |
 | P3-T02 | Duplicate guard tại backend | `feature/p3-t02-lead-duplicate-guard` | P3-T01, P2-T02 | Chưa bắt đầu | Mọi caller phải qua duplicate decision và recheck |
 | P3-T03 | Trash/restore conflict handling | `feature/p3-t03-lead-trash-conflict` | P3-T02 | Chưa bắt đầu | Restore xử lý duplicate active an toàn và có audit |
 | P3-T04 | UI states và form Lead | `feature/p3-t04-lead-ui-states` | P1-T03, P3-T02, P3-T03 | Chưa bắt đầu | Lead UI có state nhất quán và quyết định modal/full page rõ ràng |
@@ -816,9 +816,29 @@ Checkpoint P2-T04: **dừng tại đây để nghiệm thu toàn bộ remediatio
 2. Kiểm tra detail/edit/trash theo đủ role.
 3. Xác nhận phòng A không thấy Lead phòng B.
 
-### Checkpoint
-
 Dừng sau P3-T01 để kiểm thử Repository boundary trước duplicate hardening.
+
+### Nhật ký triển khai
+
+**Ngày**: 23/07/2026
+**Branch**: `feature/p3-t01-lead-repository-boundary`
+**Requirement**: `REQ-7.1`, `GAP-ARCH-001`
+
+**Files thay đổi**:
+- `app/Repositories/Contracts/LeadSourceRepository.php` [NEW] — Định nghĩa repository contract cho LeadSource.
+- `app/Repositories/Contracts/TagRepository.php` [NEW] — Định nghĩa repository contract cho Tag.
+- `app/Repositories/EloquentLeadSourceRepository.php` [NEW] — Triển khai logic đóng gói câu lệnh query cho LeadSource.
+- `app/Repositories/EloquentTagRepository.php` [NEW] — Triển khai logic đóng gói câu lệnh query cho Tag.
+- `app/Repositories/Contracts/LeadRepository.php` — Loại bỏ `visibleTo`, `filteredVisibleTo`, `trashedVisibleTo` trả về Builder, bổ sung `countVisibleTo`.
+- `app/Repositories/EloquentLeadRepository.php` — Thay đổi phạm vi truy cập các phương thức trả về Builder sang `private`, đồng thời bổ sung định dạng PHPDoc `@return Builder<Lead>` để hỗ trợ phân tích tĩnh PHPStan.
+- `app/Services/LeadDirectoryService.php` — Thay thế truy vấn model trực tiếp bằng `LeadSourceRepository` và `TagRepository` mới, và đổi cách đếm sang `countVisibleTo`.
+- `app/Providers/RepositoryServiceProvider.php` — Đăng ký các binding cho 2 repository mới.
+- `tests/Feature/LeadRepositoryTest.php` — Cập nhật các assert sử dụng `paginateVisibleTo` thay vì trực tiếp truy cập Builder.
+
+**Quality gates**:
+- `composer quality`: ✅ PASS (169 tests passed, static analysis OK)
+
+Checkpoint P3-T01: **dừng tại đây để kiểm thử Repository boundary trước duplicate hardening**.
 
 ---
 
