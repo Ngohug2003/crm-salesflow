@@ -60,11 +60,13 @@ it('applies all department owned and read-only data scopes before filtering', fu
         ->all();
     $repository = app(LeadRepository::class);
 
-    $visibleIds = static fn (User $actor): array => $repository
-        ->visibleTo($actor)
-        ->whereIn('id', $targetIds)
-        ->orderBy('id')
+    $visibleIds = static fn (User $actor): array => collect(
+        $repository->paginateVisibleTo($actor, new LeadFilterData, 100)->items()
+    )
+        ->filter(fn (Lead $lead) => in_array($lead->id, $targetIds, true))
         ->pluck('id')
+        ->sort()
+        ->values()
         ->all();
 
     expect($visibleIds($admin))->toBe($targetIds)
@@ -84,8 +86,9 @@ it('searches contact and company fields case insensitively and excludes deleted 
     $deleted->delete();
     $repository = app(LeadRepository::class);
 
-    $idsFor = static fn (string $search): array => $repository
-        ->filteredVisibleTo($actor, new LeadFilterData(search: $search))
+    $idsFor = static fn (string $search): array => collect(
+        $repository->paginateVisibleTo($actor, new LeadFilterData(search: $search), 100)->items()
+    )
         ->pluck('id')
         ->all();
 
@@ -136,7 +139,7 @@ it('combines taxonomy assignment lifecycle and date filters without duplicate le
         createdTo: CarbonImmutable::parse('2026-07-31'),
     );
 
-    expect(app(LeadRepository::class)->filteredVisibleTo($actor, $filters)->pluck('id')->all())
+    expect(collect(app(LeadRepository::class)->paginateVisibleTo($actor, $filters, 100)->items())->pluck('id')->all())
         ->toBe([$matching->getKey()]);
 });
 
@@ -156,14 +159,14 @@ it('uses an allowlist for sorting and a stable identifier fallback', function ()
     ]);
     $repository = app(LeadRepository::class);
 
-    $allowed = $repository->filteredVisibleTo($actor, new LeadFilterData(
+    $allowed = collect($repository->paginateVisibleTo($actor, new LeadFilterData(
         sortBy: 'estimated_value',
         sortDirection: 'asc',
-    ))->pluck('id')->all();
-    $rejected = $repository->filteredVisibleTo($actor, new LeadFilterData(
+    ), 100)->items())->pluck('id')->all();
+    $rejected = collect($repository->paginateVisibleTo($actor, new LeadFilterData(
         sortBy: 'created_at; DROP TABLE leads',
         sortDirection: 'sideways',
-    ))->pluck('id')->all();
+    ), 100)->items())->pluck('id')->all();
 
     expect($allowed)->toBe([$first->getKey(), $second->getKey(), $third->getKey()])
         ->and($rejected)->toBe([$third->getKey(), $second->getKey(), $first->getKey()])
