@@ -1,6 +1,8 @@
 <?php
 
+use App\Enums\LeadPriority;
 use App\Enums\LeadStatus;
+use App\Exceptions\DuplicateLeadException;
 use App\Livewire\Leads\LeadEditor;
 use App\Livewire\Leads\LeadLifecycle;
 use App\Livewire\Leads\LeadTrash;
@@ -12,6 +14,7 @@ use App\Models\Tag;
 use App\Models\User;
 use App\Services\DuplicateLeadService;
 use App\Services\LeadLifecycleService;
+use App\Services\LeadManagementService;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -105,7 +108,21 @@ it('warns before saving a duplicate and only persists after explicit confirmatio
 
     expect(Lead::query()->where('full_name', 'Lead mới bị trùng')->exists())->toBeFalse();
 
+    // Call confirmDuplicateSave without reason -> should fail with validation error
     $component
+        ->call('confirmDuplicateSave')
+        ->assertHasErrors(['duplicateOverrideReason'])
+        ->assertSet('showDuplicateWarning', true);
+
+    // Call with too short reason -> should fail with validation error
+    $component
+        ->set('duplicateOverrideReason', 'Short')
+        ->call('confirmDuplicateSave')
+        ->assertHasErrors(['duplicateOverrideReason']);
+
+    // Call with valid reason -> should succeed
+    $component
+        ->set('duplicateOverrideReason', 'Lý do trùng hợp lệ tối thiểu mười ký tự')
         ->call('confirmDuplicateSave')
         ->assertSet('showDuplicateWarning', false)
         ->assertHasNoErrors()
@@ -127,6 +144,7 @@ it('invalidates duplicate confirmation when contact data changes', function (): 
         ->call('save')
         ->set('form.email', 'unique@example.com')
         ->set('form.phone', '0909 999 999')
+        ->set('duplicateOverrideReason', 'Lý do trùng hợp lệ tối thiểu mười ký tự')
         ->call('confirmDuplicateSave')
         ->assertSet('duplicateCandidates.0.id', $second->getKey());
 
@@ -265,4 +283,61 @@ it('searches and paginates only trashed leads in the actor scope', function (): 
         ->set('search', 'không tồn tại')
         ->assertSee('Thùng rác đang trống')
         ->assertDontSee('Lead ngoài phạm vi');
+});
+
+it('enforces duplicate guard and audits overrides at the service level', function (): void {
+    $admin = p308Actor('admin');
+    $existing = Lead::factory()->create(['email' => 'unique_dup@example.com']);
+    $service = app(LeadManagementService::class);
+
+    $payload = [
+        'full_name' => 'Lead trùng lặp ở service',
+        'email' => 'unique_dup@example.com',
+        'phone' => '',
+        'secondary_phone' => '',
+        'company_name' => '',
+        'job_title' => '',
+        'website' => '',
+        'address' => '',
+        'city' => '',
+        'province' => '',
+        'country' => 'Việt Nam',
+        'priority' => LeadPriority::Medium,
+        'estimated_value' => null,
+        'notes' => '',
+        'tag_ids' => [],
+        'owner_id' => '',
+    ];
+
+    // 1. Calling save directly should throw DuplicateLeadException
+    expect(fn () => $service->save($admin, null, $payload))
+        ->toThrow(DuplicateLeadException::class);
+
+    $signature = app(DuplicateLeadService::class)->signature($payload);
+
+    // 2. Calling with matching signature but empty reason -> throws DuplicateLeadException
+    expect(fn () => $service->save($admin, null, $payload, $signature, ''))
+        ->toThrow(DuplicateLeadException::class);
+
+    // 3. Calling with matching signature but short reason -> throws DuplicateLeadException
+    expect(fn () => $service->save($admin, null, $payload, $signature, 'Short'))
+        ->toThrow(DuplicateLeadException::class);
+
+    // 4. Calling with matching signature and valid reason -> succeeds
+    $overrideReason = 'Lý do trùng hợp lý tối thiểu mười ký tự';
+    $savedLead = $service->save($admin, null, $payload, $signature, $overrideReason);
+
+    expect($savedLead)->not->toBeNull()
+        ->and($savedLead->email)->toBe('unique_dup@example.com');
+
+    // 5. Verify the audit log has the duplicate override metadata
+    $activity = Activity::query()
+        ->where('subject_type', Lead::class)
+        ->where('subject_id', $savedLead->getKey())
+        ->where('event', 'created')
+        ->sole();
+
+    expect($activity->properties->get('duplicate_override'))->not->toBeNull()
+        ->and($activity->properties->get('duplicate_override')['candidate_ids'])->toBe([$existing->getKey()])
+        ->and($activity->properties->get('duplicate_override')['reason'])->toBe($overrideReason);
 });

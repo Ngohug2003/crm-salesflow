@@ -9,6 +9,7 @@ use App\Enums\LeadPriority;
 use App\Enums\LeadStatus;
 use App\Events\LeadAssigned;
 use App\Events\LeadStatusChanged;
+use App\Exceptions\DuplicateLeadException;
 use App\Models\Lead;
 use App\Models\User;
 use App\Repositories\Contracts\LeadRepository;
@@ -27,12 +28,33 @@ final readonly class LeadManagementService
         private UserRepository $users,
         private DataScopeService $dataScope,
         private SystemAuditService $audit,
+        private DuplicateLeadService $duplicates,
     ) {}
 
     /** @param array<string, mixed> $attributes */
-    public function save(User $actor, ?Lead $lead, array $attributes): Lead
-    {
+    public function save(
+        User $actor,
+        ?Lead $lead,
+        array $attributes,
+        ?string $duplicateConfirmedSignature = null,
+        ?string $duplicateOverrideReason = null,
+    ): Lead {
         Gate::forUser($actor)->authorize($lead === null ? 'create' : 'update', $lead ?? Lead::class);
+
+        // Duplicate detection check
+        $currentSignature = $this->duplicates->signature($attributes);
+        $candidates = $this->duplicates->candidates($actor, $attributes, $lead?->id);
+
+        $duplicateOverride = false;
+        if ($candidates !== []) {
+            if ($duplicateConfirmedSignature !== $currentSignature
+                || empty(trim((string) $duplicateOverrideReason))
+                || mb_strlen(trim((string) $duplicateOverrideReason)) < 10
+            ) {
+                throw new DuplicateLeadException($candidates, $currentSignature);
+            }
+            $duplicateOverride = true;
+        }
 
         /** @var list<int> $tagIds */
         $tagIds = $attributes['tag_ids'];
@@ -52,7 +74,7 @@ final readonly class LeadManagementService
             $attributes['department_id'] = $lead->department_id;
         }
 
-        return DB::transaction(function () use ($actor, $lead, $attributes, $tagIds): Lead {
+        return DB::transaction(function () use ($actor, $lead, $attributes, $tagIds, $duplicateOverride, $candidates, $duplicateOverrideReason): Lead {
             $oldValues = $lead === null ? null : $this->auditSnapshot($lead);
 
             if ($lead === null) {
@@ -77,7 +99,15 @@ final readonly class LeadManagementService
 
             $newValues = $this->auditSnapshot($savedLead);
 
-            if ($oldValues !== $newValues) {
+            $metadata = [];
+            if ($duplicateOverride) {
+                $metadata['duplicate_override'] = [
+                    'candidate_ids' => collect($candidates)->pluck('id')->all(),
+                    'reason' => trim((string) $duplicateOverrideReason),
+                ];
+            }
+
+            if ($oldValues !== $newValues || $duplicateOverride) {
                 $this->audit->record(
                     $actor,
                     $savedLead,
@@ -85,6 +115,7 @@ final readonly class LeadManagementService
                     $lead === null ? 'Tạo Lead' : 'Cập nhật Lead',
                     $oldValues,
                     $newValues,
+                    $metadata,
                 );
             }
 

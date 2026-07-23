@@ -145,6 +145,13 @@
                 @endforeach
             </div>
 
+            <div>
+                <flux:textarea wire:model="duplicateOverrideReason" label="Lý do lưu riêng (bắt buộc)" placeholder="Nhập lý do lưu trùng lặp (ví dụ: Khách hàng có 2 nhu cầu riêng biệt, tối thiểu 10 ký tự)..." rows="3" required />
+                @error('duplicateOverrideReason')
+                    <p class="mt-1.5 text-sm font-medium text-red-600 dark:text-red-400">{{ $message }}</p>
+                @enderror
+            </div>
+
             <flux:callout variant="warning" heading="Không tự động gộp dữ liệu">
                 Chọn “Vẫn lưu riêng” chỉ xác nhận đây là hai Lead nghiệp vụ khác nhau. Dữ liệu Lead hiện có sẽ không bị thay đổi.
             </flux:callout>
