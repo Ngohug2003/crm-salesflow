@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire\Leads;
 
+use App\Exceptions\DuplicateLeadException;
 use App\Exceptions\LeadWorkflowException;
 use App\Models\Lead;
 use App\Models\User;
@@ -31,6 +32,17 @@ final class LeadTrash extends Component
     public string $restoreReason = '';
 
     public ?string $notice = null;
+
+    /** @var list<array{id: int, full_name: string, email: ?string, phone: ?string, status: string, owner: string, department: string, trashed: bool, matched_fields: list<string>}> */
+    public array $duplicateCandidates = [];
+
+    public ?string $pendingDuplicateSignature = null;
+
+    public ?string $confirmedDuplicateSignature = null;
+
+    public string $duplicateOverrideReason = '';
+
+    public bool $showDuplicateConflict = false;
 
     public function mount(): void
     {
@@ -75,9 +87,24 @@ final class LeadTrash extends Component
                 $this->currentUser(),
                 $this->pendingRestoreId,
                 $this->restoreReason,
+                $this->confirmedDuplicateSignature,
+                $this->duplicateOverrideReason,
             );
         } catch (LeadWorkflowException $exception) {
             $this->addError($exception->field, $exception->getMessage());
+
+            return;
+        } catch (DuplicateLeadException $e) {
+            $this->duplicateCandidates = $e->candidates;
+            $this->pendingDuplicateSignature = $e->signature;
+            $this->showDuplicateConflict = true;
+
+            if ($this->confirmedDuplicateSignature !== $e->signature) {
+                $this->confirmedDuplicateSignature = null;
+            }
+
+            $this->dispatch('modal-close', name: 'restore-lead');
+            $this->dispatch('modal-show', name: 'duplicate-conflict');
 
             return;
         }
@@ -90,6 +117,39 @@ final class LeadTrash extends Component
 
     public function dismissRestore(): void
     {
+        $this->resetRestore();
+    }
+
+    public function confirmConflictRestore(): void
+    {
+        $this->duplicateOverrideReason = trim($this->duplicateOverrideReason);
+        if (empty($this->duplicateOverrideReason)) {
+            $this->addError('duplicateOverrideReason', 'Vui lòng nhập lý do khôi phục trùng lặp.');
+
+            return;
+        }
+
+        if (mb_strlen($this->duplicateOverrideReason) < 10) {
+            $this->addError('duplicateOverrideReason', 'Lý do phải có ít nhất 10 ký tự.');
+
+            return;
+        }
+
+        $this->confirmedDuplicateSignature = $this->pendingDuplicateSignature;
+        $this->showDuplicateConflict = false;
+        $this->dispatch('modal-close', name: 'duplicate-conflict');
+
+        $this->confirmRestore();
+    }
+
+    public function dismissConflict(): void
+    {
+        $this->duplicateCandidates = [];
+        $this->pendingDuplicateSignature = null;
+        $this->confirmedDuplicateSignature = null;
+        $this->duplicateOverrideReason = '';
+        $this->showDuplicateConflict = false;
+        $this->resetErrorBag('duplicateOverrideReason');
         $this->resetRestore();
     }
 

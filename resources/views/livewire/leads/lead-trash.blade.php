@@ -61,4 +61,47 @@
             <div class="flex justify-end gap-3"><flux:button variant="ghost" x-on:click="$flux.modal('restore-lead').close()">Hủy</flux:button><flux:button variant="primary" wire:click="confirmRestore" wire:loading.attr="disabled" wire:target="confirmRestore">Xác nhận khôi phục</flux:button></div>
         </div>
     </flux:modal>
+
+    <flux:modal name="duplicate-conflict" wire:model="showDuplicateConflict" class="md:w-[42rem]" wire:close="dismissConflict">
+        <div class="space-y-5">
+            <div>
+                <flux:heading size="lg">Xung đột khôi phục Lead</flux:heading>
+                <flux:text class="mt-2">Lead bạn muốn khôi phục (<strong>{{ $pendingRestoreName }}</strong>) bị trùng lặp thông tin liên hệ với các Lead đang hoạt động dưới đây:</flux:text>
+            </div>
+
+            <div class="max-h-80 space-y-3 overflow-y-auto">
+                @foreach ($duplicateCandidates as $candidate)
+                    <div class="rounded-xl border border-amber-200 bg-amber-50/70 p-4 dark:border-amber-900 dark:bg-amber-950/20">
+                        <div class="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
+                            <div>
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <p class="font-semibold">{{ $candidate['full_name'] }}</p>
+                                    <flux:badge color="amber" size="sm">Trùng {{ implode(', ', $candidate['matched_fields']) }}</flux:badge>
+                                </div>
+                                <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">{{ $candidate['email'] ?: 'Chưa có email' }} · {{ $candidate['phone'] ?: 'Chưa có SĐT' }}</p>
+                                <p class="mt-1 text-xs text-slate-500">{{ $candidate['status'] }} · {{ $candidate['owner'] }} · {{ $candidate['department'] }}</p>
+                            </div>
+                            <flux:button :href="route('leads.show', $candidate['id'])" wire:navigate size="sm" variant="ghost">Mở Lead hoạt động</flux:button>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+
+            <div>
+                <flux:textarea wire:model="duplicateOverrideReason" label="Lý do khôi phục trùng lặp (bắt buộc)" placeholder="Nhập lý do khôi phục trùng lặp (ví dụ: Khách hàng yêu cầu tạo tài khoản/lead mới cho chi nhánh khác, tối thiểu 10 ký tự)..." rows="3" required />
+                @error('duplicateOverrideReason')
+                    <p class="mt-1.5 text-sm font-medium text-red-600 dark:text-red-400">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <flux:callout variant="warning" heading="Không tự động gộp dữ liệu">
+                Lưu ý: Dữ liệu của Lead đang hoạt động sẽ không bị ảnh hưởng.
+            </flux:callout>
+
+            <div class="flex flex-col-reverse justify-end gap-3 sm:flex-row">
+                <flux:button variant="ghost" wire:click="dismissConflict" x-on:click="$flux.modal('duplicate-conflict').close()">Hủy khôi phục</flux:button>
+                <flux:button variant="primary" wire:click="confirmConflictRestore" wire:loading.attr="disabled" wire:target="confirmConflictRestore">Vẫn khôi phục riêng</flux:button>
+            </div>
+        </div>
+    </flux:modal>
 </div>
