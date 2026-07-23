@@ -67,7 +67,7 @@ Ngày cập nhật cấu trúc: **23/07/2026**.
 | P3-T01 | Chuẩn hóa Lead Repository boundary | `feature/p3-t01-lead-repository-boundary` | P2-T01, P3-08 | Hoàn tất triển khai — chờ kiểm thử | Lead query thuộc Repository; taxonomy không query trong Service |
 | P3-T02 | Duplicate guard tại backend | `feature/p3-t02-lead-duplicate-guard` | P3-T01, P2-T02 | Hoàn tất triển khai — chờ kiểm thử | Mọi caller phải qua duplicate decision và recheck |
 | P3-T03 | Trash/restore conflict handling | `feature/p3-t03-lead-trash-conflict` | P3-T02 | Hoàn tất triển khai — chờ kiểm thử | Restore xử lý duplicate active an toàn và có audit |
-| P3-T04 | UI states và form Lead | `feature/p3-t04-lead-ui-states` | P1-T03, P3-T02, P3-T03 | Chưa bắt đầu | Lead UI có state nhất quán và quyết định modal/full page rõ ràng |
+| P3-T04 | UI states và form Lead | `feature/p3-t04-lead-ui-states` | P1-T03, P3-T02, P3-T03 | Hoàn tất triển khai — chờ kiểm thử | Lead UI có state nhất quán và quyết định modal/full page rõ ràng |
 | TR-01 | Test và quality checkpoint toàn hệ thống | `feature/tr-01-system-quality-checkpoint` | P1/P2/P3 technical features | Chưa bắt đầu | Toàn bộ test/quality/build đạt |
 | TR-02 | Khôi phục và đồng bộ tài liệu | `docs/tr-02-requirements-sync` | TR-01 | Chưa bắt đầu | Requirement, skill, README và docs đúng code |
 | TR-03 | Tách và chuẩn hóa phase log | `docs/tr-03-phase-log-split` | TR-02 | Chưa bắt đầu | Roadmap gọn, lịch sử vẫn được giữ và liên kết |
@@ -980,9 +980,25 @@ Chuẩn hóa feedback và modal/form của Lead mà không ép form dài vào mo
 4. Mở/đóng các modal nhiều lần.
 5. Kiểm tra mobile/dark mode/keyboard.
 
-### Checkpoint
-
 Dừng sau P3-T04 để nghiệm thu toàn bộ remediation P3.
+
+### Nhật ký triển khai
+
+**Ngày**: 23/07/2026
+**Branch**: `feature/p3-t04-lead-ui-states`
+**Requirement**: `REQ-7.4`, `GAP-UI-002`
+
+**Files thay đổi**:
+- `app/Livewire/Leads/LeadWorkflow.php` — Thêm các cờ trạng thái hiển thị modal và phương thức mở/đóng modal cho các tác vụ phân công (`assign-owner-modal`) và chuyển trạng thái (`change-status-modal`).
+- `resources/views/livewire/leads/lead-workflow.blade.php` — Chuyển hai form dạng inline thành các modal bật mở theo nhu cầu. Thêm thuộc tính `wire:loading.attr="disabled"` để chống click đúp khi submit.
+- `resources/views/livewire/leads/lead-list.blade.php` và `lead-trash.blade.php` — Đồng bộ hóa trải nghiệm tải dữ liệu với việc tích hợp loading spinner overlay có độ mờ và hiệu ứng mượt mà khi lọc và chuyển trang, vô hiệu hóa các nút tương tác tương ứng.
+- `tests/Feature/LeadWorkflowTest.php` — Cập nhật test case kiểm thử workflow để mô phỏng chính xác hành động bấm nút bật mở modal trước khi kiểm tra hiển thị.
+- `app/Livewire/Leads/LeadEditor.php` — Bổ sung khối chú thích tài liệu ở cấp độ class làm rõ quyết định kiến trúc duy trì form tạo/sửa Lead dưới dạng full-page (do form dài nhiều trường và cần URL tĩnh).
+
+**Quality gates**:
+- `composer quality`: ✅ PASS (172 tests passed, static analysis OK)
+
+Checkpoint P3-T04: **dừng tại đây để nghiệm thu toàn bộ remediation P3**.
 
 ---
 

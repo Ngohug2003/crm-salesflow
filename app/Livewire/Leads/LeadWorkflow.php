@@ -34,6 +34,10 @@ final class LeadWorkflow extends Component
 
     public string $statusReason = '';
 
+    public bool $showAssignModal = false;
+
+    public bool $showStatusModal = false;
+
     public function mount(int $leadId): void
     {
         $this->leadId = $leadId;
@@ -97,6 +101,39 @@ final class LeadWorkflow extends Component
             && $this->statusOptions() !== [];
     }
 
+    public function openAssign(): void
+    {
+        $this->resetValidation();
+        $lead = $this->lead();
+        $this->ownerId = $lead->owner_id === null ? '' : (string) $lead->owner_id;
+        $this->assignmentReason = '';
+        $this->showAssignModal = true;
+        $this->dispatch('modal-show', name: 'assign-owner-modal');
+    }
+
+    public function cancelAssign(): void
+    {
+        $this->resetValidation();
+        $this->showAssignModal = false;
+        $this->dispatch('modal-close', name: 'assign-owner-modal');
+    }
+
+    public function openChangeStatus(): void
+    {
+        $this->resetValidation();
+        $this->targetStatus = '';
+        $this->statusReason = '';
+        $this->showStatusModal = true;
+        $this->dispatch('modal-show', name: 'change-status-modal');
+    }
+
+    public function cancelChangeStatus(): void
+    {
+        $this->resetValidation();
+        $this->showStatusModal = false;
+        $this->dispatch('modal-close', name: 'change-status-modal');
+    }
+
     public function assign(): mixed
     {
         if (! $this->hasAssignmentChange()) {
@@ -124,6 +161,7 @@ final class LeadWorkflow extends Component
         }
 
         session()->flash('status', 'Đã cập nhật người phụ trách và lưu lịch sử phân công.');
+        $this->dispatch('modal-close', name: 'assign-owner-modal');
 
         return $this->redirectRoute('leads.show', ['leadId' => $this->leadId], navigate: true);
     }
@@ -149,6 +187,7 @@ final class LeadWorkflow extends Component
         }
 
         session()->flash('status', 'Đã chuyển trạng thái Lead và lưu lịch sử.');
+        $this->dispatch('modal-close', name: 'change-status-modal');
 
         return $this->redirectRoute('leads.show', ['leadId' => $this->leadId], navigate: true);
     }

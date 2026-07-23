@@ -21,6 +21,15 @@ use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
+/**
+ * LeadEditor Component.
+ *
+ * QUYẾT ĐỊNH THIẾT KẾ:
+ * Lead create/edit tiếp tục duy trì dưới dạng full-page (trang đầy đủ) thay vì sử dụng modal
+ * do form nhập liệu của Lead rất dài, bao gồm nhiều trường dữ liệu thuộc các nhóm thông tin khác nhau
+ * (Thông tin liên hệ, Địa chỉ và nhu cầu, Người phụ trách, Tag,...) và cần có liên kết URL riêng biệt
+ * để dễ dàng chia sẻ, lưu bookmark và tránh làm hỏng trải nghiệm người dùng trên thiết bị di động (mobile).
+ */
 final class LeadEditor extends Component
 {
     public LeadForm $form;

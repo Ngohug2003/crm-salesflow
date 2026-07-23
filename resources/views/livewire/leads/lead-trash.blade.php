@@ -23,35 +23,44 @@
             </div>
         </div>
 
-        @if ($this->leads->isEmpty())
-            <div class="grid min-h-52 place-items-center rounded-xl border border-dashed border-slate-300 text-center dark:border-slate-700">
-                <div><p class="font-medium">Thùng rác đang trống</p><p class="mt-1 text-sm text-slate-500">Lead bị xóa mềm sẽ xuất hiện tại đây.</p></div>
+        <div class="relative">
+            <div wire:loading.delay.longest class="absolute inset-0 bg-white/50 dark:bg-slate-900/50 backdrop-blur-[1px] z-10 flex items-center justify-center rounded-xl">
+                <svg class="animate-spin h-8 w-8 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
             </div>
-        @else
-            <div class="overflow-x-auto">
-                <flux:table>
-                    <flux:table.columns>
-                        <flux:table.column>Lead</flux:table.column>
-                        <flux:table.column>Phụ trách</flux:table.column>
-                        <flux:table.column>Trạng thái</flux:table.column>
-                        <flux:table.column>Đã xóa lúc</flux:table.column>
-                        <flux:table.column align="end">Thao tác</flux:table.column>
-                    </flux:table.columns>
-                    <flux:table.rows>
-                        @foreach ($this->leads as $lead)
-                            <flux:table.row :key="$lead->id">
-                                <flux:table.cell variant="strong"><p>{{ $lead->full_name }}</p><p class="mt-1 text-xs font-normal text-slate-500">{{ $lead->email ?: $lead->phone ?: 'Chưa có liên hệ' }}</p></flux:table.cell>
-                                <flux:table.cell><p>{{ $lead->owner?->name ?? 'Chưa phân công' }}</p><p class="mt-1 text-xs text-slate-500">{{ $lead->department?->name ?? 'Chưa gán' }}</p></flux:table.cell>
-                                <flux:table.cell><flux:badge :color="$lead->status->color()" size="sm">{{ $lead->status->label() }}</flux:badge></flux:table.cell>
-                                <flux:table.cell>{{ $lead->deleted_at?->timezone(config('crm.display_timezone'))->format('d/m/Y H:i:s') }}</flux:table.cell>
-                                <flux:table.cell align="end"><flux:button size="sm" variant="ghost" wire:click="openRestore({{ $lead->id }})">Khôi phục</flux:button></flux:table.cell>
-                            </flux:table.row>
-                        @endforeach
-                    </flux:table.rows>
-                </flux:table>
-            </div>
-            <div class="mt-5">{{ $this->leads->onEachSide(1)->links() }}</div>
-        @endif
+
+            @if ($this->leads->isEmpty())
+                <div class="grid min-h-52 place-items-center rounded-xl border border-dashed border-slate-300 text-center dark:border-slate-700">
+                    <div><p class="font-medium">Thùng rác đang trống</p><p class="mt-1 text-sm text-slate-500">Lead bị xóa mềm sẽ xuất hiện tại đây.</p></div>
+                </div>
+            @else
+                <div class="overflow-x-auto">
+                    <flux:table>
+                        <flux:table.columns>
+                            <flux:table.column>Lead</flux:table.column>
+                            <flux:table.column>Phụ trách</flux:table.column>
+                            <flux:table.column>Trạng thái</flux:table.column>
+                            <flux:table.column>Đã xóa lúc</flux:table.column>
+                            <flux:table.column align="end">Thao tác</flux:table.column>
+                        </flux:table.columns>
+                        <flux:table.rows>
+                            @foreach ($this->leads as $lead)
+                                <flux:table.row :key="$lead->id">
+                                    <flux:table.cell variant="strong"><p>{{ $lead->full_name }}</p><p class="mt-1 text-xs font-normal text-slate-500">{{ $lead->email ?: $lead->phone ?: 'Chưa có liên hệ' }}</p></flux:table.cell>
+                                    <flux:table.cell><p>{{ $lead->owner?->name ?? 'Chưa phân công' }}</p><p class="mt-1 text-xs text-slate-500">{{ $lead->department?->name ?? 'Chưa gán' }}</p></flux:table.cell>
+                                    <flux:table.cell><flux:badge :color="$lead->status->color()" size="sm">{{ $lead->status->label() }}</flux:badge></flux:table.cell>
+                                    <flux:table.cell>{{ $lead->deleted_at?->timezone(config('crm.display_timezone'))->format('d/m/Y H:i:s') }}</flux:table.cell>
+                                    <flux:table.cell align="end"><flux:button size="sm" variant="ghost" wire:click="openRestore({{ $lead->id }})" wire:loading.attr="disabled">Khôi phục</flux:button></flux:table.cell>
+                                </flux:table.row>
+                            @endforeach
+                        </flux:table.rows>
+                    </flux:table>
+                </div>
+                <div class="mt-5">{{ $this->leads->onEachSide(1)->links() }}</div>
+            @endif
+        </div>
     </section>
 
     <flux:modal name="restore-lead" class="md:w-[32rem]" wire:close="dismissRestore">
