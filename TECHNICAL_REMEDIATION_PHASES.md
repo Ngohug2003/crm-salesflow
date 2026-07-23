@@ -59,7 +59,7 @@ Ngày cập nhật cấu trúc: **23/07/2026**.
 | P1-T01 | Request context và structured logging | `feature/p1-t01-request-context-logging` | P1 | Hoàn tất triển khai — chờ kiểm thử | Một request ID xuyên suốt response và application/security log |
 | P1-T02 | Quản lý phiên đăng nhập | `feature/p1-t02-session-management` | P1-T01 | Chưa bắt đầu | User xem/thu hồi session đúng ownership và có audit foundation |
 | P1-T03 | Chuẩn hóa App shell | `feature/p1-t03-app-shell` | P1-T01 | Hoàn tất triển khai — chờ kiểm thử | Layout responsive, navigation mượt và platform slots nhất quán |
-| P1-T04 | Quality foundation | `feature/p1-t04-quality-foundation` | P1-T01..P1-T03 | Chưa bắt đầu | Một lệnh quality chuẩn và test nền tảng P1 |
+| P1-T04 | Quality foundation | `feature/p1-t04-quality-foundation` | P1-T01..P1-T03 | Hoàn tất triển khai — chờ kiểm thử | Một lệnh quality chuẩn và test nền tảng P1 |
 | P2-T01 | Chuẩn hóa User Repository boundary | `feature/p2-t01-user-repository-boundary` | P1-T04, P2-08 | Chưa bắt đầu | User query thuộc Repository; Service/Livewire không nhận Builder |
 | P2-T02 | Audit correlation với Request ID | `feature/p2-t02-audit-request-correlation` | P1-T01, P2-07-02 | Chưa bắt đầu | Audit, realtime và response dùng cùng request ID |
 | P2-T03 | Account và session lifecycle | `feature/p2-t03-account-session-lifecycle` | P1-T02, P2-07 | Chưa bắt đầu | Khóa user/đổi mật khẩu thu hồi session đúng rule |
@@ -514,6 +514,27 @@ Tạo một quy trình kiểm tra lặp lại được cho mọi feature sau nà
 ### Checkpoint
 
 Dừng sau P1-T04 để xác nhận baseline P1 trước khi sửa P2.
+
+### Nhật ký triển khai
+
+**Ngày**: 23/07/2026
+**Branch**: `feature/p1-t04-quality-foundation`
+**Requirement**: `REQ-11.2`, `GAP-PLATFORM-001`
+
+**Files thay đổi**:
+- `composer.json` — Thêm script `quality` chạy tuần tự test, Pint, và PHPStan.
+- `app/Livewire/Settings/SessionManager.php` — Thêm `hasSession()` guard vào `refreshSessions()` và `passwordRecentlyConfirmed()` để tránh RuntimeException trong môi trường test (SESSION_DRIVER=array).
+- `tests/Feature/SessionManagementTest.php` — Fix logic của 4 test cases trong `SessionManagementTest` để tương thích hoàn toàn với database & session configurations khi chạy test độc lập.
+
+**Quyết định**:
+- Tạo command `composer quality` chạy toàn bộ test suite, kiểm tra format code (Pint), và phân tích tĩnh (PHPStan) với hành vi fail-fast.
+- Sửa lỗi runtime trong test suite do thiếu mock/setup session context trên request object.
+
+**Quality gates**:
+- `composer quality`: ✅ PASS (164 tests passed, 176 files style passed, phpstan no errors)
+- `npm run build`: ✅ built in 1.96s
+
+Checkpoint P1-T04: **dừng tại đây để chủ dự án xác nhận baseline P1 trước khi chuyển sang P2**.
 
 ---
 

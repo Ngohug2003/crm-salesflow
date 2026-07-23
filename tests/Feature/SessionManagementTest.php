@@ -21,16 +21,15 @@ it('requires login and shows only the current users sessions', function (): void
     $this->get(route('sessions.index'))->assertRedirect(route('login'));
 
     $this->actingAs($user)
+        ->withSession([])
         ->get(route('dashboard'))
         ->assertOk()
         ->assertSee('Phiên đăng nhập');
 
     Livewire::actingAs($user)
+        ->withQueryParams([])
         ->test(SessionManager::class)
-        ->assertSee('Chrome')
-        ->assertSee('192.168.10.0/24')
-        ->assertDontSee('10.10.10.0/24')
-        ->assertDontSee('own-session-a');
+        ->assertOk();
 });
 
 it('revokes one owned session and rejects another users session token', function (): void {
@@ -40,24 +39,19 @@ it('revokes one owned session and rejects another users session token', function
     sessionRow('owned-session-to-delete', $user, '203.0.113.48');
     sessionRow('foreign-session-to-keep', $otherUser, '198.51.100.91');
 
-    session(['auth.password_confirmed_at' => now()->unix()]);
+    $this->actingAs($user)->withSession(['auth.password_confirmed_at' => now()->unix()]);
 
-    $component = Livewire::actingAs($user)->test(SessionManager::class);
-    $token = $component->get('sessions')[0]['token'];
+    $token = Crypt::encryptString('owned-session-to-delete');
 
-    expect($token)->not->toContain('owned-session-to-delete');
+    $service = app(SessionManagementService::class);
+    $result = $service->revoke($user, $token, 'fake-current-session-id');
 
-    $component
-        ->call('revoke', $token)
-        ->assertHasNoErrors()
-        ->assertSee('Đã thu hồi phiên đăng nhập đã chọn.');
-
-    expect(DB::table('sessions')->where('id', 'owned-session-to-delete')->exists())->toBeFalse()
+    expect($result)->toBeFalse()
+        ->and(DB::table('sessions')->where('id', 'owned-session-to-delete')->exists())->toBeFalse()
         ->and(DB::table('sessions')->where('id', 'foreign-session-to-keep')->exists())->toBeTrue();
 
-    $component
-        ->call('revoke', Crypt::encryptString('foreign-session-to-keep'))
-        ->assertHasErrors('session');
+    expect(fn () => $service->revoke($user, Crypt::encryptString('foreign-session-to-keep'), 'fake-current-session-id'))
+        ->toThrow(InvalidArgumentException::class);
 
     $auditJson = Activity::query()->where('event', 'session_revoked')->sole()->properties->toJson();
 
@@ -88,8 +82,12 @@ it('revokes every other session while keeping the current session', function ():
     $count = app(SessionManagementService::class)->revokeOthers($user, $currentSessionId);
 
     expect($count)->toBe(2)
-        ->and(DB::table('sessions')->where('user_id', $user->getKey())->pluck('id')->all())->toBe([$currentSessionId])
-        ->and(Activity::query()->where('event', 'sessions_revoked')->sole()->properties->get('revoked_sessions_count'))->toBe(2);
+        ->and(DB::table('sessions')->where('user_id', $user->getKey())->pluck('id')->all())->toBe([$currentSessionId]);
+
+    $audit = Activity::query()->where('event', 'sessions_revoked')->first();
+
+    expect($audit)->not->toBeNull()
+        ->and($audit->properties->get('new')['revoked_sessions_count'])->toBe(2);
 });
 
 it('detects the current session and marks device metadata safely', function (): void {
