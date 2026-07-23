@@ -1,5 +1,6 @@
 <?php
 
+use App\Data\UserListFilters;
 use App\Enums\DataScope;
 use App\Livewire\Departments\DepartmentManagement;
 use App\Models\Department;
@@ -61,11 +62,13 @@ it('enforces all department owned and read-only scopes in repository queries', f
     $targetIds = collect($targets)->pluck('id')->sort()->values()->all();
     $repository = app(UserRepository::class);
 
-    $visibleIds = static fn (User $actor): array => $repository
-        ->visibleTo($actor)
-        ->whereIn('id', $targetIds)
-        ->orderBy('id')
+    $visibleIds = static fn (User $actor): array => collect($repository
+        ->paginateVisibleTo($actor, new UserListFilters, 100)
+        ->items())
         ->pluck('id')
+        ->intersect($targetIds)
+        ->sort()
+        ->values()
         ->all();
 
     expect($visibleIds($admin))->toBe($targetIds)

@@ -60,7 +60,7 @@ Ngày cập nhật cấu trúc: **23/07/2026**.
 | P1-T02 | Quản lý phiên đăng nhập | `feature/p1-t02-session-management` | P1-T01 | Chưa bắt đầu | User xem/thu hồi session đúng ownership và có audit foundation |
 | P1-T03 | Chuẩn hóa App shell | `feature/p1-t03-app-shell` | P1-T01 | Hoàn tất triển khai — chờ kiểm thử | Layout responsive, navigation mượt và platform slots nhất quán |
 | P1-T04 | Quality foundation | `feature/p1-t04-quality-foundation` | P1-T01..P1-T03 | Hoàn tất triển khai — chờ kiểm thử | Một lệnh quality chuẩn và test nền tảng P1 |
-| P2-T01 | Chuẩn hóa User Repository boundary | `feature/p2-t01-user-repository-boundary` | P1-T04, P2-08 | Chưa bắt đầu | User query thuộc Repository; Service/Livewire không nhận Builder |
+| P2-T01 | Chuẩn hóa User Repository boundary | `feature/p2-t01-user-repository-boundary` | P1-T04, P2-08 | Hoàn tất triển khai — chờ kiểm thử | User query thuộc Repository; Service/Livewire không nhận Builder |
 | P2-T02 | Audit correlation với Request ID | `feature/p2-t02-audit-request-correlation` | P1-T01, P2-07-02 | Chưa bắt đầu | Audit, realtime và response dùng cùng request ID |
 | P2-T03 | Account và session lifecycle | `feature/p2-t03-account-session-lifecycle` | P1-T02, P2-07 | Chưa bắt đầu | Khóa user/đổi mật khẩu thu hồi session đúng rule |
 | P2-T04 | UI states và form quản trị | `feature/p2-t04-admin-ui-states` | P1-T03, P2-T01..P2-T03 | Chưa bắt đầu | User/Department/Audit có state, modal/form thống nhất |
@@ -570,6 +570,29 @@ Checkpoint P1-T04: **dừng tại đây để chủ dự án xác nhận baselin
 ### Checkpoint
 
 Dừng sau P2-T01 để kiểm thử danh sách và quản lý user theo đủ role.
+
+### Nhật ký triển khai
+
+**Ngày**: 23/07/2026
+**Branch**: `feature/p2-t01-user-repository-boundary`
+**Requirement**: `REQ-1.2`, `GAP-UI-002`
+
+**Files thay đổi**:
+- `app/Repositories/Contracts/UserRepository.php` — Loại bỏ `visibleTo()` khỏi contract, thêm `findVisibleActiveUser()` và `visibleActiveUsers()`.
+- `app/Repositories/EloquentUserRepository.php` — Đổi `visibleTo()` sang `private` helper và implement các method mới có kèm PHPStan return type annotations (`Collection<int, User>` và `Builder<User>`).
+- `app/Services/LeadAssignmentService.php` — Dùng `findVisibleActiveUser()` thay thế.
+- `app/Services/LeadDirectoryService.php` — Dùng `visibleActiveUsers()` thay thế.
+- `app/Services/LeadManagementService.php` — Dùng `findVisibleActiveUser()` thay thế.
+- `tests/Feature/DataScopePolicyTest.php` — Cập nhật assert test từ `visibleTo()` sang `paginateVisibleTo()` để bảo vệ boundary của Repository.
+
+**Quyết định**:
+- Đóng gói hoàn toàn logic truy vấn data scope người dùng vào trong tầng Repository. Service/Livewire không được phép thao tác trực tiếp trên Eloquent Builder của Model User.
+
+**Quality gates**:
+- `composer quality`: ✅ PASS (164 tests passed, 176 files style passed, phpstan no errors)
+- `npm run build`: ✅ built in 1.81s
+
+Checkpoint P2-T01: **dừng tại đây để chủ dự án kiểm thử phân quyền danh sách người dùng trên giao diện**.
 
 ---
 

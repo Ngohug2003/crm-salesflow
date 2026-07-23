@@ -94,10 +94,7 @@ final readonly class LeadDirectoryService
     /** @return Collection<int, User> */
     public function ownerOptions(User $actor): Collection
     {
-        return $this->users->visibleTo($actor)
-            ->where('is_active', true)
-            ->orderBy('name')
-            ->get(['id', 'department_id', 'name', 'email']);
+        return $this->users->visibleActiveUsers($actor);
     }
 
     /** @return Collection<int, Department> */
