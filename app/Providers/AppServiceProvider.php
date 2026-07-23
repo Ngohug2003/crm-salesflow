@@ -2,9 +2,11 @@
 
 namespace App\Providers;
 
+use App\Support\RequestContext;
 use Illuminate\Database\Events\ConnectionEstablished;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
+use Spatie\Activitylog\Models\Activity;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -26,6 +28,10 @@ class AppServiceProvider extends ServiceProvider
             if ($event->connection->getDriverName() === 'pgsql') {
                 $event->connection->statement("SET TIME ZONE 'Asia/Ho_Chi_Minh'");
             }
+        });
+
+        Activity::creating(static function (Activity $activity): void {
+            $activity->request_id = app(RequestContext::class)->id();
         });
     }
 }

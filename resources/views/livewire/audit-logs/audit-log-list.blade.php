@@ -9,8 +9,8 @@
     </div>
 
     @php
-        $hasFilters = $search !== '' || $module !== 'all' || $event !== 'all' || $actor !== 'all' || $dateFrom !== '' || $dateTo !== '';
-        $activeFilterCount = collect([$search !== '', $module !== 'all', $event !== 'all', $actor !== 'all', $dateFrom !== '', $dateTo !== ''])
+        $hasFilters = $search !== '' || $module !== 'all' || $event !== 'all' || $actor !== 'all' || $dateFrom !== '' || $dateTo !== '' || $requestId !== '';
+        $activeFilterCount = collect([$search !== '', $module !== 'all', $event !== 'all', $actor !== 'all', $dateFrom !== '', $dateTo !== '', $requestId !== ''])
             ->filter()
             ->count();
         $selectedActor = $actor !== 'all' ? $this->options['actors']->firstWhere('id', (int) $actor) : null;
@@ -101,7 +101,10 @@
                 <div class="xl:col-span-3">
                     <flux:input wire:model.live="dateTo" type="date" label="Đến ngày" min="{{ $dateFrom !== '' ? $dateFrom : null }}" />
                 </div>
-                <div class="flex items-end md:col-span-2 xl:col-span-6">
+                <div class="xl:col-span-3">
+                    <flux:input id="audit-request-id" wire:model.live.debounce.300ms="requestId" label="Request ID" placeholder="UUID hoặc mã request..." />
+                </div>
+                <div class="flex items-end md:col-span-2 xl:col-span-3">
                     <p class="pb-2 text-xs text-slate-500">Các thay đổi được áp dụng ngay và đồng bộ vào URL để có thể chia sẻ kết quả lọc.</p>
                 </div>
             </div>
@@ -126,6 +129,9 @@
                     @endif
                     @if ($dateTo !== '')
                         <flux:badge size="sm">Đến: {{ $dateTo }}</flux:badge>
+                    @endif
+                    @if ($requestId !== '')
+                        <flux:badge size="sm">Request ID: {{ str($requestId)->limit(12) }}</flux:badge>
                     @endif
                 </div>
             @endif
@@ -194,6 +200,13 @@
                                         <flux:badge size="sm" color="blue">{{ str($activity->event)->headline() }}</flux:badge>
                                     </div>
                                     <p class="mt-1 font-mono text-xs text-slate-400">{{ class_basename((string) $activity->subject_type) }} #{{ $activity->subject_id ?? '—' }}</p>
+                                    @if ($activity->request_id)
+                                        <p class="mt-1 font-mono text-xs text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 cursor-pointer" 
+                                           title="Lọc theo Request ID"
+                                           wire:click="$set('requestId', '{{ $activity->request_id }}')">
+                                            Req: {{ str($activity->request_id)->limit(12) }}
+                                        </p>
+                                    @endif
                                 </flux:table.cell>
                                 <flux:table.cell>
                                     <div class="min-w-80 max-w-2xl">
@@ -223,7 +236,7 @@
                                     <span class="text-emerald-400">
                                         <strong>{{ $activity->causer?->name ?? 'Hệ thống' }}</strong>
                                         <span class="text-emerald-300">{{ $activity->description }}</span>
-                                        <span class="text-slate-500">[{{ $activity->log_name }}/{{ $activity->event }} · {{ class_basename((string) $activity->subject_type) }}#{{ $activity->subject_id ?? '—' }}]</span>
+                                        <span class="text-slate-500">[{{ $activity->log_name }}/{{ $activity->event }} · {{ class_basename((string) $activity->subject_type) }}#{{ $activity->subject_id ?? '—' }}@if($activity->request_id) · Req:{{ str($activity->request_id)->limit(8) }}@endif]</span>
                                     </span>
                                 </summary>
                                 <div class="ml-0 mt-2 rounded-lg border border-slate-800 bg-black/30 p-3 text-slate-300 lg:ml-[11.5rem]">

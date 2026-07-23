@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Services\SystemAuditService;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Context;
 use Livewire\Livewire;
 use Spatie\Activitylog\Models\Activity;
 
@@ -118,4 +119,34 @@ it('hides sensitive values from nested audit properties', function (): void {
         ->not->toContain('private-token')
         ->toContain('Old')
         ->toContain('New');
+});
+
+it('correlates activity logs with request id and allows searching and filtering', function (): void {
+    $it = Department::factory()->create(['code' => 'IT']);
+    $itAdmin = auditUser('admin', $it);
+    $target = auditUser('sales');
+
+    // Simulate request ID context
+    $requestId = 'test-request-correlation-1234';
+    Context::add('request_id', $requestId);
+
+    app(SystemAuditService::class)->record(
+        $itAdmin,
+        $target,
+        'updated',
+        'Cập nhật có request ID',
+        null,
+        ['name' => 'Test']
+    );
+
+    $activity = Activity::query()->latest('id')->firstOrFail();
+    expect($activity->request_id)->toBe($requestId);
+
+    // Test filtering by request ID in Livewire
+    Livewire::actingAs($itAdmin)
+        ->test(AuditLogList::class)
+        ->set('requestId', $requestId)
+        ->assertSee('Cập nhật có request ID')
+        ->set('requestId', 'non-existent-request-id')
+        ->assertDontSee('Cập nhật có request ID');
 });

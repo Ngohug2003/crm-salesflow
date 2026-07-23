@@ -13,5 +13,6 @@ final readonly class AuditLogFilters
         public string $actor = 'all',
         public string $dateFrom = '',
         public string $dateTo = '',
+        public string $requestId = '',
     ) {}
 }

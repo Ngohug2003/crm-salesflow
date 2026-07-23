@@ -61,7 +61,7 @@ Ngày cập nhật cấu trúc: **23/07/2026**.
 | P1-T03 | Chuẩn hóa App shell | `feature/p1-t03-app-shell` | P1-T01 | Hoàn tất triển khai — chờ kiểm thử | Layout responsive, navigation mượt và platform slots nhất quán |
 | P1-T04 | Quality foundation | `feature/p1-t04-quality-foundation` | P1-T01..P1-T03 | Hoàn tất triển khai — chờ kiểm thử | Một lệnh quality chuẩn và test nền tảng P1 |
 | P2-T01 | Chuẩn hóa User Repository boundary | `feature/p2-t01-user-repository-boundary` | P1-T04, P2-08 | Hoàn tất triển khai — chờ kiểm thử | User query thuộc Repository; Service/Livewire không nhận Builder |
-| P2-T02 | Audit correlation với Request ID | `feature/p2-t02-audit-request-correlation` | P1-T01, P2-07-02 | Chưa bắt đầu | Audit, realtime và response dùng cùng request ID |
+| P2-T02 | Audit correlation với Request ID | `feature/p2-t02-audit-request-correlation` | P1-T01, P2-07-02 | Hoàn tất triển khai — chờ kiểm thử | Audit, realtime và response dùng cùng request ID |
 | P2-T03 | Account và session lifecycle | `feature/p2-t03-account-session-lifecycle` | P1-T02, P2-07 | Chưa bắt đầu | Khóa user/đổi mật khẩu thu hồi session đúng rule |
 | P2-T04 | UI states và form quản trị | `feature/p2-t04-admin-ui-states` | P1-T03, P2-T01..P2-T03 | Chưa bắt đầu | User/Department/Audit có state, modal/form thống nhất |
 | P3-T01 | Chuẩn hóa Lead Repository boundary | `feature/p3-t01-lead-repository-boundary` | P2-T01, P3-08 | Chưa bắt đầu | Lead query thuộc Repository; taxonomy không query trong Service |
@@ -634,6 +634,30 @@ Liên kết audit nghiệp vụ P2 với request context P1 để tra cứu mộ
 ### Checkpoint
 
 Dừng sau P2-T02 để chủ dự án kiểm tra correlation và quyền truy cập Audit.
+
+### Nhật ký triển khai
+
+**Ngày**: 23/07/2026
+**Branch**: `feature/p2-t02-audit-request-correlation`
+**Requirement**: `REQ-11.2`, `GAP-AUDIT-001`
+
+**Files thay đổi**:
+- `database/migrations/2026_07_23_141238_add_request_id_to_activity_log_table.php` — Tạo migration thêm cột `request_id` (string, 100) có đánh index cho bảng `activity_log`.
+- `app/Providers/AppServiceProvider.php` — Đăng ký sự kiện model `creating` cho Spatie Activity để tự động điền `request_id` từ RequestContext.
+- `app/Data/AuditLogFilters.php` — Bổ sung filter `requestId`.
+- `app/Livewire/AuditLogs/AuditLogList.php` — Bổ sung query parameter `request_id`, binding và cập nhật logic clear filters.
+- `app/Repositories/EloquentAuditLogRepository.php` — Hỗ trợ lọc theo `request_id` trong truy vấn phân trang của Audit Logs, và thêm tìm kiếm khớp chính xác `request_id`.
+- `resources/views/livewire/audit-logs/audit-log-list.blade.php` — Thêm trường nhập lọc Request ID, hiển thị huy hiệu Req trên bảng và console log, đồng thời click vào ID sẽ trigger lọc nhanh.
+- `tests/Feature/AuditLogAccessTest.php` — Bổ sung test kiểm thử tính liên thông request ID và tính năng tìm kiếm/lọc.
+
+**Quyết định**:
+- Không thay đổi model mặc định của Spatie Activitylog; thay vào đó, dùng Eloquent model events (`creating`) để giữ mã nguồn tối giản và tự động gán request ID cho mọi luồng (kể cả queue job).
+
+**Quality gates**:
+- `composer quality`: ✅ PASS (165 tests passed, 177 files style passed, phpstan no errors)
+- `npm run build`: ✅ built in 1.81s
+
+Checkpoint P2-T02: **dừng tại đây để chủ dự án kiểm tra correlation và quyền truy cập Audit**.
 
 ---
 

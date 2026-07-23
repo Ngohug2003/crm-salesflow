@@ -20,6 +20,7 @@ final class EloquentAuditLogRepository implements AuditLogRepository
     public function paginate(AuditLogFilters $filters, int $perPage = 20): LengthAwarePaginator
     {
         $search = trim($filters->search);
+        $requestId = trim($filters->requestId);
         $dateFrom = $this->dateBoundary($filters->dateFrom, endOfDay: false);
         $dateTo = $this->dateBoundary($filters->dateTo, endOfDay: true);
 
@@ -29,6 +30,7 @@ final class EloquentAuditLogRepository implements AuditLogRepository
                 $query->where(function (Builder $query) use ($search): void {
                     $query->whereLike('description', "%{$search}%", caseSensitive: false)
                         ->orWhereLike('log_name', "%{$search}%", caseSensitive: false)
+                        ->orWhere('request_id', $search)
                         ->orWhereHasMorph(
                             'causer',
                             [User::class],
@@ -38,6 +40,7 @@ final class EloquentAuditLogRepository implements AuditLogRepository
                         );
                 });
             })
+            ->when($requestId !== '', fn (Builder $query): Builder => $query->where('request_id', $requestId))
             ->when($filters->module !== 'all', fn (Builder $query): Builder => $query->where('log_name', $filters->module))
             ->when($filters->event !== 'all', fn (Builder $query): Builder => $query->where('event', $filters->event))
             ->when(ctype_digit($filters->actor), fn (Builder $query): Builder => $query->where('causer_id', (int) $filters->actor))
