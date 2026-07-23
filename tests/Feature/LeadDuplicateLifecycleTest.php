@@ -341,3 +341,78 @@ it('enforces duplicate guard and audits overrides at the service level', functio
         ->and($activity->properties->get('duplicate_override')['candidate_ids'])->toBe([$existing->getKey()])
         ->and($activity->properties->get('duplicate_override')['reason'])->toBe($overrideReason);
 });
+
+it('enforces duplicate conflict guard and audits overrides on restore', function (): void {
+    $admin = p308Actor('admin');
+    $activeLead = Lead::factory()->create(['email' => 'restore_dup@example.com']);
+    $trashedLead = Lead::factory()->create(['email' => 'restore_dup@example.com']);
+    $trashedLead->delete();
+
+    $lifecycleService = app(LeadLifecycleService::class);
+
+    expect(fn () => $lifecycleService->restore($admin, $trashedLead->id, 'Khôi phục thường'))
+        ->toThrow(DuplicateLeadException::class);
+
+    $contactAttributes = [
+        'email' => $trashedLead->email,
+        'phone' => $trashedLead->phone,
+        'secondary_phone' => $trashedLead->secondary_phone,
+    ];
+    $signature = app(DuplicateLeadService::class)->signature($contactAttributes);
+
+    expect(fn () => $lifecycleService->restore($admin, $trashedLead->id, 'Khôi phục', $signature, ''))
+        ->toThrow(DuplicateLeadException::class);
+
+    expect(fn () => $lifecycleService->restore($admin, $trashedLead->id, 'Khôi phục', $signature, 'Short'))
+        ->toThrow(DuplicateLeadException::class);
+
+    $overrideReason = 'Lý do khôi phục trùng khớp nghiệp vụ tối thiểu 10 ký tự';
+    $restoredLead = $lifecycleService->restore($admin, $trashedLead->id, 'Khôi phục', $signature, $overrideReason);
+
+    expect($restoredLead->trashed())->toBeFalse()
+        ->and($restoredLead->email)->toBe('restore_dup@example.com');
+
+    $activity = Activity::query()
+        ->where('subject_type', Lead::class)
+        ->where('subject_id', $restoredLead->id)
+        ->where('event', 'restored')
+        ->sole();
+
+    expect($activity->properties->get('duplicate_override'))->not->toBeNull()
+        ->and($activity->properties->get('duplicate_override')['candidate_ids'])->toBe([$activeLead->id])
+        ->and($activity->properties->get('duplicate_override')['reason'])->toBe($overrideReason);
+});
+
+it('shows duplicate conflict warning in LeadTrash and only restores after explicit confirmation', function (): void {
+    $admin = p308Actor('admin');
+    $activeLead = Lead::factory()->create(['email' => 'trash_dup@example.com']);
+    $trashedLead = Lead::factory()->create(['email' => 'trash_dup@example.com']);
+    $trashedLead->delete();
+
+    $component = Livewire::actingAs($admin)
+        ->test(LeadTrash::class)
+        ->call('openRestore', $trashedLead->id)
+        ->set('restoreReason', 'Lý do khôi phục')
+        ->call('confirmRestore')
+        ->assertSet('showDuplicateConflict', true)
+        ->assertSet('duplicateCandidates.0.id', $activeLead->id);
+
+    expect($trashedLead->fresh()->trashed())->toBeTrue();
+
+    $component
+        ->call('confirmConflictRestore')
+        ->assertHasErrors(['duplicateOverrideReason']);
+
+    $component
+        ->set('duplicateOverrideReason', 'Short')
+        ->call('confirmConflictRestore')
+        ->assertHasErrors(['duplicateOverrideReason']);
+
+    $component
+        ->set('duplicateOverrideReason', 'Lý do khôi phục trùng khớp nghiệp vụ tối thiểu 10 ký tự')
+        ->call('confirmConflictRestore')
+        ->assertSet('showDuplicateConflict', false)
+        ->assertHasNoErrors();
+
+    expect($trashedLead->fresh()->trashed())->toBeFalse();
+});

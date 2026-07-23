@@ -66,7 +66,7 @@ Ngày cập nhật cấu trúc: **23/07/2026**.
 | P2-T04 | UI states và form quản trị | `feature/p2-t04-admin-ui-states` | P1-T03, P2-T01..P2-T03 | Hoàn tất triển khai — chờ kiểm thử | User/Department/Audit có state, modal/form thống nhất |
 | P3-T01 | Chuẩn hóa Lead Repository boundary | `feature/p3-t01-lead-repository-boundary` | P2-T01, P3-08 | Hoàn tất triển khai — chờ kiểm thử | Lead query thuộc Repository; taxonomy không query trong Service |
 | P3-T02 | Duplicate guard tại backend | `feature/p3-t02-lead-duplicate-guard` | P3-T01, P2-T02 | Hoàn tất triển khai — chờ kiểm thử | Mọi caller phải qua duplicate decision và recheck |
-| P3-T03 | Trash/restore conflict handling | `feature/p3-t03-lead-trash-conflict` | P3-T02 | Chưa bắt đầu | Restore xử lý duplicate active an toàn và có audit |
+| P3-T03 | Trash/restore conflict handling | `feature/p3-t03-lead-trash-conflict` | P3-T02 | Hoàn tất triển khai — chờ kiểm thử | Restore xử lý duplicate active an toàn và có audit |
 | P3-T04 | UI states và form Lead | `feature/p3-t04-lead-ui-states` | P1-T03, P3-T02, P3-T03 | Chưa bắt đầu | Lead UI có state nhất quán và quyết định modal/full page rõ ràng |
 | TR-01 | Test và quality checkpoint toàn hệ thống | `feature/tr-01-system-quality-checkpoint` | P1/P2/P3 technical features | Chưa bắt đầu | Toàn bộ test/quality/build đạt |
 | TR-02 | Khôi phục và đồng bộ tài liệu | `docs/tr-02-requirements-sync` | TR-01 | Chưa bắt đầu | Requirement, skill, README và docs đúng code |
@@ -929,9 +929,24 @@ Không để restore Lead cũ âm thầm tạo xung đột với Lead active m�
 4. Kiểm tra cancel/restore riêng và audit.
 5. Xác nhận tag/history vẫn còn.
 
-### Checkpoint
-
 Dừng sau P3-T03 để kiểm thử trash/restore trước khi chỉnh Lead UI.
+
+### Nhật ký triển khai
+
+**Ngày**: 23/07/2026
+**Branch**: `feature/p3-t03-lead-trash-conflict`
+**Requirement**: `REQ-7.3`, `GAP-DUP-002`
+
+**Files thay đổi**:
+- `app/Services/LeadLifecycleService.php` — Tích hợp preflight duplicate check khi restore. Kiểm tra dữ liệu liên hệ của Lead bị xóa mềm đối chiếu với danh sách Lead active. Nếu trùng lặp, yêu cầu truyền khớp mã băm liên hệ (`signature`) và lý do ghi đè trùng lặp (`duplicateOverrideReason` tối thiểu 10 ký tự), nếu không sẽ ném `DuplicateLeadException`. Khi khôi phục riêng thành công, lưu thông tin ghi đè `duplicate_override` (chứa candidates và lý do) vào audit log. Định nghĩa thêm phương thức gộp `merge()` contract placeholder ném `LogicException`.
+- `app/Livewire/Leads/LeadTrash.php` — Thêm các biến quản lý trạng thái trùng lặp và modal cảnh báo conflict. Bắt `DuplicateLeadException` khi nhấn khôi phục, kiểm soát validate lý do khôi phục riêng tối thiểu 10 ký tự phía Livewire.
+- `resources/views/livewire/leads/lead-trash.blade.php` — Thêm modal `duplicate-conflict` hiển thị danh sách Lead active bị trùng, form nhập lý do khôi phục trùng lặp và hiển thị lỗi tương ứng.
+- `tests/Feature/LeadDuplicateLifecycleTest.php` — Bổ sung các test cases kiểm thử khôi phục trùng lặp không có lý do/chữ ký (ném exception), khôi phục thành công lưu đúng metadata vào audit log, và kiểm thử tích hợp trên component Livewire `LeadTrash`.
+
+**Quality gates**:
+- `composer quality`: ✅ PASS (172 tests passed, static analysis OK)
+
+Checkpoint P3-T03: **dừng tại đây để kiểm thử trash/restore trước khi chỉnh Lead UI**.
 
 ---
 

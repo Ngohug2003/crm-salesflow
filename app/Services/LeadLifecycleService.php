@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Enums\LeadStatus;
 use App\Events\LeadAssigned;
+use App\Exceptions\DuplicateLeadException;
 use App\Exceptions\LeadWorkflowException;
 use App\Models\Lead;
 use App\Models\User;
@@ -22,6 +23,7 @@ final readonly class LeadLifecycleService
         private LeadWorkflowRepository $workflow,
         private UserRepository $users,
         private SystemAuditService $audit,
+        private DuplicateLeadService $duplicates,
     ) {}
 
     public function delete(User $actor, int $leadId, ?string $reason): Lead
@@ -48,13 +50,39 @@ final readonly class LeadLifecycleService
         });
     }
 
-    public function restore(User $actor, int $leadId, ?string $reason): Lead
-    {
+    public function restore(
+        User $actor,
+        int $leadId,
+        ?string $reason,
+        ?string $duplicateConfirmedSignature = null,
+        ?string $duplicateOverrideReason = null,
+    ): Lead {
         $reason = $this->reason($reason, 'restoreReason');
+        $lead = $this->leads->findTrashedVisibleForUpdateOrFail($actor, $leadId);
+        Gate::forUser($actor)->authorize('restore', $lead);
 
-        return DB::transaction(function () use ($actor, $leadId, $reason): Lead {
-            $lead = $this->leads->findTrashedVisibleForUpdateOrFail($actor, $leadId);
-            Gate::forUser($actor)->authorize('restore', $lead);
+        // Preflight duplicate check with active leads
+        $contactAttributes = [
+            'email' => $lead->email,
+            'phone' => $lead->phone,
+            'secondary_phone' => $lead->secondary_phone,
+        ];
+        $currentSignature = $this->duplicates->signature($contactAttributes);
+        $candidates = $this->duplicates->candidates($actor, $contactAttributes, $lead->id);
+        $activeCandidates = array_values(array_filter($candidates, fn ($c) => ! $c['trashed']));
+
+        $duplicateOverride = false;
+        if ($activeCandidates !== []) {
+            if ($duplicateConfirmedSignature !== $currentSignature
+                || empty(trim((string) $duplicateOverrideReason))
+                || mb_strlen(trim((string) $duplicateOverrideReason)) < 10
+            ) {
+                throw new DuplicateLeadException($activeCandidates, $currentSignature);
+            }
+            $duplicateOverride = true;
+        }
+
+        return DB::transaction(function () use ($actor, $lead, $reason, $duplicateOverride, $activeCandidates, $duplicateOverrideReason): Lead {
             $old = $this->snapshot($lead);
 
             if ($lead->owner_id !== null && ! $this->users->activeExists($lead->owner_id)) {
@@ -85,6 +113,14 @@ final readonly class LeadLifecycleService
             $restoredLead = $this->leads->restore($lead);
             $new = $this->snapshot($restoredLead);
 
+            $metadata = ['reason' => $reason];
+            if ($duplicateOverride) {
+                $metadata['duplicate_override'] = [
+                    'candidate_ids' => collect($activeCandidates)->pluck('id')->all(),
+                    'reason' => trim((string) $duplicateOverrideReason),
+                ];
+            }
+
             $this->audit->record(
                 $actor,
                 $restoredLead,
@@ -92,7 +128,7 @@ final readonly class LeadLifecycleService
                 'Khôi phục Lead',
                 $old,
                 $new,
-                ['reason' => $reason],
+                $metadata,
             );
 
             return $restoredLead;
@@ -121,5 +157,16 @@ final readonly class LeadLifecycleService
             'status' => $status instanceof LeadStatus ? $status->value : (string) $status,
             'deleted_at' => $lead->deleted_at?->toISOString(),
         ];
+    }
+
+    /**
+     * Merge a source lead into a target lead.
+     * Note: This is only a contract placeholder, not implemented in this phase.
+     *
+     * @throws \LogicException
+     */
+    public function merge(User $actor, int $sourceLeadId, int $targetLeadId): void
+    {
+        throw new \LogicException('Tính năng gộp Lead (merge) chưa được triển khai ở giai đoạn này.');
     }
 }
