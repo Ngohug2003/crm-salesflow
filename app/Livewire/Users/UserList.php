@@ -97,6 +97,7 @@ final class UserList extends Component
 
         $this->resetForm();
         $this->showForm = true;
+        $this->dispatch('modal-show', name: 'user-form');
     }
 
     public function openEdit(int $userId): void
@@ -108,11 +109,14 @@ final class UserList extends Component
         $this->notice = null;
         $this->form->fillFrom($user);
         $this->showForm = true;
+        $this->dispatch('modal-show', name: 'user-form');
     }
 
     public function cancelForm(): void
     {
         $this->resetForm();
+        $this->showForm = false;
+        $this->dispatch('modal-close', name: 'user-form');
     }
 
     public function save(): void
@@ -142,6 +146,8 @@ final class UserList extends Component
             ? "Đã tạo người dùng {$savedUser->name}."
             : "Đã cập nhật người dùng {$savedUser->name}.";
         $this->resetForm(keepNotice: true);
+        $this->showForm = false;
+        $this->dispatch('modal-close', name: 'user-form');
         unset($this->users);
     }
 

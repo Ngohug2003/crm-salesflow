@@ -35,7 +35,7 @@ it('shows create and edit actions to authorized users', function (): void {
         ->assertSee('Tạo người dùng')
         ->assertSee('Sửa')
         ->call('openCreate')
-        ->assertSet('showForm', true)
+        ->assertDispatched('modal-show', name: 'user-form')
         ->assertSee('Tài khoản mới được xác thực email tự động')
         ->call('cancelForm')
         ->call('openEdit', $target->getKey())
@@ -59,7 +59,7 @@ it('creates a normalized verified user with a hashed password and assigned role'
         ->set('form.passwordConfirmation', 'StrongPass@123')
         ->call('save')
         ->assertHasNoErrors()
-        ->assertSet('showForm', false)
+        ->assertDispatched('modal-close', name: 'user-form')
         ->assertSee('Đã tạo người dùng Nguyễn Văn Mới.');
 
     $user = User::query()->where('email', 'new.user@salesflow.test')->sole();

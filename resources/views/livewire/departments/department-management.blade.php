@@ -34,42 +34,41 @@
         @endforeach
     </div>
 
-    @if ($showForm)
-        <section class="crm-card mb-6" aria-labelledby="department-form-title">
-            <div class="mb-6 flex items-start justify-between gap-4">
+    <flux:modal name="department-form" class="md:w-[35rem]" wire:close="cancelForm">
+        @if ($showForm)
+            <div class="space-y-6">
                 <div>
-                    <h2 id="department-form-title" class="text-lg font-semibold">{{ $form->departmentId ? 'Chỉnh sửa phòng ban' : 'Tạo phòng ban' }}</h2>
-                    <p class="mt-1 text-sm text-slate-500">Mã phòng ban được chuẩn hóa thành chữ in hoa và không được trùng.</p>
+                    <flux:heading size="lg">{{ $form->departmentId ? 'Chỉnh sửa phòng ban' : 'Tạo phòng ban' }}</flux:heading>
+                    <flux:subheading class="mt-1">Mã phòng ban được chuẩn hóa thành chữ in hoa và không được trùng.</flux:subheading>
                 </div>
-                <flux:button variant="ghost" icon="x-mark" square wire:click="cancelForm" aria-label="Đóng biểu mẫu" />
+
+                <form wire:submit="save" class="space-y-5">
+                    <div class="grid gap-5 md:grid-cols-2">
+                        <flux:input wire:model.blur="form.name" label="Tên phòng ban" placeholder="Ví dụ: Phòng Kinh doanh" required />
+                        <flux:input wire:model.blur="form.code" label="Mã phòng ban" placeholder="Ví dụ: SALES-HCM" required />
+                        <flux:select wire:model="form.parentId" label="Phòng ban cha" placeholder="Không có — phòng ban cấp gốc">
+                            <option value="">Không có — phòng ban cấp gốc</option>
+                            @foreach ($this->parentOptions as $department)
+                                <option value="{{ $department->id }}">{{ $department->name }} ({{ $department->code }})</option>
+                            @endforeach
+                        </flux:select>
+                        <flux:input wire:model="form.sortOrder" type="number" min="0" max="32767" label="Thứ tự hiển thị" required />
+                    </div>
+
+                    <flux:textarea wire:model.blur="form.description" label="Mô tả" rows="3" placeholder="Mô tả ngắn về chức năng của phòng ban" />
+
+                    <flux:switch wire:model="form.isActive" label="Đang hoạt động" description="Phòng ban hoạt động có thể được chọn khi gán người dùng và dữ liệu CRM." />
+
+                    <div class="flex flex-col-reverse gap-3 border-t border-slate-200 pt-5 dark:border-slate-800 sm:flex-row sm:justify-end">
+                        <flux:button type="button" variant="ghost" wire:click="cancelForm">Hủy</flux:button>
+                        <flux:button type="submit" variant="primary" wire:loading.attr="disabled" wire:target="save">
+                            {{ $form->departmentId ? 'Lưu thay đổi' : 'Tạo phòng ban' }}
+                        </flux:button>
+                    </div>
+                </form>
             </div>
-
-            <form wire:submit="save" class="space-y-5">
-                <div class="grid gap-5 md:grid-cols-2">
-                    <flux:input wire:model.blur="form.name" label="Tên phòng ban" placeholder="Ví dụ: Phòng Kinh doanh" required />
-                    <flux:input wire:model.blur="form.code" label="Mã phòng ban" placeholder="Ví dụ: SALES-HCM" required />
-                    <flux:select wire:model="form.parentId" label="Phòng ban cha" placeholder="Không có — phòng ban cấp gốc">
-                        <option value="">Không có — phòng ban cấp gốc</option>
-                        @foreach ($this->parentOptions as $department)
-                            <option value="{{ $department->id }}">{{ $department->name }} ({{ $department->code }})</option>
-                        @endforeach
-                    </flux:select>
-                    <flux:input wire:model="form.sortOrder" type="number" min="0" max="32767" label="Thứ tự hiển thị" required />
-                </div>
-
-                <flux:textarea wire:model.blur="form.description" label="Mô tả" rows="3" placeholder="Mô tả ngắn về chức năng của phòng ban" />
-
-                <flux:switch wire:model="form.isActive" label="Đang hoạt động" description="Phòng ban hoạt động có thể được chọn khi gán người dùng và dữ liệu CRM." />
-
-                <div class="flex flex-col-reverse gap-3 border-t border-slate-200 pt-5 dark:border-slate-800 sm:flex-row sm:justify-end">
-                    <flux:button type="button" variant="ghost" wire:click="cancelForm">Hủy</flux:button>
-                    <flux:button type="submit" variant="primary" wire:loading.attr="disabled" wire:target="save">
-                        {{ $form->departmentId ? 'Lưu thay đổi' : 'Tạo phòng ban' }}
-                    </flux:button>
-                </div>
-            </form>
-        </section>
-    @endif
+        @endif
+    </flux:modal>
 
     <section class="crm-card">
         <div class="mb-5 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
@@ -87,58 +86,67 @@
             </div>
         </div>
 
-        @if ($this->departments->isEmpty())
-            <div class="grid min-h-52 place-items-center rounded-xl border border-dashed border-slate-300 text-center dark:border-slate-700">
-                <div class="px-6">
-                    <p class="font-medium">Không tìm thấy phòng ban</p>
-                    <p class="mt-1 text-sm text-slate-500">Thử thay đổi từ khóa hoặc bộ lọc trạng thái.</p>
-                </div>
+        <div class="relative">
+            <div wire:loading.delay.longest class="absolute inset-0 bg-white/50 dark:bg-slate-900/50 backdrop-blur-[1px] z-10 flex items-center justify-center rounded-xl">
+                <svg class="animate-spin h-8 w-8 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
             </div>
-        @else
-            <flux:table>
-                <flux:table.columns>
-                    <flux:table.column>Phòng ban</flux:table.column>
-                    <flux:table.column>Cấp cha</flux:table.column>
-                    <flux:table.column>Người dùng</flux:table.column>
-                    <flux:table.column>Trạng thái</flux:table.column>
-                    <flux:table.column align="end">Thao tác</flux:table.column>
-                </flux:table.columns>
-                <flux:table.rows>
-                    @foreach ($this->departments as $department)
-                        <flux:table.row :key="$department->id">
-                            <flux:table.cell variant="strong">
-                                <div class="min-w-48">
-                                    <p>{{ $department->name }}</p>
-                                    <p class="mt-0.5 font-mono text-xs font-normal text-slate-400">{{ $department->code }}</p>
-                                </div>
-                            </flux:table.cell>
-                            <flux:table.cell>{{ $department->parent?->name ?? 'Cấp gốc' }}</flux:table.cell>
-                            <flux:table.cell>{{ $department->users_count }}</flux:table.cell>
-                            <flux:table.cell>
-                                <flux:badge :color="$department->is_active ? 'emerald' : null" size="sm">
-                                    {{ $department->is_active ? 'Hoạt động' : 'Ngừng hoạt động' }}
-                                </flux:badge>
-                            </flux:table.cell>
-                            <flux:table.cell align="end">
-                                <div class="flex justify-end gap-2">
-                                    @can('update', $department)
-                                        <flux:button size="sm" variant="ghost" wire:click="openEdit({{ $department->id }})">Sửa</flux:button>
-                                        <flux:button size="sm" variant="ghost" wire:click="toggleActive({{ $department->id }})">
-                                            {{ $department->is_active ? 'Tắt' : 'Bật' }}
-                                        </flux:button>
-                                    @endcan
-                                    @can('delete', $department)
-                                        <flux:button size="sm" variant="ghost" class="text-red-600! hover:text-red-700! dark:text-red-400!" wire:click="openDelete({{ $department->id }})">
-                                            Xóa
-                                        </flux:button>
-                                    @endcan
-                                </div>
-                            </flux:table.cell>
-                        </flux:table.row>
-                    @endforeach
-                </flux:table.rows>
-            </flux:table>
-        @endif
+
+            @if ($this->departments->isEmpty())
+                <div class="grid min-h-52 place-items-center rounded-xl border border-dashed border-slate-300 text-center dark:border-slate-700">
+                    <div class="px-6">
+                        <p class="font-medium">Không tìm thấy phòng ban</p>
+                        <p class="mt-1 text-sm text-slate-500">Thử thay đổi từ khóa hoặc bộ lọc trạng thái.</p>
+                    </div>
+                </div>
+            @else
+                <flux:table>
+                    <flux:table.columns>
+                        <flux:table.column>Phòng ban</flux:table.column>
+                        <flux:table.column>Cấp cha</flux:table.column>
+                        <flux:table.column>Người dùng</flux:table.column>
+                        <flux:table.column>Trạng thái</flux:table.column>
+                        <flux:table.column align="end">Thao tác</flux:table.column>
+                    </flux:table.columns>
+                    <flux:table.rows>
+                        @foreach ($this->departments as $department)
+                            <flux:table.row :key="$department->id">
+                                <flux:table.cell variant="strong">
+                                    <div class="min-w-48">
+                                        <p>{{ $department->name }}</p>
+                                        <p class="mt-0.5 font-mono text-xs font-normal text-slate-400">{{ $department->code }}</p>
+                                    </div>
+                                </flux:table.cell>
+                                <flux:table.cell>{{ $department->parent?->name ?? 'Cấp gốc' }}</flux:table.cell>
+                                <flux:table.cell>{{ $department->users_count }}</flux:table.cell>
+                                <flux:table.cell>
+                                    <flux:badge :color="$department->is_active ? 'emerald' : null" size="sm">
+                                        {{ $department->is_active ? 'Hoạt động' : 'Ngừng hoạt động' }}
+                                    </flux:badge>
+                                </flux:table.cell>
+                                <flux:table.cell align="end">
+                                    <div class="flex justify-end gap-2">
+                                        @can('update', $department)
+                                            <flux:button size="sm" variant="ghost" wire:click="openEdit({{ $department->id }})" wire:loading.attr="disabled">Sửa</flux:button>
+                                            <flux:button size="sm" variant="ghost" wire:click="toggleActive({{ $department->id }})" wire:loading.attr="disabled" wire:target="toggleActive({{ $department->id }})">
+                                                {{ $department->is_active ? 'Tắt' : 'Bật' }}
+                                            </flux:button>
+                                        @endcan
+                                        @can('delete', $department)
+                                            <flux:button size="sm" variant="ghost" class="text-red-600! hover:text-red-700! dark:text-red-400!" wire:click="openDelete({{ $department->id }})" wire:loading.attr="disabled" wire:target="openDelete({{ $department->id }})">
+                                                Xóa
+                                            </flux:button>
+                                        @endcan
+                                    </div>
+                                </flux:table.cell>
+                            </flux:table.row>
+                        @endforeach
+                    </flux:table.rows>
+                </flux:table>
+            @endif
+        </div>
     </section>
 
     <flux:modal name="delete-department" class="md:w-[30rem]" wire:close="dismissDelete">
