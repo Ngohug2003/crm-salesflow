@@ -43,6 +43,9 @@ final class AuditLogList extends Component
     #[Url(as: 'view', except: 'table')]
     public string $viewMode = 'table';
 
+    #[Url(as: 'request_id', except: '')]
+    public string $requestId = '';
+
     public ?int $latestRealtimeActivityId = null;
 
     public ?string $realtimeNotice = null;
@@ -63,7 +66,7 @@ final class AuditLogList extends Component
         Gate::authorize('viewAny', Activity::class);
 
         return $this->service()->paginate(new AuditLogFilters(
-            $this->search, $this->module, $this->event, $this->actor, $this->dateFrom, $this->dateTo,
+            $this->search, $this->module, $this->event, $this->actor, $this->dateFrom, $this->dateTo, $this->requestId,
         ));
     }
 
@@ -88,7 +91,7 @@ final class AuditLogList extends Component
 
     public function clearFilters(): void
     {
-        $this->reset('search', 'module', 'event', 'actor', 'dateFrom', 'dateTo');
+        $this->reset('search', 'module', 'event', 'actor', 'dateFrom', 'dateTo', 'requestId');
         $this->resetPage();
     }
 
