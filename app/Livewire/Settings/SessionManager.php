@@ -30,6 +30,12 @@ final class SessionManager extends Component
 
     public function refreshSessions(): void
     {
+        if (! request()->hasSession()) {
+            $this->sessions = [];
+
+            return;
+        }
+
         $this->sessions = array_map(
             static fn ($session): array => [
                 'token' => $session->token,
@@ -109,6 +115,10 @@ final class SessionManager extends Component
 
     private function passwordRecentlyConfirmed(): bool
     {
+        if (! request()->hasSession()) {
+            return false;
+        }
+
         $confirmedAt = (int) request()->session()->get('auth.password_confirmed_at', 0);
 
         return $confirmedAt !== 0
