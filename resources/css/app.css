@@ -18,12 +18,20 @@
 }
 
 @layer components {
+    .nav-group-label {
+        @apply mb-1 px-3 text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500;
+    }
+
     .nav-link {
         @apply flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white;
     }
 
     .nav-link-active {
         @apply bg-emerald-50 text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300;
+    }
+
+    .nav-icon {
+        @apply size-5 shrink-0;
     }
 
     .crm-card {

@@ -58,7 +58,7 @@ Ngày cập nhật cấu trúc: **23/07/2026**.
 |---|---|---|---|---|---|
 | P1-T01 | Request context và structured logging | `feature/p1-t01-request-context-logging` | P1 | Hoàn tất triển khai — chờ kiểm thử | Một request ID xuyên suốt response và application/security log |
 | P1-T02 | Quản lý phiên đăng nhập | `feature/p1-t02-session-management` | P1-T01 | Chưa bắt đầu | User xem/thu hồi session đúng ownership và có audit foundation |
-| P1-T03 | Chuẩn hóa App shell | `feature/p1-t03-app-shell` | P1-T01 | Chưa bắt đầu | Layout responsive, navigation mượt và platform slots nhất quán |
+| P1-T03 | Chuẩn hóa App shell | `feature/p1-t03-app-shell` | P1-T01 | Hoàn tất triển khai — chờ kiểm thử | Layout responsive, navigation mượt và platform slots nhất quán |
 | P1-T04 | Quality foundation | `feature/p1-t04-quality-foundation` | P1-T01..P1-T03 | Chưa bắt đầu | Một lệnh quality chuẩn và test nền tảng P1 |
 | P2-T01 | Chuẩn hóa User Repository boundary | `feature/p2-t01-user-repository-boundary` | P1-T04, P2-08 | Chưa bắt đầu | User query thuộc Repository; Service/Livewire không nhận Builder |
 | P2-T02 | Audit correlation với Request ID | `feature/p2-t02-audit-request-correlation` | P1-T01, P2-07-02 | Chưa bắt đầu | Audit, realtime và response dùng cùng request ID |
@@ -457,6 +457,36 @@ Hoàn thiện layout foundation đã bắt đầu ở P1, giảm giật khi chuy
 ### Checkpoint
 
 Dừng sau P1-T03 để chủ dự án đánh giá độ mượt và layout.
+
+### Nhật ký triển khai
+
+**Ngày**: 23/07/2026
+**Branch**: `feature/p1-t03-app-shell`
+**Requirement**: `REQ-5.2`, `GAP-UI-001`
+
+**Files tạo mới**:
+- `resources/views/layouts/partials/_sidebar.blade.php` — Sidebar partial với navigation nhóm CRM/Quản trị/Cá nhân/Sắp có
+- `resources/views/layouts/partials/_topbar.blade.php` — Topbar partial với search slot (disabled), notification bell (disabled), quick create (disabled), dark mode toggle, user menu
+- `resources/views/layouts/partials/_user-menu.blade.php` — User dropdown menu với Flux dropdown/menu components
+
+**Files thay đổi**:
+- `resources/views/layouts/app.blade.php` — Tách thành partials, thêm `@persist('app-sidebar')`
+- `resources/css/app.css` — Thêm `.nav-group-label` và `.nav-icon` utility classes
+
+**Quyết định kiến trúc**:
+- Thay Unicode icons (⌂ ◎ ♙ ▤ ◴ ⌘ ◌) bằng Heroicon SVG qua Flux `<flux:icon.*>`
+- Phân nhóm navigation: CRM → Quản trị → Cá nhân → Sắp có
+- User menu chuyển lên topbar thành Flux dropdown, giữ avatar ở đáy sidebar
+- Logo brand "SF" badge thêm vào sidebar header
+- Platform slots (search, notification, quick create) đặt disabled có chủ ý
+- `@persist('app-sidebar')` tránh re-render sidebar khi Livewire navigate
+
+**Quality gates**:
+- Pint: ✅ PASS 176 files
+- PHPStan: ✅ No errors
+- Vite build: ✅ built in 2.36s
+
+Checkpoint P1-T03: **dừng tại đây để chủ dự án kiểm thử thủ công trước khi bắt đầu P1-T04**.
 
 ---
 
