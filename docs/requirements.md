@@ -32,6 +32,8 @@ Không tự chọn một yêu cầu thấp hơn khi phát hiện xung đột. Ph
 | DEC-006 | Mật khẩu demo chỉ được điền sẵn khi `APP_ENV=local`; tuyệt đối không xuất hiện ngoài local. |
 | DEC-007 | UI và thông báo người dùng dùng tiếng Việt; tên class, method, biến và schema dùng tiếng Anh rõ nghĩa. |
 | DEC-008 | Giữ cây thư mục hiện tại theo technical layer; không bắt buộc chuyển domain code vào `app/Modules/<Module>`. |
+| DEC-009 | Form tạo/sửa Lead sử dụng full-page thay vì modal do form dài nhiều trường và cần URL riêng; các tác vụ phân công/chuyển trạng thái/xóa/khôi phục/xung đột trùng lặp sử dụng modal. |
+| DEC-010 | Không cài package ngoài bừa bãi để tránh phình mã nguồn, chỉ dùng các thư viện core và Flux UI Free đã được phê duyệt. |
 
 ## 2. Mục tiêu sản phẩm
 
