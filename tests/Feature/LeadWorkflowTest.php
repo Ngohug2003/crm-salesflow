@@ -128,6 +128,7 @@ it('rejects no-op assignment and direct owner changes through the general editor
 
     Livewire::actingAs($admin)
         ->test(LeadWorkflow::class, ['leadId' => $lead->getKey()])
+        ->call('openAssign')
         ->assertSee('Lý do của lịch sử cũ không thể chỉnh sửa')
         ->assertSee('disabled', false)
         ->set('assignmentReason', 'Chỉ sửa lý do')

@@ -5,13 +5,24 @@
     </div>
 
     @if ($this->canAssign || $this->canChangeStatus)
-        <div class="grid gap-6 lg:grid-cols-2">
+        <div class="flex flex-wrap gap-3">
             @if ($this->canAssign)
-                <form wire:submit="assign" class="crm-card">
-                    <h3 class="font-semibold">Gán người phụ trách</h3>
-                    <p class="mt-1 text-sm text-slate-500">Phòng ban sẽ tự động đồng bộ theo owner mới.</p>
+                <flux:button variant="primary" icon="user-plus" wire:click="openAssign">Gán người phụ trách</flux:button>
+            @endif
+            @if ($this->canChangeStatus)
+                <flux:button variant="primary" icon="arrow-path" wire:click="openChangeStatus">Chuyển trạng thái</flux:button>
+            @endif
+        </div>
 
-                    <div class="mt-5 space-y-4">
+        <flux:modal name="assign-owner-modal" class="md:w-[32rem]" wire:close="cancelAssign">
+            @if ($showAssignModal)
+                <form wire:submit.prevent="assign" class="space-y-5">
+                    <div>
+                        <flux:heading size="lg">Gán người phụ trách</flux:heading>
+                        <flux:text class="mt-2">Phòng ban sẽ tự động đồng bộ theo owner mới.</flux:text>
+                    </div>
+
+                    <div class="space-y-4">
                         <flux:select wire:model.live="ownerId" label="Người phụ trách mới">
                             <option value="">Chưa phân công</option>
                             @foreach ($this->ownerOptions as $ownerOption)
@@ -22,19 +33,28 @@
                         @if (! $this->hasAssignmentChange)
                             <p class="text-sm text-slate-500">Hãy chọn người phụ trách khác để tạo một lần phân công mới. Lý do của lịch sử cũ không thể chỉnh sửa.</p>
                         @endif
-                        <div class="flex justify-end">
-                            <flux:button type="submit" variant="primary" :disabled="! $this->hasAssignmentChange" wire:loading.attr="disabled" wire:target="assign">Lưu phân công</flux:button>
-                        </div>
+                        @error('ownerId')
+                            <p class="mt-1.5 text-sm font-medium text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div class="flex justify-end gap-3">
+                        <flux:button variant="ghost" x-on:click="$flux.modal('assign-owner-modal').close()">Hủy</flux:button>
+                        <flux:button type="submit" variant="primary" :disabled="! $this->hasAssignmentChange" wire:loading.attr="disabled" wire:target="assign">Lưu phân công</flux:button>
                     </div>
                 </form>
             @endif
+        </flux:modal>
 
-            @if ($this->canChangeStatus)
-                <form wire:submit="changeStatus" class="crm-card">
-                    <h3 class="font-semibold">Chuyển trạng thái</h3>
-                    <p class="mt-1 text-sm text-slate-500">Hiện tại: <strong>{{ $this->lead->status->label() }}</strong>. Chỉ các bước hợp lệ mới được hiển thị.</p>
+        <flux:modal name="change-status-modal" class="md:w-[32rem]" wire:close="cancelChangeStatus">
+            @if ($showStatusModal)
+                <form wire:submit.prevent="changeStatus" class="space-y-5">
+                    <div>
+                        <flux:heading size="lg">Chuyển trạng thái</flux:heading>
+                        <flux:text class="mt-2">Hiện tại: <strong>{{ $this->lead->status->label() }}</strong>. Chỉ các bước hợp lệ mới được hiển thị.</flux:text>
+                    </div>
 
-                    <div class="mt-5 space-y-4">
+                    <div class="space-y-4">
                         <flux:select wire:model="targetStatus" label="Trạng thái tiếp theo" required>
                             <option value="">Chọn trạng thái</option>
                             @foreach ($this->statusOptions as $value => $label)
@@ -42,13 +62,21 @@
                             @endforeach
                         </flux:select>
                         <flux:textarea wire:model="statusReason" label="Lý do thay đổi" rows="3" maxlength="500" placeholder="Bắt buộc khi chuyển sang Không đủ điều kiện hoặc Đã mất" />
-                        <div class="flex justify-end">
-                            <flux:button type="submit" variant="primary" wire:loading.attr="disabled" wire:target="changeStatus">Chuyển trạng thái</flux:button>
-                        </div>
+                        @error('targetStatus')
+                            <p class="mt-1.5 text-sm font-medium text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
+                        @error('statusReason')
+                            <p class="mt-1.5 text-sm font-medium text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div class="flex justify-end gap-3">
+                        <flux:button variant="ghost" x-on:click="$flux.modal('change-status-modal').close()">Hủy</flux:button>
+                        <flux:button type="submit" variant="primary" wire:loading.attr="disabled" wire:target="changeStatus">Chuyển trạng thái</flux:button>
                     </div>
                 </form>
             @endif
-        </div>
+        </flux:modal>
     @endif
 
     <div class="crm-card">
