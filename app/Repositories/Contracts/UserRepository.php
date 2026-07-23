@@ -7,13 +7,15 @@ namespace App\Repositories\Contracts;
 use App\Data\UserListFilters;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Carbon;
 
 interface UserRepository
 {
-    /** @return Builder<User> */
-    public function visibleTo(User $actor): Builder;
+    /** @return Collection<int, User> */
+    public function visibleActiveUsers(User $actor): Collection;
+
+    public function findVisibleActiveUser(User $actor, int $userId): ?User;
 
     /** @return LengthAwarePaginator<int, User> */
     public function paginateVisibleTo(User $actor, UserListFilters $filters, int $perPage = 15): LengthAwarePaginator;

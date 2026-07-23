@@ -85,9 +85,7 @@ final readonly class LeadAssignmentService
             return null;
         }
 
-        $owner = $this->users->visibleTo($actor)
-            ->where('is_active', true)
-            ->find($ownerId);
+        $owner = $this->users->findVisibleActiveUser($actor, $ownerId);
 
         if (! $owner instanceof User) {
             throw new AuthorizationException('Người phụ trách nằm ngoài phạm vi bạn được quản lý.');
