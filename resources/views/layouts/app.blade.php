@@ -39,6 +39,7 @@
                     @can('system-console.view')
                         <a href="{{ route('system-console.index') }}" wire:navigate.hover @class(['nav-link', 'nav-link-active' => request()->routeIs('system-console.*')])><span>⌘</span><span x-show="sidebar">System Console</span></a>
                     @endcan
+                    <a href="{{ route('sessions.index') }}" wire:navigate.hover @class(['nav-link', 'nav-link-active' => request()->routeIs('sessions.*')])><span>◌</span><span x-show="sidebar">Phiên đăng nhập</span></a>
                     @foreach (['Companies' => '▦', 'Contacts' => '♙', 'Opportunities' => '◇', 'Pipelines' => '◫', 'Activities' => '◷', 'Tasks' => '✓', 'Reports' => '⌁'] as $label => $icon)
                         <span class="nav-link cursor-not-allowed opacity-55" title="Có trong phase tiếp theo"><span>{{ $icon }}</span><span x-show="sidebar">{{ $label }}</span></span>
                     @endforeach

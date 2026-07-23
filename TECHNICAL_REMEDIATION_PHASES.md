@@ -362,6 +362,54 @@ Hoàn thiện phần authentication foundation: người dùng biết tài kho�
 
 Dừng sau P1-T02 để kiểm thử bằng ít nhất hai trình duyệt.
 
+### Nhật ký P1-T02 — Quản lý phiên đăng nhập
+
+Trạng thái: **hoàn tất triển khai, chờ chạy test Docker**.
+
+Đã triển khai:
+
+- Tạo route `/settings/sessions` và menu “Phiên đăng nhập” cho mọi user đã đăng nhập, verified và active.
+- Tạo Livewire `SessionManager` hiển thị trình duyệt/thiết bị, IP đã che, thời gian hoạt động cuối, fingerprint rút gọn và nhãn phiên hiện tại.
+- Tạo repository đọc/xóa bảng `sessions` với điều kiện bắt buộc `user_id` là user hiện tại.
+- Tạo service thu hồi một phiên hoặc toàn bộ phiên khác, không đưa session ID nguyên bản ra UI hoặc audit.
+- Dùng token mã hóa cho action revoke; token của user khác bị từ chối sau khi decrypt vì không qua ownership query.
+- Yêu cầu `auth.password_confirmed_at` còn hạn trước thao tác thu hồi; nếu thiếu thì chuyển sang `password.confirm`.
+- Audit ghi `session_revoked` hoặc `sessions_revoked` trên subject là chính user hiện tại, chỉ chứa fingerprint/IP đã che/metadata hoặc số lượng bị thu hồi.
+- `.env.example` chuyển `SESSION_DRIVER=database` để local/demo dùng được màn quản lý session.
+
+File đã tạo/sửa:
+
+- `app/Data/SessionInfo.php`
+- `app/Livewire/Settings/SessionManager.php`
+- `app/Repositories/Contracts/SessionRepository.php`
+- `app/Repositories/EloquentSessionRepository.php`
+- `app/Services/SessionManagementService.php`
+- `resources/views/livewire/settings/session-manager.blade.php`
+- `app/Providers/RepositoryServiceProvider.php`
+- `routes/web.php`
+- `resources/views/layouts/app.blade.php`
+- `.env.example`
+- `tests/Feature/SessionManagementTest.php`
+
+Migration/package:
+
+- Không có migration mới; sử dụng bảng `sessions` đã có trong migration nền tảng Laravel.
+- Không cài Composer/NPM package.
+
+Lệnh kiểm tra:
+
+```bash
+docker compose exec -T app php artisan test tests/Feature/SessionManagementTest.php
+git diff --check
+```
+
+Kết quả:
+
+- `git diff --check`: **đạt**.
+- Docker test: **chưa chạy được do môi trường**. WSL báo `The command 'docker' could not be found in this WSL 2 distro`; cần bật Docker Desktop WSL integration rồi chạy lại đúng một file test mới theo chỉ đạo chủ dự án.
+
+Checkpoint P1-T02: **dừng tại đây để chủ dự án chạy test file mới và kiểm thử thủ công trước khi bắt đầu P1-T03**.
+
 ---
 
 ## P1-T03 — Chuẩn hóa App shell

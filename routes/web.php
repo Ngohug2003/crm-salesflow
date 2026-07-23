@@ -7,6 +7,7 @@ use App\Http\Controllers\RoleGuideController;
 use App\Http\Controllers\UserController;
 use App\Livewire\Dashboard\DashboardOverview;
 use App\Livewire\Platform\SystemConsole;
+use App\Livewire\Settings\SessionManager;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/dashboard');
@@ -22,5 +23,6 @@ Route::middleware(['auth', 'request.context.authenticated', 'verified', 'account
     Route::get('/settings/departments', [DepartmentController::class, 'index'])->name('departments.index');
     Route::get('/settings/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
     Route::get('/settings/system-console', SystemConsole::class)->name('system-console.index');
+    Route::get('/settings/sessions', SessionManager::class)->name('sessions.index');
     Route::get('/help/roles', RoleGuideController::class)->name('help.roles');
 });
