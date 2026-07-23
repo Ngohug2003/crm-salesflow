@@ -530,5 +530,6 @@ Một feature chỉ hoàn tất khi:
 | GAP-LEAD-001 | Lead còn thiếu conversion hoàn chỉnh, attachments, import/export và bulk workflow cuối. | Theo dependency P3/P5/P8; không nhồi vào một feature. |
 | GAP-FRONTEND-001 | SortableJS và chart library chưa được cài. | Đây là chủ ý theo DEC-004; chỉ cài ở P5-06 và P7 khi use case bắt đầu. |
 | GAP-DOC-001 | `PROJECT_PHASES.md` đang trộn kế hoạch và nhật ký dài. | Requirement nằm ở file này; phase file chỉ tiếp tục làm checkpoint và lịch sử, không phát sinh quy tắc kiến trúc mới. |
+| GAP-PLATFORM-001 | Request ID và structured operational log chưa có correlation chuẩn trong code nền tảng ban đầu. | P1-T01 bổ sung HTTP/log context; P2-T02 tiếp tục liên kết request ID first-class vào Audit database. |
 
 Mỗi feature từ `P3-09` phải ghi requirement ID và gap ID liên quan trong phần nhật ký để tránh lệch thiết kế lặp lại.
