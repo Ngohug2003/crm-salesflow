@@ -8,10 +8,12 @@ use App\Enums\DataScope;
 use App\Exceptions\UserOperationException;
 use App\Models\User;
 use App\Repositories\Contracts\DepartmentRepository;
+use App\Repositories\Contracts\SessionRepository;
 use App\Repositories\Contracts\UserRepository;
 use App\Services\Authorization\DataScopeService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 final readonly class UserManagementService
 {
@@ -20,6 +22,7 @@ final readonly class UserManagementService
         private DepartmentRepository $departments,
         private DataScopeService $dataScope,
         private SystemAuditService $audit,
+        private SessionRepository $sessions,
     ) {}
 
     /** @param array{name: string, email: string, department_id: ?int, is_active: bool, roles: list<string>, password?: string} $attributes */
@@ -64,6 +67,22 @@ final readonly class UserManagementService
 
             $passwordChanged = array_key_exists('password', $attributes);
 
+            $revokedSessionsCount = 0;
+            if ($user !== null) {
+                $isBlocking = $user->is_active && ! $attributes['is_active'];
+                if ($isBlocking) {
+                    $revokedSessionsCount = $this->sessions->deleteAllSessions($user);
+                } elseif ($passwordChanged) {
+                    $user->forceFill(['remember_token' => Str::random(60)])->save();
+                    if ($actor->getKey() === $user->getKey()) {
+                        $currentSessionId = request()->hasSession() ? request()->session()->getId() : 'fake-id';
+                        $revokedSessionsCount = $this->sessions->deleteOtherSessions($user, $currentSessionId);
+                    } else {
+                        $revokedSessionsCount = $this->sessions->deleteAllSessions($user);
+                    }
+                }
+            }
+
             if ($user === null) {
                 $attributes['email_verified_at'] = now();
                 $savedUser = $this->users->create($attributes);
@@ -82,7 +101,10 @@ final readonly class UserManagementService
                     $user === null ? 'Tạo người dùng' : 'Cập nhật người dùng',
                     $oldValues,
                     $newValues,
-                    ['password_changed' => $passwordChanged],
+                    [
+                        'password_changed' => $passwordChanged,
+                        'revoked_sessions_count' => $revokedSessionsCount,
+                    ],
                 );
             }
 

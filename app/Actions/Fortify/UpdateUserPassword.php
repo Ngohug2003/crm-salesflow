@@ -3,9 +3,11 @@
 namespace App\Actions\Fortify;
 
 use App\Models\User;
+use App\Repositories\Contracts\SessionRepository;
 use App\Services\SystemAuditService;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Laravel\Fortify\Contracts\UpdatesUserPasswords;
 
@@ -13,7 +15,10 @@ class UpdateUserPassword implements UpdatesUserPasswords
 {
     use PasswordValidationRules;
 
-    public function __construct(private readonly SystemAuditService $audit) {}
+    public function __construct(
+        private readonly SystemAuditService $audit,
+        private readonly SessionRepository $sessions,
+    ) {}
 
     /**
      * Validate and update the user's password.
@@ -33,7 +38,11 @@ class UpdateUserPassword implements UpdatesUserPasswords
 
         $user->forceFill([
             'password' => Hash::make($input['password']),
+            'remember_token' => Str::random(60),
         ])->save();
+
+        $currentSessionId = request()->hasSession() ? request()->session()->getId() : 'fake-id';
+        $revokedCount = $this->sessions->deleteOtherSessions($user, $currentSessionId);
 
         $this->audit->record(
             $user,
@@ -42,7 +51,10 @@ class UpdateUserPassword implements UpdatesUserPasswords
             'Thay đổi mật khẩu cá nhân',
             null,
             null,
-            ['password_changed' => true],
+            [
+                'password_changed' => true,
+                'revoked_sessions_count' => $revokedCount,
+            ],
         );
     }
 }

@@ -44,4 +44,11 @@ final readonly class EloquentSessionRepository implements SessionRepository
             ->where('id', '!=', $currentSessionId)
             ->delete();
     }
+
+    public function deleteAllSessions(User $user): int
+    {
+        return DB::table((string) config('session.table', 'sessions'))
+            ->where('user_id', $user->getKey())
+            ->delete();
+    }
 }

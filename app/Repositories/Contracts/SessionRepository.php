@@ -16,4 +16,6 @@ interface SessionRepository
     public function deleteForUser(User $user, string $sessionId): bool;
 
     public function deleteOtherSessions(User $user, string $currentSessionId): int;
+
+    public function deleteAllSessions(User $user): int;
 }
