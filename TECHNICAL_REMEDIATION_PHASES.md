@@ -65,7 +65,7 @@ Ngày cập nhật cấu trúc: **23/07/2026**.
 | P2-T03 | Account và session lifecycle | `feature/p2-t03-account-session-lifecycle` | P1-T02, P2-07 | Hoàn tất triển khai — chờ kiểm thử | Khóa user/đổi mật khẩu thu hồi session đúng rule |
 | P2-T04 | UI states và form quản trị | `feature/p2-t04-admin-ui-states` | P1-T03, P2-T01..P2-T03 | Hoàn tất triển khai — chờ kiểm thử | User/Department/Audit có state, modal/form thống nhất |
 | P3-T01 | Chuẩn hóa Lead Repository boundary | `feature/p3-t01-lead-repository-boundary` | P2-T01, P3-08 | Hoàn tất triển khai — chờ kiểm thử | Lead query thuộc Repository; taxonomy không query trong Service |
-| P3-T02 | Duplicate guard tại backend | `feature/p3-t02-lead-duplicate-guard` | P3-T01, P2-T02 | Chưa bắt đầu | Mọi caller phải qua duplicate decision và recheck |
+| P3-T02 | Duplicate guard tại backend | `feature/p3-t02-lead-duplicate-guard` | P3-T01, P2-T02 | Hoàn tất triển khai — chờ kiểm thử | Mọi caller phải qua duplicate decision và recheck |
 | P3-T03 | Trash/restore conflict handling | `feature/p3-t03-lead-trash-conflict` | P3-T02 | Chưa bắt đầu | Restore xử lý duplicate active an toàn và có audit |
 | P3-T04 | UI states và form Lead | `feature/p3-t04-lead-ui-states` | P1-T03, P3-T02, P3-T03 | Chưa bắt đầu | Lead UI có state nhất quán và quyết định modal/full page rõ ràng |
 | TR-01 | Test và quality checkpoint toàn hệ thống | `feature/tr-01-system-quality-checkpoint` | P1/P2/P3 technical features | Chưa bắt đầu | Toàn bộ test/quality/build đạt |
@@ -877,9 +877,25 @@ Ngăn API/import/service caller tương lai bypass duplicate check đang đượ
 3. Xác nhận rồi đổi contact sang duplicate khác.
 4. Lưu riêng và kiểm tra audit.
 
-### Checkpoint
-
 Dừng sau P3-T02 để kiểm thử create/edit duplicate trước trash conflict.
+
+### Nhật ký triển khai
+
+**Ngày**: 23/07/2026
+**Branch**: `feature/p3-t02-lead-duplicate-guard`
+**Requirement**: `REQ-7.2`, `GAP-DUP-001`
+
+**Files thay đổi**:
+- `app/Exceptions/DuplicateLeadException.php` [NEW] — Định nghĩa exception trùng lặp lưu trữ danh sách ứng viên trùng và chữ ký liên hệ.
+- `app/Services/LeadManagementService.php` — Đưa duplicate detection preflight check xuống tầng Service. Tự động kiểm tra trùng lặp và ném `DuplicateLeadException` nếu thiếu thông tin xác nhận khớp hoặc thiếu lý do ghi đè (hoặc lý do < 10 ký tự). Khi ghi đè thành công, đính kèm `duplicate_override` metadata (gồm danh sách candidate IDs và lý do) vào audit log.
+- `app/Livewire/Leads/LeadEditor.php` — Thêm thuộc tính `duplicateOverrideReason`, bọc phương thức `save` trong try/catch bắt `DuplicateLeadException` và cập nhật luồng xác nhận/quay lại chỉnh sửa. Bổ sung validate lý do ghi đè tối thiểu 10 ký tự trước khi xác nhận.
+- `resources/views/livewire/leads/lead-editor.blade.php` — Bổ sung trường nhập lý do trùng lặp vào modal và hiển thị lỗi validation.
+- `tests/Feature/LeadDuplicateLifecycleTest.php` — Bổ sung test kiểm thử cưỡng chế trùng lặp tại Service, test validate lý do ghi đè ngắn/rỗng, và kiểm thử audit log chứa dữ liệu override.
+
+**Quality gates**:
+- `composer quality`: ✅ PASS (170 tests passed, static analysis OK)
+
+Checkpoint P3-T02: **dừng tại đây để kiểm thử create/edit duplicate trước trash conflict**.
 
 ---
 

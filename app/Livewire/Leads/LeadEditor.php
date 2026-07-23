@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Livewire\Leads;
 
 use App\Enums\DataScope;
+use App\Exceptions\DuplicateLeadException;
 use App\Livewire\Forms\LeadForm;
 use App\Models\Lead;
 use App\Models\LeadSource;
@@ -12,7 +13,6 @@ use App\Models\Tag;
 use App\Models\User;
 use App\Repositories\Contracts\LeadRepository;
 use App\Services\Authorization\DataScopeService;
-use App\Services\DuplicateLeadService;
 use App\Services\LeadDirectoryService;
 use App\Services\LeadManagementService;
 use Illuminate\Contracts\View\View;
@@ -35,6 +35,8 @@ final class LeadEditor extends Component
     public ?string $confirmedDuplicateSignature = null;
 
     public bool $showDuplicateWarning = false;
+
+    public string $duplicateOverrideReason = '';
 
     public function mount(?int $leadId = null): void
     {
@@ -96,31 +98,52 @@ final class LeadEditor extends Component
             ? null
             : $this->repository()->findVisibleOrFail($actor, $this->leadId);
         $payload = $this->form->validatedPayload();
-        $signature = $this->duplicates()->signature($payload);
-        $candidates = $this->duplicates()->candidates($actor, $payload, $this->leadId);
 
-        if ($candidates !== [] && $this->confirmedDuplicateSignature !== $signature) {
-            $this->duplicateCandidates = $candidates;
-            $this->pendingDuplicateSignature = $signature;
+        try {
+            $savedLead = $this->management()->save(
+                $actor,
+                $lead,
+                $payload,
+                $this->confirmedDuplicateSignature,
+                $this->duplicateOverrideReason
+            );
+
+            session()->flash(
+                'status',
+                $lead === null
+                    ? "Đã tạo Lead {$savedLead->full_name}."
+                    : "Đã cập nhật Lead {$savedLead->full_name}.",
+            );
+
+            return $this->redirectRoute('leads.show', ['leadId' => $savedLead->getKey()], navigate: true);
+        } catch (DuplicateLeadException $e) {
+            $this->duplicateCandidates = $e->candidates;
+            $this->pendingDuplicateSignature = $e->signature;
             $this->showDuplicateWarning = true;
+
+            if ($this->confirmedDuplicateSignature !== $e->signature) {
+                $this->confirmedDuplicateSignature = null;
+            }
 
             return null;
         }
-
-        $savedLead = $this->management()->save($actor, $lead, $payload);
-
-        session()->flash(
-            'status',
-            $lead === null
-                ? "Đã tạo Lead {$savedLead->full_name}."
-                : "Đã cập nhật Lead {$savedLead->full_name}.",
-        );
-
-        return $this->redirectRoute('leads.show', ['leadId' => $savedLead->getKey()], navigate: true);
     }
 
     public function confirmDuplicateSave(): mixed
     {
+        $this->duplicateOverrideReason = trim($this->duplicateOverrideReason);
+        if (empty($this->duplicateOverrideReason)) {
+            $this->addError('duplicateOverrideReason', 'Vui lòng nhập lý do lưu trùng lặp.');
+
+            return null;
+        }
+
+        if (mb_strlen($this->duplicateOverrideReason) < 10) {
+            $this->addError('duplicateOverrideReason', 'Lý do phải có ít nhất 10 ký tự.');
+
+            return null;
+        }
+
         $this->confirmedDuplicateSignature = $this->pendingDuplicateSignature;
         $this->showDuplicateWarning = false;
 
@@ -132,7 +155,9 @@ final class LeadEditor extends Component
         $this->duplicateCandidates = [];
         $this->pendingDuplicateSignature = null;
         $this->confirmedDuplicateSignature = null;
+        $this->duplicateOverrideReason = '';
         $this->showDuplicateWarning = false;
+        $this->resetErrorBag('duplicateOverrideReason');
     }
 
     public function render(): View
@@ -153,11 +178,6 @@ final class LeadEditor extends Component
     private function management(): LeadManagementService
     {
         return app(LeadManagementService::class);
-    }
-
-    private function duplicates(): DuplicateLeadService
-    {
-        return app(DuplicateLeadService::class);
     }
 
     private function dataScope(): DataScopeService
