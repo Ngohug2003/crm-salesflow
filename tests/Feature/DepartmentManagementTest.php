@@ -39,6 +39,7 @@ it('creates a department with normalized data', function (): void {
     Livewire::actingAs(departmentManager())
         ->test(DepartmentManagement::class)
         ->call('openCreate')
+        ->assertDispatched('modal-show', name: 'department-form')
         ->set('form.name', '  Kinh doanh Miền Nam  ')
         ->set('form.code', 'sales-south')
         ->set('form.description', '  Phụ trách thị trường miền Nam.  ')
@@ -46,7 +47,7 @@ it('creates a department with normalized data', function (): void {
         ->set('form.sortOrder', 25)
         ->call('save')
         ->assertHasNoErrors()
-        ->assertSet('showForm', false)
+        ->assertDispatched('modal-close', name: 'department-form')
         ->assertSee('Đã tạo phòng ban mới.');
 
     $this->assertDatabaseHas('departments', [

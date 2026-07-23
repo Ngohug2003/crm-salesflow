@@ -81,6 +81,7 @@ final class DepartmentManagement extends Component
 
         $this->resetForm();
         $this->showForm = true;
+        $this->dispatch('modal-show', name: 'department-form');
     }
 
     public function openEdit(int $departmentId): void
@@ -92,11 +93,14 @@ final class DepartmentManagement extends Component
         $this->notice = null;
         $this->form->fillFrom($department);
         $this->showForm = true;
+        $this->dispatch('modal-show', name: 'department-form');
     }
 
     public function cancelForm(): void
     {
         $this->resetForm();
+        $this->showForm = false;
+        $this->dispatch('modal-close', name: 'department-form');
     }
 
     public function save(): void
@@ -119,6 +123,8 @@ final class DepartmentManagement extends Component
         $this->notice = $isCreating ? 'Đã tạo phòng ban mới.' : 'Đã cập nhật phòng ban.';
         $this->noticeType = 'success';
         $this->resetForm(keepNotice: true);
+        $this->showForm = false;
+        $this->dispatch('modal-close', name: 'department-form');
         $this->forgetComputedValues();
     }
 

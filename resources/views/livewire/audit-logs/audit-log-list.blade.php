@@ -165,90 +165,99 @@
             <p class="hidden text-xs text-slate-500 sm:block">Chế độ xem được lưu trên URL</p>
         </div>
 
-        @if ($this->activities->isEmpty())
-            <div class="grid min-h-52 place-items-center rounded-xl border border-dashed border-slate-300 text-center dark:border-slate-700">
-                <div class="px-6">
-                    <p class="font-medium">Chưa có nhật ký phù hợp</p>
-                    <p class="mt-1 text-sm text-slate-500">Thử thay đổi bộ lọc hoặc thực hiện một thao tác cập nhật dữ liệu.</p>
-                </div>
+        <div class="relative">
+            <div wire:loading.delay.longest class="absolute inset-0 bg-white/50 dark:bg-slate-900/50 backdrop-blur-[1px] z-10 flex items-center justify-center rounded-xl">
+                <svg class="animate-spin h-8 w-8 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
             </div>
-        @else
-            @if ($viewMode === 'table')
-                <flux:table>
-                    <flux:table.columns>
-                        <flux:table.column>Thời gian (Việt Nam)</flux:table.column>
-                        <flux:table.column>Người thực hiện</flux:table.column>
-                        <flux:table.column>Phân hệ / Sự kiện</flux:table.column>
-                        <flux:table.column>Nội dung</flux:table.column>
-                    </flux:table.columns>
-                    <flux:table.rows>
-                        @foreach ($this->activities as $activity)
-                            <flux:table.row :key="$activity->id" @class([
-                                'bg-emerald-50/80 dark:bg-emerald-950/20' => $latestRealtimeActivityId === $activity->id,
-                            ])>
-                                <flux:table.cell>
-                                    <p class="min-w-36 font-medium">{{ $activity->created_at?->timezone(config('crm.display_timezone'))->format('d/m/Y H:i:s') }}</p>
-                                    <p class="text-xs text-slate-500">Log #{{ $activity->id }}</p>
-                                </flux:table.cell>
-                                <flux:table.cell>
-                                    <p class="min-w-48 font-medium">{{ $activity->causer?->name ?? 'Hệ thống' }}</p>
-                                    <p class="text-xs text-slate-500">{{ $activity->causer?->email ?? 'Không có tài khoản' }}</p>
-                                </flux:table.cell>
-                                <flux:table.cell>
-                                    <div class="flex min-w-40 flex-wrap gap-2">
-                                        <flux:badge size="sm">{{ str($activity->log_name)->headline() }}</flux:badge>
-                                        <flux:badge size="sm" color="blue">{{ str($activity->event)->headline() }}</flux:badge>
-                                    </div>
-                                    <p class="mt-1 font-mono text-xs text-slate-400">{{ class_basename((string) $activity->subject_type) }} #{{ $activity->subject_id ?? '—' }}</p>
-                                    @if ($activity->request_id)
-                                        <p class="mt-1 font-mono text-xs text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 cursor-pointer" 
-                                           title="Lọc theo Request ID"
-                                           wire:click="$set('requestId', '{{ $activity->request_id }}')">
-                                            Req: {{ str($activity->request_id)->limit(12) }}
-                                        </p>
-                                    @endif
-                                </flux:table.cell>
-                                <flux:table.cell>
-                                    <div class="min-w-80 max-w-2xl">
-                                        <p>{{ $activity->description }}</p>
-                                        @include('livewire.audit-logs.partials.details', ['activity' => $activity])
-                                    </div>
-                                </flux:table.cell>
-                            </flux:table.row>
-                        @endforeach
-                    </flux:table.rows>
-                </flux:table>
-            @else
-                <div class="overflow-hidden rounded-xl border border-blue-950 bg-[#050f27] shadow-inner shadow-black/30">
-                    <div class="flex items-center gap-2 border-b border-blue-950 bg-[#071632] px-4 py-3 font-mono text-xs font-semibold uppercase tracking-wider text-blue-300">
-                        <span class="text-amber-400">⚠</span>
-                        Nhật ký hoạt động hệ thống
-                    </div>
-                    <div class="max-h-[38rem] overflow-auto p-4 font-mono text-xs leading-6 sm:text-sm">
-                        @foreach ($this->activities as $activity)
-                            <details wire:key="audit-log-{{ $activity->id }}" @class([
-                                'group border-l-2 pl-2 hover:border-emerald-500 hover:bg-white/[0.025]',
-                                'border-emerald-400 bg-emerald-500/10' => $latestRealtimeActivityId === $activity->id,
-                                'border-transparent' => $latestRealtimeActivityId !== $activity->id,
-                            ])>
-                                <summary class="grid cursor-pointer list-none gap-x-3 lg:grid-cols-[10.75rem_1fr]">
-                                    <span class="select-none whitespace-nowrap text-blue-500">[{{ $activity->created_at?->timezone(config('crm.display_timezone'))->format('d/m/Y H:i:s') }}]</span>
-                                    <span class="text-emerald-400">
-                                        <strong>{{ $activity->causer?->name ?? 'Hệ thống' }}</strong>
-                                        <span class="text-emerald-300">{{ $activity->description }}</span>
-                                        <span class="text-slate-500">[{{ $activity->log_name }}/{{ $activity->event }} · {{ class_basename((string) $activity->subject_type) }}#{{ $activity->subject_id ?? '—' }}@if($activity->request_id) · Req:{{ str($activity->request_id)->limit(8) }}@endif]</span>
-                                    </span>
-                                </summary>
-                                <div class="ml-0 mt-2 rounded-lg border border-slate-800 bg-black/30 p-3 text-slate-300 lg:ml-[11.5rem]">
-                                    @include('livewire.audit-logs.partials.details', ['activity' => $activity, 'console' => true])
-                                </div>
-                            </details>
-                        @endforeach
+
+            @if ($this->activities->isEmpty())
+                <div class="grid min-h-52 place-items-center rounded-xl border border-dashed border-slate-300 text-center dark:border-slate-700">
+                    <div class="px-6">
+                        <p class="font-medium">Chưa có nhật ký phù hợp</p>
+                        <p class="mt-1 text-sm text-slate-500">Thử thay đổi bộ lọc hoặc thực hiện một thao tác cập nhật dữ liệu.</p>
                     </div>
                 </div>
-            @endif
+            @else
+                @if ($viewMode === 'table')
+                    <flux:table>
+                        <flux:table.columns>
+                            <flux:table.column>Thời gian (Việt Nam)</flux:table.column>
+                            <flux:table.column>Người thực hiện</flux:table.column>
+                            <flux:table.column>Phân hệ / Sự kiện</flux:table.column>
+                            <flux:table.column>Nội dung</flux:table.column>
+                        </flux:table.columns>
+                        <flux:table.rows>
+                            @foreach ($this->activities as $activity)
+                                <flux:table.row :key="$activity->id" @class([
+                                    'bg-emerald-50/80 dark:bg-emerald-950/20' => $latestRealtimeActivityId === $activity->id,
+                                ])>
+                                    <flux:table.cell>
+                                        <p class="min-w-36 font-medium">{{ $activity->created_at?->timezone(config('crm.display_timezone'))->format('d/m/Y H:i:s') }}</p>
+                                        <p class="text-xs text-slate-500">Log #{{ $activity->id }}</p>
+                                    </flux:table.cell>
+                                    <flux:table.cell>
+                                        <p class="min-w-48 font-medium">{{ $activity->causer?->name ?? 'Hệ thống' }}</p>
+                                        <p class="text-xs text-slate-500">{{ $activity->causer?->email ?? 'Không có tài khoản' }}</p>
+                                    </flux:table.cell>
+                                    <flux:table.cell>
+                                        <div class="flex min-w-40 flex-wrap gap-2">
+                                            <flux:badge size="sm">{{ str($activity->log_name)->headline() }}</flux:badge>
+                                            <flux:badge size="sm" color="blue">{{ str($activity->event)->headline() }}</flux:badge>
+                                        </div>
+                                        <p class="mt-1 font-mono text-xs text-slate-400">{{ class_basename((string) $activity->subject_type) }} #{{ $activity->subject_id ?? '—' }}</p>
+                                        @if ($activity->request_id)
+                                            <p class="mt-1 font-mono text-xs text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 cursor-pointer" 
+                                               title="Lọc theo Request ID"
+                                               wire:click="$set('requestId', '{{ $activity->request_id }}')">
+                                                Req: {{ str($activity->request_id)->limit(12) }}
+                                            </p>
+                                        @endif
+                                    </flux:table.cell>
+                                    <flux:table.cell>
+                                        <div class="min-w-80 max-w-2xl">
+                                            <p>{{ $activity->description }}</p>
+                                            @include('livewire.audit-logs.partials.details', ['activity' => $activity])
+                                        </div>
+                                    </flux:table.cell>
+                                </flux:table.row>
+                            @endforeach
+                        </flux:table.rows>
+                    </flux:table>
+                @else
+                    <div class="overflow-hidden rounded-xl border border-blue-950 bg-[#050f27] shadow-inner shadow-black/30">
+                        <div class="flex items-center gap-2 border-b border-blue-950 bg-[#071632] px-4 py-3 font-mono text-xs font-semibold uppercase tracking-wider text-blue-300">
+                            <span class="text-amber-400">⚠</span>
+                            Nhật ký hoạt động hệ thống
+                        </div>
+                        <div class="max-h-[38rem] overflow-auto p-4 font-mono text-xs leading-6 sm:text-sm">
+                            @foreach ($this->activities as $activity)
+                                <details wire:key="audit-log-{{ $activity->id }}" @class([
+                                    'group border-l-2 pl-2 hover:border-emerald-500 hover:bg-white/[0.025]',
+                                    'border-emerald-400 bg-emerald-500/10' => $latestRealtimeActivityId === $activity->id,
+                                    'border-transparent' => $latestRealtimeActivityId !== $activity->id,
+                                ])>
+                                    <summary class="grid cursor-pointer list-none gap-x-3 lg:grid-cols-[10.75rem_1fr]">
+                                        <span class="select-none whitespace-nowrap text-blue-500">[{{ $activity->created_at?->timezone(config('crm.display_timezone'))->format('d/m/Y H:i:s') }}]</span>
+                                        <span class="text-emerald-400">
+                                            <strong>{{ $activity->causer?->name ?? 'Hệ thống' }}</strong>
+                                            <span class="text-emerald-300">{{ $activity->description }}</span>
+                                            <span class="text-slate-500">[{{ $activity->log_name }}/{{ $activity->event }} · {{ class_basename((string) $activity->subject_type) }}#{{ $activity->subject_id ?? '—' }}@if($activity->request_id) · Req:{{ str($activity->request_id)->limit(8) }}@endif]</span>
+                                        </span>
+                                    </summary>
+                                    <div class="ml-0 mt-2 rounded-lg border border-slate-800 bg-black/30 p-3 text-slate-300 lg:ml-[11.5rem]">
+                                        @include('livewire.audit-logs.partials.details', ['activity' => $activity, 'console' => true])
+                                    </div>
+                                </details>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
 
-            <div class="mt-5">{{ $this->activities->links() }}</div>
-        @endif
+                <div class="mt-5">{{ $this->activities->links() }}</div>
+            @endif
+        </div>
     </section>
 </div>

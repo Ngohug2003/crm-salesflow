@@ -63,7 +63,7 @@ Ngày cập nhật cấu trúc: **23/07/2026**.
 | P2-T01 | Chuẩn hóa User Repository boundary | `feature/p2-t01-user-repository-boundary` | P1-T04, P2-08 | Hoàn tất triển khai — chờ kiểm thử | User query thuộc Repository; Service/Livewire không nhận Builder |
 | P2-T02 | Audit correlation với Request ID | `feature/p2-t02-audit-request-correlation` | P1-T01, P2-07-02 | Hoàn tất triển khai — chờ kiểm thử | Audit, realtime và response dùng cùng request ID |
 | P2-T03 | Account và session lifecycle | `feature/p2-t03-account-session-lifecycle` | P1-T02, P2-07 | Hoàn tất triển khai — chờ kiểm thử | Khóa user/đổi mật khẩu thu hồi session đúng rule |
-| P2-T04 | UI states và form quản trị | `feature/p2-t04-admin-ui-states` | P1-T03, P2-T01..P2-T03 | Chưa bắt đầu | User/Department/Audit có state, modal/form thống nhất |
+| P2-T04 | UI states và form quản trị | `feature/p2-t04-admin-ui-states` | P1-T03, P2-T01..P2-T03 | Hoàn tất triển khai — chờ kiểm thử | User/Department/Audit có state, modal/form thống nhất |
 | P3-T01 | Chuẩn hóa Lead Repository boundary | `feature/p3-t01-lead-repository-boundary` | P2-T01, P3-08 | Chưa bắt đầu | Lead query thuộc Repository; taxonomy không query trong Service |
 | P3-T02 | Duplicate guard tại backend | `feature/p3-t02-lead-duplicate-guard` | P3-T01, P2-T02 | Chưa bắt đầu | Mọi caller phải qua duplicate decision và recheck |
 | P3-T03 | Trash/restore conflict handling | `feature/p3-t03-lead-trash-conflict` | P3-T02 | Chưa bắt đầu | Restore xử lý duplicate active an toàn và có audit |
@@ -748,9 +748,29 @@ Chuẩn hóa trải nghiệm User, Department và Audit theo app shell P1.
 - Modal không giữ lỗi/dữ liệu cũ.
 - Responsive, dark mode và keyboard đạt mức cơ bản.
 
-### Checkpoint
-
 Dừng sau P2-T04 để nghiệm thu toàn bộ remediation P2.
+
+### Nhật ký triển khai
+
+**Ngày**: 23/07/2026
+**Branch**: `feature/p2-t04-admin-ui-states`
+**Requirement**: `REQ-12.1`, `GAP-UX-001`
+
+**Files thay đổi**:
+- `app/Livewire/Users/UserList.php` — Tích hợp showForm boolean và modal events (`modal-show`, `modal-close`).
+- `resources/views/livewire/users/user-list.blade.php` — Chuyển form inline sang `<flux:modal>` với class `w-full` và inline style rộng `56rem` (95vw max-width) để tối ưu hiển thị, bọc nội dung trong `@if ($showForm)` để tối ưu hiệu năng và tránh sai lệch chỉ mục tìm kiếm, thêm loading overlay SVG spinner khi tải bảng.
+- `app/Livewire/Departments/DepartmentManagement.php` — Tích hợp showForm boolean và modal events.
+- `resources/views/livewire/departments/department-management.blade.php` — Chuyển form inline sang `<flux:modal>` bọc trong `@if ($showForm)`, thêm loading overlay SVG spinner, đồng thời disable các nút thao tác bằng `wire:loading.attr="disabled"` để chống click đúp.
+- `resources/views/livewire/audit-logs/audit-log-list.blade.php` — Bọc danh sách log trong loading overlay SVG spinner khi tải/filter.
+- `tests/Feature/UserFormTest.php` & `tests/Feature/DepartmentManagementTest.php` — Cập nhật các assert trên property `$showForm` thành các assert event `assertDispatched` phù hợp.
+
+**Quyết định**:
+- Sử dụng inline style `width: 56rem; max-width: 95vw;` trên `<flux:modal>` của user form để chắc chắn mở rộng modal rộng rãi mà không cần chạy lại Vite compilation cho Tailwind CSS trong môi trường test/WSL của nhà phát triển.
+
+**Quality gates**:
+- `composer quality`: ✅ PASS (169 tests passed, 178 files style passed, phpstan no errors)
+
+Checkpoint P2-T04: **dừng tại đây để nghiệm thu toàn bộ remediation Giai đoạn 2**.
 
 ---
 
