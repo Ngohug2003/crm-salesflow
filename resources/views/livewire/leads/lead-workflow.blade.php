@@ -4,15 +4,53 @@
         <p class="mt-1 text-sm text-slate-500">Mọi lần phân công và chuyển trạng thái đều được kiểm tra ở backend và lưu thành lịch sử không thể chỉnh sửa.</p>
     </div>
 
-    @if ($this->canAssign || $this->canChangeStatus)
+    @if ($this->canAssign || $this->canChangeStatus || $this->canConvert)
         <div class="flex flex-wrap gap-3">
+            @if ($this->canConvert)
+                <flux:button variant="primary" color="emerald" icon="sparkles" wire:click="openConvert">Chuyển đổi Lead</flux:button>
+            @endif
             @if ($this->canAssign)
-                <flux:button variant="primary" icon="user-plus" wire:click="openAssign">Gán người phụ trách</flux:button>
+                <flux:button variant="filled" icon="user-plus" wire:click="openAssign">Gán người phụ trách</flux:button>
             @endif
             @if ($this->canChangeStatus)
-                <flux:button variant="primary" icon="arrow-path" wire:click="openChangeStatus">Chuyển trạng thái</flux:button>
+                <flux:button variant="filled" icon="arrow-path" wire:click="openChangeStatus">Chuyển trạng thái</flux:button>
             @endif
         </div>
+
+        <flux:modal name="convert-lead-modal" class="md:w-[32rem]" wire:close="cancelConvert">
+            @if ($showConvertModal)
+                <form wire:submit.prevent="convertLead" class="space-y-5">
+                    <div>
+                        <flux:heading size="lg">Chuyển đổi Khách hàng tiềm năng</flux:heading>
+                        <flux:text class="mt-2">Lead <strong>{{ $this->lead->full_name }}</strong> sẽ được chuyển sang trạng thái <strong>Đã chuyển đổi (Converted)</strong> và khởi tạo tự động các đối tượng chọn bên dưới.</flux:text>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="rounded-xl border border-slate-200 p-4 dark:border-slate-800 space-y-3">
+                            <flux:checkbox wire:model="convertCreateCompany" label="Tạo Doanh nghiệp mới" />
+                            <flux:checkbox wire:model="convertCreateContact" label="Tạo Người liên hệ mới" />
+                            <flux:checkbox wire:model="convertCreateOpportunity" label="Tạo Cơ hội bán hàng mới" />
+                        </div>
+
+                        @if ($convertCreateOpportunity)
+                            <div class="space-y-3 pt-2">
+                                <flux:input wire:model="convertOpportunityName" label="Tên Cơ hội bán hàng *" required />
+                                <flux:input wire:model="convertEstimatedValue" type="number" label="Giá trị dự kiến (VNĐ)" />
+                            </div>
+                        @endif
+
+                        @error('convert')
+                            <p class="text-sm font-medium text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div class="flex justify-end gap-3">
+                        <flux:button variant="ghost" x-on:click="$flux.modal('convert-lead-modal').close()">Hủy</flux:button>
+                        <flux:button type="submit" variant="primary" color="emerald" wire:loading.attr="disabled" wire:target="convertLead">Xác nhận Chuyển đổi</flux:button>
+                    </div>
+                </form>
+            @endif
+        </flux:modal>
 
         <flux:modal name="assign-owner-modal" class="md:w-[32rem]" wire:close="cancelAssign">
             @if ($showAssignModal)

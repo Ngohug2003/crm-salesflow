@@ -7,7 +7,11 @@ namespace App\Services;
 use App\Data\LeadConversionData;
 use App\Enums\LeadStatus;
 use App\Exceptions\LeadConversionException;
+use App\Models\Company;
+use App\Models\Contact;
 use App\Models\Lead;
+use App\Models\Pipeline;
+use App\Models\PipelineStage;
 use App\Models\User;
 use App\Repositories\Contracts\LeadRepository;
 use App\Repositories\Contracts\LeadWorkflowRepository;
@@ -94,6 +98,92 @@ final readonly class LeadConversionService implements LeadConversionContract
             $currentStatus = $lead->getAttribute('status');
             $currentStatus = $currentStatus instanceof LeadStatus ? $currentStatus : LeadStatus::from((string) $currentStatus);
 
+            // 1. Resolve or Create Company
+            $companyId = $data->companyId;
+            if ($companyId === null && $data->createCompany) {
+                $leadCompanyName = trim((string) $lead->getAttribute('company_name'));
+                $companyName = $data->companyName !== null && trim($data->companyName) !== ''
+                    ? trim($data->companyName)
+                    : ($leadCompanyName !== '' ? $leadCompanyName : 'Công ty từ Lead '.$lead->full_name);
+
+                $company = Company::query()->create([
+                    'name' => $companyName,
+                    'email' => $lead->email,
+                    'phone' => $lead->phone,
+                    'owner_id' => $lead->owner_id,
+                    'department_id' => $lead->department_id,
+                    'created_by' => $actor->getKey(),
+                    'updated_by' => $actor->getKey(),
+                ]);
+                $companyId = $company->id;
+            }
+
+            // 2. Resolve or Create Contact
+            $contactId = $data->contactId;
+            if ($contactId === null && $data->createContact) {
+                $nameParts = explode(' ', trim((string) $lead->full_name), 2);
+                $firstName = $nameParts[0];
+                $lastName = $nameParts[1] ?? null;
+
+                $contact = Contact::query()->create([
+                    'first_name' => $firstName,
+                    'last_name' => $lastName,
+                    'full_name' => trim((string) $lead->full_name),
+                    'email' => $lead->email,
+                    'phone' => $lead->phone,
+                    'company_id' => $companyId,
+                    'owner_id' => $lead->owner_id,
+                    'department_id' => $lead->department_id,
+                    'created_by' => $actor->getKey(),
+                    'updated_by' => $actor->getKey(),
+                ]);
+                $contactId = $contact->id;
+            }
+
+            // 3. Resolve or Create Opportunity if requested
+            $createdOpportunityId = null;
+            if ($data->createOpportunity) {
+                $pipelineId = $data->pipelineId;
+                if ($pipelineId === null) {
+                    $defaultPipeline = Pipeline::query()->where('is_default', true)->first()
+                        ?? Pipeline::query()->where('is_active', true)->first();
+                    $pipelineId = $defaultPipeline?->id;
+                }
+
+                if ($pipelineId !== null) {
+                    $stageId = $data->stageId;
+                    if ($stageId === null) {
+                        $firstStage = PipelineStage::query()
+                            ->where('pipeline_id', $pipelineId)
+                            ->orderBy('position', 'asc')
+                            ->first();
+                        $stageId = $firstStage?->id;
+                    }
+
+                    if ($stageId !== null) {
+                        $opportunityName = $data->opportunityName !== null && trim($data->opportunityName) !== ''
+                            ? trim($data->opportunityName)
+                            : "Cơ hội từ Lead {$lead->full_name}";
+
+                        /** @var OpportunityManagementService $oppManagement */
+                        $oppManagement = app(OpportunityManagementService::class);
+                        $createdOpportunity = $oppManagement->create($actor, [
+                            'title' => $opportunityName,
+                            'amount' => $data->estimatedValue ?? 0.0,
+                            'pipeline_id' => $pipelineId,
+                            'stage_id' => $stageId,
+                            'company_id' => $companyId,
+                            'contact_id' => $contactId,
+                            'lead_id' => $lead->id,
+                            'owner_id' => $lead->owner_id,
+                            'department_id' => $lead->department_id,
+                            'notes' => $data->notes,
+                        ]);
+                        $createdOpportunityId = $createdOpportunity->id;
+                    }
+                }
+            }
+
             $savedLead = $this->leads->update($lead, [
                 'status' => LeadStatus::Converted,
                 'converted_at' => now(),
@@ -120,10 +210,11 @@ final readonly class LeadConversionService implements LeadConversionContract
                 ],
                 [
                     'create_company' => $data->createCompany,
-                    'company_id' => $data->companyId,
+                    'company_id' => $companyId,
                     'create_contact' => $data->createContact,
-                    'contact_id' => $data->contactId,
+                    'contact_id' => $contactId,
                     'create_opportunity' => $data->createOpportunity,
+                    'opportunity_id' => $createdOpportunityId,
                 ],
             );
 

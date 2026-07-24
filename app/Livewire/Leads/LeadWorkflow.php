@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire\Leads;
 
+use App\Data\LeadConversionData;
 use App\Data\LeadTimelineEntry;
 use App\Enums\LeadStatus;
 use App\Exceptions\LeadWorkflowException;
@@ -12,6 +13,7 @@ use App\Models\User;
 use App\Repositories\Contracts\LeadRepository;
 use App\Repositories\Contracts\LeadWorkflowRepository;
 use App\Services\LeadAssignmentService;
+use App\Services\LeadConversionService;
 use App\Services\LeadDirectoryService;
 use App\Services\LeadStatusTransitionService;
 use Illuminate\Contracts\View\View;
@@ -190,6 +192,71 @@ final class LeadWorkflow extends Component
         $this->dispatch('modal-close', name: 'change-status-modal');
 
         return $this->redirectRoute('leads.show', ['leadId' => $this->leadId], navigate: true);
+    }
+
+    public bool $showConvertModal = false;
+
+    public bool $convertCreateCompany = true;
+
+    public bool $convertCreateContact = true;
+
+    public bool $convertCreateOpportunity = true;
+
+    public string $convertOpportunityName = '';
+
+    public ?float $convertEstimatedValue = null;
+
+    #[Computed]
+    public function canConvert(): bool
+    {
+        /** @var LeadConversionService $service */
+        $service = app(LeadConversionService::class);
+        $check = $service->checkEligibility($this->currentUser(), $this->lead());
+
+        return $check['eligible'];
+    }
+
+    public function openConvert(): void
+    {
+        $this->resetValidation();
+        $lead = $this->lead();
+        $this->convertOpportunityName = "Cơ hội từ Lead {$lead->full_name}";
+        $this->convertEstimatedValue = $lead->estimated_value !== null ? (float) $lead->estimated_value : null;
+        $this->showConvertModal = true;
+        $this->dispatch('modal-show', name: 'convert-lead-modal');
+    }
+
+    public function cancelConvert(): void
+    {
+        $this->resetValidation();
+        $this->showConvertModal = false;
+        $this->dispatch('modal-close', name: 'convert-lead-modal');
+    }
+
+    public function convertLead(): mixed
+    {
+        /** @var LeadConversionService $service */
+        $service = app(LeadConversionService::class);
+
+        try {
+            $data = new LeadConversionData(
+                createCompany: $this->convertCreateCompany,
+                createContact: $this->convertCreateContact,
+                createOpportunity: $this->convertCreateOpportunity,
+                opportunityName: $this->convertOpportunityName,
+                estimatedValue: $this->convertEstimatedValue,
+            );
+
+            $service->convert($this->currentUser(), $this->leadId, $data);
+            session()->flash('status', 'Đã chuyển đổi Lead thành công!');
+            $this->dispatch('modal-close', name: 'convert-lead-modal');
+
+            return $this->redirectRoute('leads.show', ['leadId' => $this->leadId], navigate: true);
+        } catch (\Throwable $e) {
+            $this->addError('convert', $e->getMessage());
+
+            return null;
+        }
     }
 
     public function render(): View

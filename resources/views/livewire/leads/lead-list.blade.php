@@ -222,9 +222,14 @@
                                         <p class="font-medium">{{ $lead->estimated_value !== null ? number_format((float) $lead->estimated_value, 0, ',', '.').' ₫' : '—' }}</p>
                                         <p class="mt-1 text-xs text-slate-500">{{ $lead->created_at?->format('d/m/Y') }}</p>
                                         <div class="mt-2 flex justify-end gap-1">
-                                            <flux:button :href="route('leads.show', $lead)" wire:navigate size="sm" variant="ghost">Xem</flux:button>
+                                            <flux:button :href="route('leads.show', ['leadId' => $lead->id])" wire:navigate size="sm" variant="ghost">Xem</flux:button>
+                                            @can('convert', $lead)
+                                                @if ($lead->status->value !== 'converted')
+                                                    <flux:button :href="route('leads.show', ['leadId' => $lead->id])" wire:navigate size="sm" variant="subtle" color="emerald">Chuyển đổi</flux:button>
+                                                @endif
+                                            @endcan
                                             @can('update', $lead)
-                                                <flux:button :href="route('leads.edit', $lead)" wire:navigate size="sm" variant="ghost">Sửa</flux:button>
+                                                <flux:button :href="route('leads.edit', ['leadId' => $lead->id])" wire:navigate size="sm" variant="ghost">Sửa</flux:button>
                                             @endcan
                                         </div>
                                     </flux:table.cell>
