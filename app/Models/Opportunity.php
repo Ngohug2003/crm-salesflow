@@ -134,6 +134,12 @@ final class Opportunity extends Model
         return $this->hasMany(OpportunityStageHistory::class, 'opportunity_id')->orderBy('created_at', 'desc');
     }
 
+    /** @return MorphMany<Activity, $this> */
+    public function activities(): MorphMany
+    {
+        return $this->morphMany(Activity::class, 'subject');
+    }
+
     /**
      * @param  Builder<$this>  $query
      * @return Builder<$this>

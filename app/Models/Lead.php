@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 final class Lead extends Model
@@ -103,6 +104,12 @@ final class Lead extends Model
     public function statusHistories(): HasMany
     {
         return $this->hasMany(LeadStatusHistory::class);
+    }
+
+    /** @return MorphMany<Activity, $this> */
+    public function activities(): MorphMany
+    {
+        return $this->morphMany(Activity::class, 'subject');
     }
 
     /** @return array<string, string> */

@@ -90,6 +90,12 @@ final class Contact extends Model
         return $this->hasMany(Opportunity::class, 'contact_id');
     }
 
+    /** @return MorphMany<Activity, $this> */
+    public function activities(): MorphMany
+    {
+        return $this->morphMany(Activity::class, 'subject');
+    }
+
     /** @return MorphMany<Attachment, $this> */
     public function attachments(): MorphMany
     {
