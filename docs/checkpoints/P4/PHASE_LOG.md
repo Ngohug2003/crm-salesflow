@@ -9,7 +9,7 @@ Mục tiêu: Xây dựng hồ sơ khách hàng và quan hệ Company–Contact l
 | P4-01 | ✅ Company schema và domain | `feature/p4-01-company-domain` | P2-08 | Schema/model/factory/test Company với PostgreSQL BIGINT tự tăng, Data Scope và soft delete |
 | P4-02 | ✅ Contact schema và domain | `feature/p4-02-contact-domain` | P4-01 | Schema/model/factory/test Contact và quan hệ với Company |
 | P4-03 | ✅ Company CRUD | `feature/p4-03-company-crud` | P4-01, P2-04 | Dịch vụ, Repository, Policy và Livewire CRUD cho Company |
-| P4-04 | Contact CRUD và quan hệ | `feature/p4-04-contact-crud` | P4-02, P2-04 | Dịch vụ, Repository, Policy và Livewire CRUD cho Contact |
+| P4-04 | ✅ Contact CRUD và quan hệ | `feature/p4-04-contact-crud` | P4-02, P2-04 | Dịch vụ, Repository, Policy và Livewire CRUD cho Contact |
 | P4-05 | Duplicate handling | `feature/p4-05-customer-duplicates` | P4-03, P4-04 | Phát hiện trùng lặp khách hàng, cảnh báo và xử lý |
 | P4-06 | Attachment và timeline foundation | `feature/p4-06-customer-files-timeline` | P4-03, P4-04 | Đính kèm tệp tin và mốc thời gian khách hàng |
 | P4-07 | Customer authorization checkpoint | `feature/p4-07-customer-checkpoint` | P4-01..P4-06 | Kiểm thử phân quyền và checkpoint nghiệm thu Giai đoạn 4 |
@@ -89,5 +89,38 @@ File chính:
 - `routes/web.php`
 - `resources/views/layouts/partials/_sidebar.blade.php`
 - `tests/Feature/CompanyCrudTest.php`
+
+### Nhật ký feature P4-04 — Contact CRUD và quan hệ
+
+Trạng thái: **hoàn tất triển khai, chờ chủ dự án kiểm thử**.
+
+Đã triển khai:
+
+- Tạo `ContactFilterData` DTO đóng gói tham số tìm kiếm, doanh nghiệp, cờ đại diện chính (isPrimary), owner_id, department_id, sorting.
+- Định nghĩa `ContactRepository` contract và `EloquentContactRepository` thực thi Data Scope (`all`, `department`, `owned`, `read-only`) ở backend cùng allowlist sorting (`full_name`, `created_at`, `job_title`, `email`) và phương thức `resetPrimaryContactsExcept`.
+- Tạo `ContactPolicy` phân quyền `contacts.view`, `contacts.create`, `contacts.update`, `contacts.delete` và kiểm tra Data Scope.
+- Tạo `ContactManagementService` thực thi logic nghiệp vụ CRUD trong `DB::transaction()`, tự động xử lý cờ `is_primary` duy nhất cho mỗi Doanh nghiệp và ghi log kiểm toán qua `SystemAuditService`.
+- Đăng ký Bind `ContactRepository` ➔ `EloquentContactRepository` trong `RepositoryServiceProvider`.
+- Tạo các Livewire Components & Blade views dạng Full-width: `ContactList` (`/contacts`), `ContactEditor` (`/contacts/create`, `/contacts/{id}/edit`), `ContactDetail` (`/contacts/{id}`).
+- Khai báo các tuyến đường URL trong `routes/web.php` và bật menu **Người liên hệ** chính thức trên Sidebar navigation.
+- Viết 6 test cases trong `ContactCrudTest` kiểm thử phân quyền 5 vai trò, Data Scope isolation, CRUD, quan hệ Doanh nghiệp, cờ Đại diện chính duy nhất và audit logs.
+
+File chính:
+
+- `app/Data/ContactFilterData.php`
+- `app/Repositories/Contracts/ContactRepository.php`
+- `app/Repositories/EloquentContactRepository.php`
+- `app/Policies/ContactPolicy.php`
+- `app/Services/ContactManagementService.php`
+- `app/Livewire/Contacts/ContactList.php`
+- `app/Livewire/Contacts/ContactEditor.php`
+- `app/Livewire/Contacts/ContactDetail.php`
+- `resources/views/livewire/contacts/contact-list.blade.php`
+- `resources/views/livewire/contacts/contact-editor.blade.php`
+- `resources/views/livewire/contacts/contact-detail.blade.php`
+- `routes/web.php`
+- `resources/views/layouts/partials/_sidebar.blade.php`
+- `tests/Feature/ContactCrudTest.php`
+
 
 

@@ -41,6 +41,14 @@
                         <span x-show="sidebar">Doanh nghiệp</span>
                     </a>
                 @endcan
+                @can('viewAny', \App\Models\Contact::class)
+                    <a href="{{ route('contacts.index') }}" wire:navigate.hover
+                       class="nav-link"
+                       :class="path.startsWith('/contacts') && 'nav-link-active'">
+                        <flux:icon.user-circle class="nav-icon" />
+                        <span x-show="sidebar">Người liên hệ</span>
+                    </a>
+                @endcan
             </div>
         </div>
 
@@ -107,7 +115,6 @@
             <p x-show="sidebar" class="nav-group-label">Sắp có</p>
             <div class="mt-1 space-y-0.5">
                 @foreach ([
-                    'Contacts' => 'user-circle',
                     'Opportunities' => 'sparkles',
                     'Pipelines' => 'view-columns',
                     'Activities' => 'clock',
