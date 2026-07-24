@@ -28,7 +28,7 @@
 
     <!-- Main Content -->
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <!-- Hồ sơ & Người liên hệ -->
+        <!-- Hồ sơ, Tệp đính kèm, Timeline & Người liên hệ -->
         <div class="space-y-6 lg:col-span-2">
             <section class="crm-card">
                 <div class="mb-5">
@@ -121,6 +121,12 @@
                     @endforelse
                 </div>
             </section>
+
+            <!-- Attachments Manager -->
+            <livewire:customers.customer-attachment-manager :modelType="\App\Models\Company::class" :modelId="$company->id" />
+
+            <!-- Timeline Feed -->
+            <livewire:customers.customer-timeline-feed :modelType="\App\Models\Company::class" :modelId="$company->id" />
         </div>
 
         <!-- Sidebar Meta -->

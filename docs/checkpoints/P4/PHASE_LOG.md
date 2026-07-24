@@ -11,7 +11,7 @@ Mục tiêu: Xây dựng hồ sơ khách hàng và quan hệ Company–Contact l
 | P4-03 | ✅ Company CRUD | `feature/p4-03-company-crud` | P4-01, P2-04 | Dịch vụ, Repository, Policy và Livewire CRUD cho Company |
 | P4-04 | ✅ Contact CRUD và quan hệ | `feature/p4-04-contact-crud` | P4-02, P2-04 | Dịch vụ, Repository, Policy và Livewire CRUD cho Contact |
 | P4-05 | ✅ Duplicate handling | `feature/p4-05-customer-duplicates` | P4-03, P4-04 | Phát hiện trùng lặp khách hàng, cảnh báo và xử lý |
-| P4-06 | Attachment và timeline foundation | `feature/p4-06-customer-files-timeline` | P4-03, P4-04 | Đính kèm tệp tin và mốc thời gian khách hàng |
+| P4-06 | ✅ Attachment và timeline foundation | `feature/p4-06-customer-files-timeline` | P4-03, P4-04 | Đính kèm tệp tin và mốc thời gian khách hàng |
 | P4-07 | Customer authorization checkpoint | `feature/p4-07-customer-checkpoint` | P4-01..P4-06 | Kiểm thử phân quyền và checkpoint nghiệm thu Giai đoạn 4 |
 
 ---
@@ -148,6 +148,38 @@ File chính:
 - `resources/views/livewire/companies/company-editor.blade.php`
 - `resources/views/livewire/contacts/contact-editor.blade.php`
 - `tests/Feature/CustomerDuplicateTest.php`
+
+### Nhật ký feature P4-06 — Attachment và timeline foundation
+
+Trạng thái: **hoàn tất triển khai, chờ chủ dự án kiểm thử**.
+
+Đã triển khai:
+
+- Tạo migration `2026_07_24_000003_create_attachments_table.php` sử dụng quan hệ Đa hình (`attachable_type`, `attachable_id`) với PostgreSQL `BIGINT` auto-increment `id`.
+- Tạo Eloquent Model `Attachment` với hỗ trợ softDeletes và helper `humanSize()`. Thêm quan hệ `attachments(): MorphMany` trong Model `Company` và `Contact`.
+- Tạo `CustomerAttachmentService` thực hiện đăng tải tệp tin bảo mật, kiểm tra đuôi tệp nguy hiểm (`.php`, `.exe`, `.sh`,...), xóa tệp và tự động phát sinh log audit qua `SystemAuditService`.
+- Tạo `CustomerTimelineService` hợp nhất dữ liệu Audit Logs (`Spatie\Activitylog\Models\Activity`) và Tệp đính kèm (`Attachment`) thành một luồng Dòng thời gian hoạt động (Timeline Feed) xếp theo thứ tự thời gian giảm dần.
+- Tạo các Livewire Components & Blade views: `CustomerAttachmentManager` (quản lý/tải lên/xóa/tải về tệp đính kèm) và `CustomerTimelineFeed` (hiển thị dòng thời gian).
+- Nhúng cả 2 components vào trang chi tiết Doanh nghiệp (`CompanyDetail`) và Người liên hệ (`ContactDetail`).
+- Viết `CustomerAttachmentAndTimelineTest` kiểm thử 4 test cases đạt 100% PASS (tải tệp hợp lệ, chặn tệp nguy hiểm, dòng thời gian hợp nhất và xóa tệp đính kèm).
+
+File chính:
+
+- `database/migrations/2026_07_24_000003_create_attachments_table.php`
+- `app/Models/Attachment.php`
+- `app/Models/Company.php`
+- `app/Models/Contact.php`
+- `app/Data/CustomerTimelineItemData.php`
+- `app/Services/CustomerAttachmentService.php`
+- `app/Services/CustomerTimelineService.php`
+- `app/Livewire/Customers/CustomerAttachmentManager.php`
+- `app/Livewire/Customers/CustomerTimelineFeed.php`
+- `resources/views/livewire/customers/customer-attachment-manager.blade.php`
+- `resources/views/livewire/customers/customer-timeline-feed.blade.php`
+- `resources/views/livewire/companies/company-detail.blade.php`
+- `resources/views/livewire/contacts/contact-detail.blade.php`
+- `tests/Feature/CustomerAttachmentAndTimelineTest.php`
+
 
 
 
