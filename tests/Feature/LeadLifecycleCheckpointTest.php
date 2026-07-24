@@ -13,7 +13,6 @@ use App\Services\Contracts\LeadConversionContract;
 use App\Services\LeadLifecycleService;
 use App\Services\LeadStatusTransitionService;
 use Database\Seeders\DatabaseSeeder;
-use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 
@@ -122,7 +121,7 @@ it('enforces read-only protection for Viewer role across all lead mutations', fu
     /** @var LeadLifecycleService $lifecycleService */
     $lifecycleService = app(LeadLifecycleService::class);
     expect(fn () => $lifecycleService->delete($viewer, $lead->getKey(), 'Lý do xóa thử nghiệm'))
-        ->toThrow(\Exception::class);
+        ->toThrow(Exception::class);
 });
 
 it('verifies DatabaseSeeder idempotency for Lead module data', function (): void {
