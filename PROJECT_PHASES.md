@@ -74,7 +74,7 @@ Tài liệu này là lộ trình và trạng thái checkpoint chính của dự 
 | P3-06 | Form và chi tiết Lead | `feature/p3-06-lead-form-detail` | P3-05 | ✅ Hoàn tất |
 | P3-07 | Assignment và status history | `feature/p3-07-lead-assignment-status` | P3-06 | ✅ Hoàn tất |
 | P3-08 | Duplicate, soft delete và restore | `feature/p3-08-lead-duplicate-delete` | P3-06 | ✅ Hoàn tất |
-| P3-09 | Conversion eligibility và contract | `feature/p3-09-conversion-contract` | P3-07, P3-08 | 🔄 Sắp làm |
+| P3-09 | Conversion eligibility và contract | `feature/p3-09-conversion-contract` | P3-07, P3-08 | Hoàn tất triển khai — chờ kiểm thử |
 | P3-10 | Lead test và checkpoint | `feature/p3-10-lead-checkpoint` | P3-01..P3-09 | 🔄 Sắp làm |
 
 #### Technical Remediation sau P3-08

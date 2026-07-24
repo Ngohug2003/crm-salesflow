@@ -14,7 +14,7 @@ Mục tiêu: hoàn thiện vòng đời Lead từ tiếp nhận đến chuyển 
 | P3-06 | ✅ Form và chi tiết Lead | `feature/p3-06-lead-form-detail` | P3-05 | Create/edit/detail, validation, source/tags/owner và audit cơ bản |
 | P3-07 | ✅ Assignment và status history | `feature/p3-07-lead-assignment-status` | P3-06 | Gán owner, chuyển trạng thái hợp lệ, lịch sử và event |
 | P3-08 | ✅ Duplicate, soft delete và restore | `feature/p3-08-lead-duplicate-delete` | P3-06 | Phát hiện email/phone trùng, cảnh báo/merge decision, trash/restore |
-| P3-09 | Conversion eligibility và contract | `feature/p3-09-conversion-contract` | P3-07, P3-08 | Rule đủ điều kiện, DTO/action contract, chống convert lặp và test contract; chưa tạo Opportunity |
+| P3-09 | ✅ Conversion eligibility và contract | `feature/p3-09-conversion-contract` | P3-07, P3-08 | Rule đủ điều kiện, DTO/action contract, chống convert lặp và test contract; chưa tạo Opportunity |
 | P3-10 | Lead test và checkpoint | `feature/p3-10-lead-checkpoint` | P3-01..P3-09 | Feature/policy/transaction tests và checklist vòng đời Lead |
 
 ### Nhật ký feature P3-01 — Lead sources và tags
@@ -250,3 +250,28 @@ File chính:
 - `resources/views/livewire/leads/lead-lifecycle.blade.php`
 - `resources/views/livewire/leads/lead-trash.blade.php`
 - `tests/Feature/LeadDuplicateLifecycleTest.php`
+
+### Nhật ký feature P3-09 — Conversion eligibility và contract
+
+Trạng thái: **hoàn tất triển khai, chờ chủ dự án kiểm thử**.
+
+Đã triển khai:
+
+- Tạo `LeadConversionData` DTO đóng gói dữ liệu tham số chuyển đổi (chọn tạo mới/ghép nối Company, Contact, Opportunity).
+- Tạo `LeadConversionException` domain exception thăng cấp lỗi khi Lead không đủ điều kiện chuyển đổi.
+- Tạo `LeadConversionContract` interface quy định 2 phương thức `checkEligibility` và `convert`.
+- Triển khai `LeadConversionService` khóa Lead bằng `lockForUpdate`, cưỡng chế `LeadPolicy::convert` và Data Scope của Actor.
+- Cưỡng chế các quy tắc Eligibility: Lead phải active (`deleted_at IS NULL`), chưa bị chuyển đổi trước đó (`status != converted`), có đủ họ tên và ít nhất một thông tin liên hệ (email hoặc điện thoại).
+- Cập nhật trạng thái Lead sang `converted`, gán `converted_at`, ghi status history và ghi nhận log audit bất biến.
+- Đăng ký Bind Interface `LeadConversionContract` sang `LeadConversionService` trong `RepositoryServiceProvider`.
+- Tạo 9 test cases trong `LeadConversionContractTest` bao phủ 100% các nhánh eligibility, exception, idempotency và authorization.
+
+File chính:
+
+- `app/Data/LeadConversionData.php`
+- `app/Exceptions/LeadConversionException.php`
+- `app/Services/Contracts/LeadConversionContract.php`
+- `app/Services/LeadConversionService.php`
+- `app/Providers/RepositoryServiceProvider.php`
+- `tests/Feature/LeadConversionContractTest.php`
+

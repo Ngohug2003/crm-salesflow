@@ -20,6 +20,8 @@ use App\Repositories\EloquentLeadWorkflowRepository;
 use App\Repositories\EloquentSessionRepository;
 use App\Repositories\EloquentTagRepository;
 use App\Repositories\EloquentUserRepository;
+use App\Services\Contracts\LeadConversionContract;
+use App\Services\LeadConversionService;
 use Illuminate\Support\ServiceProvider;
 
 final class RepositoryServiceProvider extends ServiceProvider
@@ -28,6 +30,7 @@ final class RepositoryServiceProvider extends ServiceProvider
     public array $bindings = [
         AuditLogRepository::class => EloquentAuditLogRepository::class,
         DepartmentRepository::class => EloquentDepartmentRepository::class,
+        LeadConversionContract::class => LeadConversionService::class,
         LeadRepository::class => EloquentLeadRepository::class,
         LeadSourceRepository::class => EloquentLeadSourceRepository::class,
         LeadWorkflowRepository::class => EloquentLeadWorkflowRepository::class,
