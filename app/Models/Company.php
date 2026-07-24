@@ -74,6 +74,12 @@ final class Company extends Model
         return $this->belongsTo(User::class, 'updated_by');
     }
 
+    /** @return MorphMany<Activity, $this> */
+    public function activities(): MorphMany
+    {
+        return $this->morphMany(Activity::class, 'subject');
+    }
+
     /** @return HasMany<Contact, $this> */
     public function contacts(): HasMany
     {
