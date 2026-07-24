@@ -14,6 +14,7 @@ use App\Livewire\Contacts\ContactList;
 use App\Livewire\Dashboard\DashboardOverview;
 use App\Livewire\Opportunities\OpportunityDetail;
 use App\Livewire\Opportunities\OpportunityEditor;
+use App\Livewire\Opportunities\OpportunityKanban;
 use App\Livewire\Opportunities\OpportunityList;
 use App\Livewire\Pipelines\PipelineDetail;
 use App\Livewire\Pipelines\PipelineEditor;
@@ -43,6 +44,7 @@ Route::middleware(['auth', 'request.context.authenticated', 'verified', 'account
     Route::get('/contacts/{contactId}/edit', ContactEditor::class)->whereNumber('contactId')->name('contacts.edit');
 
     Route::get('/opportunities', OpportunityList::class)->name('opportunities.index');
+    Route::get('/opportunities/kanban', OpportunityKanban::class)->name('opportunities.kanban');
     Route::get('/opportunities/create', OpportunityEditor::class)->name('opportunities.create');
     Route::get('/opportunities/{opportunityId}', OpportunityDetail::class)->whereNumber('opportunityId')->name('opportunities.show');
     Route::get('/opportunities/{opportunityId}/edit', OpportunityEditor::class)->whereNumber('opportunityId')->name('opportunities.edit');

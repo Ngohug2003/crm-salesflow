@@ -10,6 +10,7 @@ use App\Models\Opportunity;
 use App\Models\OpportunityStageHistory;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 use Spatie\Activitylog\Models\Activity;
 
 final readonly class CustomerTimelineService
@@ -98,7 +99,7 @@ final readonly class CustomerTimelineService
                     title: "Chuyển giai đoạn bán hàng sang {$toName}",
                     description: $desc,
                     causer: $causer,
-                    timestamp: \Illuminate\Support\Carbon::parse((string) $sh->created_at),
+                    timestamp: Carbon::parse((string) $sh->created_at),
                     metadata: [
                         'from_stage' => $fromName,
                         'to_stage' => $toName,
