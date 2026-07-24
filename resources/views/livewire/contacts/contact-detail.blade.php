@@ -36,7 +36,7 @@
 
     <!-- Main Content -->
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <!-- Profile Info -->
+        <!-- Profile Info, Attachments & Timeline -->
         <div class="space-y-6 lg:col-span-2">
             <section class="crm-card">
                 <div class="mb-5">
@@ -97,6 +97,12 @@
                     @endif
                 </dl>
             </section>
+
+            <!-- Attachments Manager -->
+            <livewire:customers.customer-attachment-manager :modelType="\App\Models\Contact::class" :modelId="$contact->id" />
+
+            <!-- Timeline Feed -->
+            <livewire:customers.customer-timeline-feed :modelType="\App\Models\Contact::class" :modelId="$contact->id" />
         </div>
 
         <!-- Sidebar Meta -->
