@@ -6,7 +6,9 @@ namespace App\Livewire\Opportunities;
 
 use App\Exceptions\StaleOpportunityException;
 use App\Models\Opportunity;
+use App\Models\PipelineStage;
 use App\Models\User;
+use App\Services\OpportunityCloseWorkflowService;
 use App\Services\OpportunityManagementService;
 use App\Services\OpportunityStageTransitionService;
 use Illuminate\Contracts\View\View;
@@ -24,6 +26,10 @@ final class OpportunityDetail extends Component
 
     public string $transitionNotes = '';
 
+    public string $lostReason = '';
+
+    public bool $showLostModal = false;
+
     public ?int $selectedTargetStageId = null;
 
     public function mount(int $opportunityId): void
@@ -36,6 +42,15 @@ final class OpportunityDetail extends Component
     {
         /** @var User $actor */
         $actor = Auth::user();
+
+        // If target stage is Lost, open lost reason modal instead of immediate move
+        $targetStage = PipelineStage::query()->find($targetStageId);
+        if ($targetStage !== null && $targetStage->is_lost) {
+            $this->showLostModal = true;
+
+            return;
+        }
+
         /** @var OpportunityStageTransitionService $transitionService */
         $transitionService = app(OpportunityStageTransitionService::class);
 
@@ -55,6 +70,65 @@ final class OpportunityDetail extends Component
         } catch (StaleOpportunityException $e) {
             $this->addError('stage_error', $e->getMessage());
             $this->reloadOpportunity();
+        } catch (\Throwable $e) {
+            $this->addError('stage_error', $e->getMessage());
+        }
+    }
+
+    public function closeWon(): void
+    {
+        /** @var User $actor */
+        $actor = Auth::user();
+        /** @var OpportunityCloseWorkflowService $workflow */
+        $workflow = app(OpportunityCloseWorkflowService::class);
+
+        try {
+            $updated = $workflow->closeWon($actor, $this->opportunityId);
+            $this->reloadOpportunity();
+            $this->dispatch('attachment-updated');
+            session()->flash('message', "Đã chốt thành công Cơ hội bán hàng '{$updated->title}' (Won).");
+        } catch (\Throwable $e) {
+            $this->addError('stage_error', $e->getMessage());
+        }
+    }
+
+    public function confirmCloseLost(): void
+    {
+        $this->validate([
+            'lostReason' => ['required', 'string', 'min:3'],
+        ], [
+            'lostReason.required' => 'Vui lòng nhập lý do thất bại.',
+            'lostReason.min' => 'Lý do thất bại phải có ít nhất 3 ký tự.',
+        ]);
+
+        /** @var User $actor */
+        $actor = Auth::user();
+        /** @var OpportunityCloseWorkflowService $workflow */
+        $workflow = app(OpportunityCloseWorkflowService::class);
+
+        try {
+            $updated = $workflow->closeLost($actor, $this->opportunityId, $this->lostReason);
+            $this->reloadOpportunity();
+            $this->reset(['lostReason', 'showLostModal']);
+            $this->dispatch('attachment-updated');
+            session()->flash('message', "Đã chuyển Cơ hội bán hàng '{$updated->title}' sang trạng thái Thất bại (Lost).");
+        } catch (\Throwable $e) {
+            $this->addError('stage_error', $e->getMessage());
+        }
+    }
+
+    public function reopen(): void
+    {
+        /** @var User $actor */
+        $actor = Auth::user();
+        /** @var OpportunityCloseWorkflowService $workflow */
+        $workflow = app(OpportunityCloseWorkflowService::class);
+
+        try {
+            $updated = $workflow->reopen($actor, $this->opportunityId);
+            $this->reloadOpportunity();
+            $this->dispatch('attachment-updated');
+            session()->flash('message', "Đã mở lại Cơ hội bán hàng '{$updated->title}'.");
         } catch (\Throwable $e) {
             $this->addError('stage_error', $e->getMessage());
         }

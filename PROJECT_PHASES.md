@@ -129,7 +129,7 @@ Tài liệu này là lộ trình và trạng thái checkpoint chính của dự 
 | P5-05 | Stage transition và history | `feature/p5-05-stage-transition-history` | P5-04 | Hoàn tất triển khai — chờ kiểm thử |
 | P5-06 | Opportunity Kanban | `feature/p5-06-opportunity-kanban` | P5-05 | Hoàn tất triển khai — chờ kiểm thử |
 | P5-07 | Realtime private broadcast | `feature/p5-07-opportunity-realtime` | P5-06 | Hoàn tất triển khai — chờ kiểm thử |
-| P5-08 | Close won/lost workflow | `feature/p5-08-opportunity-close` | P5-05 | ⏳ Chưa bắt đầu |
+| P5-08 | Close won/lost workflow | `feature/p5-08-opportunity-close` | P5-05 | Hoàn tất triển khai — chờ kiểm thử |
 | P5-09 | Lead conversion integration và checkpoint | `feature/p5-09-lead-conversion-checkpoint` | P3-09, P4-02, P5-01..P5-08 | ⏳ Chưa bắt đầu |
 
 ---

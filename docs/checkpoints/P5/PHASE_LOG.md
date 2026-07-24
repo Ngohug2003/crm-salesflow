@@ -13,7 +13,7 @@ Mục tiêu: Quản lý pipeline có cấu hình, opportunity lifecycle, Kanban 
 | P5-05 | ✅ Stage transition và history | `feature/p5-05-stage-transition-history` | P5-04 | Chuyển stage có lưu lịch sử immutable và kiểm tra version conflict |
 | P5-06 | ✅ Opportunity Kanban | `feature/p5-06-opportunity-kanban` | P5-05 | Giao diện Kanban kéo thả Livewire + Alpine + HTML5 Drag & Drop |
 | P5-07 | ✅ Realtime private broadcast | `feature/p5-07-opportunity-realtime` | P5-06 | Đồng bộ Kanban realtime qua Reverb private channel |
-| P5-08 | Close won/lost workflow | `feature/p5-08-opportunity-close` | P5-05 | Quy trình đóng cơ hội Won/Lost có bắt buộc lý do và rule reopen |
+| P5-08 | ✅ Close won/lost workflow | `feature/p5-08-opportunity-close` | P5-05 | Quy trình đóng cơ hội Won/Lost có bắt buộc lý do và rule reopen |
 | P5-09 | Lead conversion integration và checkpoint | `feature/p5-09-lead-conversion-checkpoint` | P3-09, P4-02, P5-01..P5-08 | Tích hợp chuyển đổi Lead và checkpoint nghiệm thu Giai đoạn 5 |
 
 ---
@@ -88,21 +88,31 @@ Trạng thái: **hoàn tất triển khai**.
 
 ### Nhật ký feature P5-07 — Realtime private broadcast
 
+Trạng thái: **hoàn tất triển khai**.
+
+- Tạo `OpportunityStageUpdatedEvent` implement `ShouldBroadcastNow` trên `PrivateChannel('pipelines.{pipelineId}')`.
+- Tạo `PipelineChannel` authorization class kiểm tra quyền `opportunities.view` / `opportunities.view-all` trong `routes/channels.php`.
+- Cấu hình Livewire component `OpportunityKanban` tự động làm mới giao diện khi nhận sự kiện Echo private broadcast.
+- Viết `OpportunityRealtimeTest` kiểm thử 4 test cases đạt 100% PASS (11 assertions).
+
+---
+
+### Nhật ký feature P5-08 — Close won/lost workflow
+
 Trạng thái: **hoàn tất triển khai, chờ chủ dự án kiểm thử**.
 
 Đã triển khai:
 
-- Tạo class sự kiện broadcast `OpportunityStageUpdatedEvent` implement `ShouldBroadcastNow` trên `PrivateChannel('pipelines.{pipelineId}')` mang tên sự kiện `OpportunityStageUpdated`.
-- Tạo `PipelineChannel` authorization class kiểm tra quyền `opportunities.view` / `opportunities.view-all` và trạng thái active của Pipeline, đăng ký trong `routes/channels.php`.
-- Kích hoạt dispatch `OpportunityStageUpdatedEvent::dispatch()` tự động trong `OpportunityStageTransitionService` ngay khi chuyển stage thành công.
-- Cấu hình Livewire component `OpportunityKanban` đăng ký lắng nghe Echo private broadcast trên kênh `echo-private:pipelines.{pipelineId},.OpportunityStageUpdated` tự động làm mới giao diện Kanban realtime.
-- Viết `OpportunityRealtimeTest` kiểm thử 4 test cases đạt 100% PASS (11 assertions).
+- Xây dựng `OpportunityCloseWorkflowService` thực thi trong `DB::transaction()`:
+  - `closeWon()`: Chuyển cơ hội sang Stage Won, cập nhật `is_won = true`, `actual_close_date = now()`, phát event broadcast và ghi log kiểm toán.
+  - `closeLost()`: Bắt buộc nhập lý do thất bại `lost_reason` (từ chối nếu để trống), chuyển sang Stage Lost, cập nhật `is_lost = true`, `actual_close_date = now()`.
+  - `reopen()`: Mở lại cơ hội đã đóng (Won/Lost) quay về Stage đang mở, xóa `is_won` & `is_lost` về `false`, xóa `actual_close_date` về `null`.
+  - Kiểm tra phân quyền `opportunities.close` kết hợp Data Scope.
+- Cập nhật Livewire `OpportunityDetail` bổ sung nút thao tác **Chốt Won**, **Báo Lost**, **Mở lại Cơ hội** và Modal nhập Lý do thất bại.
+- Viết `OpportunityCloseWorkflowTest` kiểm thử 4 test cases đạt 100% PASS (15 assertions).
 
 File chính:
 
-- `app/Events/OpportunityStageUpdatedEvent.php`
-- `app/Broadcasting/PipelineChannel.php`
-- `routes/channels.php`
-- `app/Services/OpportunityStageTransitionService.php`
-- `app/Livewire/Opportunities/OpportunityKanban.php`
-- `tests/Feature/OpportunityRealtimeTest.php`
+- `app/Services/OpportunityCloseWorkflowService.php`
+- `app/Livewire/Opportunities/OpportunityDetail.php` & `opportunity-detail.blade.php`
+- `tests/Feature/OpportunityCloseWorkflowTest.php`
