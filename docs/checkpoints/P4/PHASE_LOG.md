@@ -12,7 +12,7 @@ Mục tiêu: Xây dựng hồ sơ khách hàng và quan hệ Company–Contact l
 | P4-04 | ✅ Contact CRUD và quan hệ | `feature/p4-04-contact-crud` | P4-02, P2-04 | Dịch vụ, Repository, Policy và Livewire CRUD cho Contact |
 | P4-05 | ✅ Duplicate handling | `feature/p4-05-customer-duplicates` | P4-03, P4-04 | Phát hiện trùng lặp khách hàng, cảnh báo và xử lý |
 | P4-06 | ✅ Attachment và timeline foundation | `feature/p4-06-customer-files-timeline` | P4-03, P4-04 | Đính kèm tệp tin và mốc thời gian khách hàng |
-| P4-07 | Customer authorization checkpoint | `feature/p4-07-customer-checkpoint` | P4-01..P4-06 | Kiểm thử phân quyền và checkpoint nghiệm thu Giai đoạn 4 |
+| P4-07 | ✅ Customer authorization checkpoint | `feature/p4-07-customer-checkpoint` | P4-01..P4-06 | Kiểm thử phân quyền và checkpoint nghiệm thu Giai đoạn 4 |
 
 ---
 
@@ -179,6 +179,28 @@ File chính:
 - `resources/views/livewire/companies/company-detail.blade.php`
 - `resources/views/livewire/contacts/contact-detail.blade.php`
 - `tests/Feature/CustomerAttachmentAndTimelineTest.php`
+
+### Nhật ký feature P4-07 — Customer authorization checkpoint
+
+Trạng thái: **hoàn tất triển khai, sẵn sàng nghiệm thu Giai đoạn 4**.
+
+Đã triển khai:
+
+- Tạo `CustomerAuthorizationCheckpointTest` kiểm thử ma trận phân quyền và Data Scope toàn diện 5 vai trò hệ thống (`super-admin`, `admin`, `sales-manager`, `sales`, `viewer`) trên mô-đun Companies & Contacts.
+- Xác nhận phân quyền Data Scope:
+  - Super Admin & Admin: Xem và thao tác toàn bộ Doanh nghiệp & Người liên hệ hệ thống.
+  - Sales Manager: Chỉ xem và thao tác dữ liệu thuộc cùng Phòng ban (`department` scope). Bị chặn (404/403) khi truy cập ngoài phòng ban.
+  - Sales Rep: Chỉ xem và thao tác dữ liệu do chính mình phụ trách (`owned` scope). Bị chặn (404/403) khi truy cập dữ liệu của đồng nghiệp khác.
+  - Viewer: Quyền xem (`read-only`), bị chặn hoàn toàn (403) trên các thao tác tạo mới, sửa, xóa.
+- Kiểm thử chuyển đổi cờ đại diện chính `is_primary` của Contact có thẩm quyền và kiểm soát dữ liệu liên quan.
+- Chạy Quality Gates toàn mô-đun P4: **20/20 test cases PASS (117 assertions)**, Laravel Pint formatting clean, PHPStan Level 5 `0 errors`.
+
+File chính:
+
+- `tests/Feature/CustomerAuthorizationCheckpointTest.php`
+- `docs/checkpoints/P4/PHASE_LOG.md`
+- `PROJECT_PHASES.md`
+
 
 
 

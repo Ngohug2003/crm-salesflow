@@ -6,9 +6,9 @@ namespace App\Services;
 
 use App\Models\Attachment;
 use App\Models\User;
-use App\Services\Authorization\DataScopeService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use InvalidArgumentException;
 
 final readonly class CustomerAttachmentService
@@ -30,12 +30,13 @@ final readonly class CustomerAttachmentService
             throw new InvalidArgumentException("Định dạng tệp .{$extension} không được phép tải lên do lý do an toàn bảo mật.");
         }
 
+        $disk = (string) config('filesystems.default', 'local');
         $fileName = $customName ?: $file->getClientOriginalName();
         $typeFolder = class_basename($attachable);
         $path = $file->storeAs(
-            "private/attachments/{$typeFolder}/{$attachable->getKey()}",
+            "attachments/{$typeFolder}/{$attachable->getKey()}",
             uniqid().'_'.preg_replace('/[^a-zA-Z0-9._-]/', '_', $fileName),
-            'local',
+            $disk,
         );
 
         $attachment = Attachment::query()->create([
@@ -43,7 +44,7 @@ final readonly class CustomerAttachmentService
             'attachable_id' => $attachable->getKey(),
             'file_name' => $fileName,
             'file_path' => $path,
-            'disk' => 'local',
+            'disk' => $disk,
             'file_size' => $file->getSize(),
             'mime_type' => $file->getClientMimeType(),
             'owner_id' => $attachable->getAttribute('owner_id'),
@@ -61,6 +62,7 @@ final readonly class CustomerAttachmentService
                 'attachment_id' => $attachment->id,
                 'file_name' => $fileName,
                 'file_size' => $attachment->humanSize(),
+                'disk' => $disk,
             ],
         );
 
@@ -80,6 +82,8 @@ final readonly class CustomerAttachmentService
                 null,
             );
         }
+
+        Storage::disk($attachment->disk)->delete($attachment->file_path);
 
         return (bool) $attachment->delete();
     }

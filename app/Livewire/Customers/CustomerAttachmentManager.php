@@ -13,10 +13,10 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 final class CustomerAttachmentManager extends Component
 {
@@ -76,16 +76,15 @@ final class CustomerAttachmentManager extends Component
         }
     }
 
-    public function downloadAttachment(int $attachmentId): ?BinaryFileResponse
+    public function downloadAttachment(int $attachmentId): mixed
     {
         $attachment = Attachment::query()->find($attachmentId);
         if ($attachment === null) {
             return null;
         }
 
-        $fullPath = storage_path("app/{$attachment->file_path}");
-        if (file_exists($fullPath)) {
-            return response()->download($fullPath, $attachment->file_name);
+        if (Storage::disk($attachment->disk)->exists($attachment->file_path)) {
+            return Storage::disk($attachment->disk)->download($attachment->file_path, $attachment->file_name);
         }
 
         $this->addError('file', 'Không tìm thấy tệp tin trên hệ thống lưu trữ.');
