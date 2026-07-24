@@ -15,7 +15,7 @@ Mục tiêu: hoàn thiện vòng đời Lead từ tiếp nhận đến chuyển 
 | P3-07 | ✅ Assignment và status history | `feature/p3-07-lead-assignment-status` | P3-06 | Gán owner, chuyển trạng thái hợp lệ, lịch sử và event |
 | P3-08 | ✅ Duplicate, soft delete và restore | `feature/p3-08-lead-duplicate-delete` | P3-06 | Phát hiện email/phone trùng, cảnh báo/merge decision, trash/restore |
 | P3-09 | ✅ Conversion eligibility và contract | `feature/p3-09-conversion-contract` | P3-07, P3-08 | Rule đủ điều kiện, DTO/action contract, chống convert lặp và test contract; chưa tạo Opportunity |
-| P3-10 | Lead test và checkpoint | `feature/p3-10-lead-checkpoint` | P3-01..P3-09 | Feature/policy/transaction tests và checklist vòng đời Lead |
+| P3-10 | ✅ Lead test và checkpoint | `feature/p3-10-lead-checkpoint` | P3-01..P3-09 | Feature/policy/transaction tests và checklist vòng đời Lead |
 
 ### Nhật ký feature P3-01 — Lead sources và tags
 
@@ -274,4 +274,25 @@ File chính:
 - `app/Services/LeadConversionService.php`
 - `app/Providers/RepositoryServiceProvider.php`
 - `tests/Feature/LeadConversionContractTest.php`
+
+### Nhật ký feature P3-10 — Lead test và checkpoint
+
+Trạng thái: **hoàn tất triển khai, chờ chủ dự án kiểm thử**.
+
+Đã triển khai:
+
+- Tạo `LeadLifecycleCheckpointTest` kiểm thử end-to-end phân hệ Lead với dữ liệu seeded thực tế (`DatabaseSeeder`), bao phủ 5 vai trò (`super-admin`, `admin`, `sales-manager`, `sales`, `viewer`).
+- Tạo tài liệu hướng dẫn nghiệm thu `docs/lead-checkpoint.md` trình bày bảng vai trò, kiểm thử tự động, kịch bản test thủ công từng bước và tiêu chuẩn đạt checkpoint.
+- Kiểm tra tính idempotent của `DatabaseSeeder` không nhân đôi dữ liệu demo.
+- Chạy thành công 100% test suite dự án (186 tests passed, 1175 assertions).
+- Đạt 100% Cổng kiểm soát chất lượng (Laravel Pint format PASS, PHPStananalyse OK 0 errors, Vite build CSS/JS thành công).
+
+File chính:
+
+- `tests/Feature/LeadLifecycleCheckpointTest.php`
+- `docs/lead-checkpoint.md`
+- `PROJECT_PHASES.md`
+- `TECHNICAL_REMEDIATION_PHASES.md`
+- `docs/checkpoints/P3/PHASE_LOG.md`
+
 
