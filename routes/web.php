@@ -5,6 +5,9 @@ use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\RoleGuideController;
 use App\Http\Controllers\UserController;
+use App\Livewire\Companies\CompanyDetail;
+use App\Livewire\Companies\CompanyEditor;
+use App\Livewire\Companies\CompanyList;
 use App\Livewire\Dashboard\DashboardOverview;
 use App\Livewire\Platform\SystemConsole;
 use App\Livewire\Settings\SessionManager;
@@ -19,6 +22,12 @@ Route::middleware(['auth', 'request.context.authenticated', 'verified', 'account
     Route::get('/leads/trash', [LeadController::class, 'trash'])->name('leads.trash');
     Route::get('/leads/{leadId}', [LeadController::class, 'show'])->whereNumber('leadId')->name('leads.show');
     Route::get('/leads/{leadId}/edit', [LeadController::class, 'edit'])->whereNumber('leadId')->name('leads.edit');
+
+    Route::get('/companies', CompanyList::class)->name('companies.index');
+    Route::get('/companies/create', CompanyEditor::class)->name('companies.create');
+    Route::get('/companies/{companyId}', CompanyDetail::class)->whereNumber('companyId')->name('companies.show');
+    Route::get('/companies/{companyId}/edit', CompanyEditor::class)->whereNumber('companyId')->name('companies.edit');
+
     Route::get('/settings/users', [UserController::class, 'index'])->name('users.index');
     Route::get('/settings/departments', [DepartmentController::class, 'index'])->name('departments.index');
     Route::get('/settings/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
