@@ -50,6 +50,7 @@ class DatabaseSeeder extends Seeder
             DemoLeadSeeder::class,
             DemoCompanySeeder::class,
             DemoContactSeeder::class,
+            DemoPipelineSeeder::class,
         ]);
     }
 }
