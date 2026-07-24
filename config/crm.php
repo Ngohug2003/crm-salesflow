@@ -61,6 +61,9 @@ $permissionGroups = [
         'label' => 'Pipeline',
         'permissions' => [
             'pipelines.view' => 'Xem pipeline',
+            'pipelines.create' => 'Tạo pipeline',
+            'pipelines.update' => 'Cập nhật pipeline',
+            'pipelines.delete' => 'Xóa pipeline',
             'pipelines.manage' => 'Quản lý pipeline',
         ],
     ],

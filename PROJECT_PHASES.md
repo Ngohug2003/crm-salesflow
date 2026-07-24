@@ -123,7 +123,7 @@ Tài liệu này là lộ trình và trạng thái checkpoint chính của dự 
 | Mã | Feature | Branch đề xuất | Phụ thuộc | Trạng thái |
 |---|---|---|---|---|
 | P5-01 | Pipeline và stage schema | `feature/p5-01-pipeline-domain` | P2-08 | Hoàn tất triển khai — chờ kiểm thử |
-| P5-02 | Quản lý pipeline/stage | `feature/p5-02-pipeline-management` | P5-01 | ⏳ Chưa bắt đầu |
+| P5-02 | Quản lý pipeline/stage | `feature/p5-02-pipeline-management` | P5-01 | Hoàn tất triển khai — chờ kiểm thử |
 | P5-03 | Opportunity schema và domain | `feature/p5-03-opportunity-domain` | P4-02, P5-01 | ⏳ Chưa bắt đầu |
 | P5-04 | Opportunity CRUD và weighted value | `feature/p5-04-opportunity-crud` | P5-03 | ⏳ Chưa bắt đầu |
 | P5-05 | Stage transition và history | `feature/p5-05-stage-transition-history` | P5-04 | ⏳ Chưa bắt đầu |
