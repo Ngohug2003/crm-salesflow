@@ -6,6 +6,8 @@ namespace App\Services;
 
 use App\Data\CustomerTimelineItemData;
 use App\Models\Attachment;
+use App\Models\Opportunity;
+use App\Models\OpportunityStageHistory;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\Models\Activity;
@@ -68,6 +70,42 @@ final readonly class CustomerTimelineService
                     'file_size' => $att->humanSize(),
                 ],
             );
+        }
+
+        if ($model instanceof Opportunity) {
+            $stageHistories = OpportunityStageHistory::query()
+                ->where('opportunity_id', $model->id)
+                ->with(['fromStage', 'toStage', 'user'])
+                ->orderByDesc('created_at')
+                ->get();
+
+            foreach ($stageHistories as $sh) {
+                $causer = $sh->user ? $sh->user->name : 'Hệ thống';
+                $fromName = $sh->fromStage?->name ?: 'Khởi tạo';
+                $toName = $sh->toStage?->name ?: 'N/A';
+                $duration = $sh->duration_seconds !== null ? round($sh->duration_seconds / 86400, 1).' ngày' : null;
+                $desc = "Từ '{$fromName}' sang '{$toName}'";
+                if ($duration !== null) {
+                    $desc .= " (Dừng ở stage trước: {$duration})";
+                }
+                if ($sh->notes) {
+                    $desc .= " - Ghi chú: {$sh->notes}";
+                }
+
+                $items[] = new CustomerTimelineItemData(
+                    type: 'stage_change',
+                    event: 'stage_transition',
+                    title: "Chuyển giai đoạn bán hàng sang {$toName}",
+                    description: $desc,
+                    causer: $causer,
+                    timestamp: \Illuminate\Support\Carbon::parse((string) $sh->created_at),
+                    metadata: [
+                        'from_stage' => $fromName,
+                        'to_stage' => $toName,
+                        'notes' => $sh->notes,
+                    ],
+                );
+            }
         }
 
         usort($items, static fn (CustomerTimelineItemData $a, CustomerTimelineItemData $b) => $b->timestamp->timestamp <=> $a->timestamp->timestamp);
