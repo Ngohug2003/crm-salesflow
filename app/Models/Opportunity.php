@@ -4,60 +4,97 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use Database\Factories\ContactFactory;
+use Database\Factories\OpportunityFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-final class Contact extends Model
+final class Opportunity extends Model
 {
-    /** @use HasFactory<ContactFactory> */
-    use HasFactory, SoftDeletes;
+    /** @use HasFactory<OpportunityFactory> */
+    use HasFactory;
+
+    use SoftDeletes;
 
     /** @var list<string> */
     protected $fillable = [
+        'title',
+        'code',
+        'amount',
+        'pipeline_id',
+        'stage_id',
         'company_id',
+        'contact_id',
+        'lead_id',
         'owner_id',
         'department_id',
-        'first_name',
-        'last_name',
-        'full_name',
-        'email',
-        'phone',
-        'secondary_phone',
-        'job_title',
-        'department_name',
-        'birthday',
-        'is_primary',
-        'address',
-        'city',
-        'province',
-        'country',
-        'notes',
         'created_by',
         'updated_by',
+        'expected_close_date',
+        'actual_close_date',
+        'lost_reason',
+        'notes',
+        'is_won',
+        'is_lost',
     ];
 
     /** @return array<string, string> */
     protected function casts(): array
     {
         return [
-            'birthday' => 'date',
-            'is_primary' => 'boolean',
+            'amount' => 'decimal:2',
+            'is_won' => 'boolean',
+            'is_lost' => 'boolean',
+            'expected_close_date' => 'date',
+            'actual_close_date' => 'date',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
             'deleted_at' => 'datetime',
         ];
     }
 
+    /**
+     * Tinh gia tri du bao weighted value = amount * probability / 100
+     */
+    public function getWeightedValueAttribute(): float
+    {
+        $probability = $this->stage !== null ? $this->stage->probability : 0;
+        $amount = (float) $this->amount;
+
+        return round(($amount * $probability) / 100, 2);
+    }
+
+    /** @return BelongsTo<Pipeline, $this> */
+    public function pipeline(): BelongsTo
+    {
+        return $this->belongsTo(Pipeline::class, 'pipeline_id');
+    }
+
+    /** @return BelongsTo<PipelineStage, $this> */
+    public function stage(): BelongsTo
+    {
+        return $this->belongsTo(PipelineStage::class, 'stage_id');
+    }
+
     /** @return BelongsTo<Company, $this> */
     public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class, 'company_id');
+    }
+
+    /** @return BelongsTo<Contact, $this> */
+    public function contact(): BelongsTo
+    {
+        return $this->belongsTo(Contact::class, 'contact_id');
+    }
+
+    /** @return BelongsTo<Lead, $this> */
+    public function lead(): BelongsTo
+    {
+        return $this->belongsTo(Lead::class, 'lead_id');
     }
 
     /** @return BelongsTo<User, $this> */
@@ -84,12 +121,6 @@ final class Contact extends Model
         return $this->belongsTo(User::class, 'updated_by');
     }
 
-    /** @return HasMany<Opportunity, $this> */
-    public function opportunities(): HasMany
-    {
-        return $this->hasMany(Opportunity::class, 'contact_id');
-    }
-
     /** @return MorphMany<Attachment, $this> */
     public function attachments(): MorphMany
     {
@@ -100,38 +131,26 @@ final class Contact extends Model
      * @param  Builder<$this>  $query
      * @return Builder<$this>
      */
-    public function scopeActive(Builder $query): Builder
+    public function scopeWon(Builder $query): Builder
     {
-        return $query->whereNull('deleted_at');
+        return $query->where('is_won', true);
     }
 
     /**
      * @param  Builder<$this>  $query
      * @return Builder<$this>
      */
-    public function scopePrimary(Builder $query): Builder
+    public function scopeLost(Builder $query): Builder
     {
-        return $query->where('is_primary', true);
+        return $query->where('is_lost', true);
     }
 
     /**
      * @param  Builder<$this>  $query
      * @return Builder<$this>
      */
-    public function scopeSearch(Builder $query, string $term): Builder
+    public function scopeOpen(Builder $query): Builder
     {
-        $term = trim($term);
-
-        if ($term === '') {
-            return $query;
-        }
-
-        return $query->where(function (Builder $sub) use ($term): void {
-            $sub->where('full_name', 'like', "%{$term}%")
-                ->orWhere('email', 'like', "%{$term}%")
-                ->orWhere('phone', 'like', "%{$term}%")
-                ->orWhere('secondary_phone', 'like', "%{$term}%")
-                ->orWhere('job_title', 'like', "%{$term}%");
-        });
+        return $query->where('is_won', false)->where('is_lost', false);
     }
 }

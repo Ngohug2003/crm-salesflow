@@ -80,6 +80,12 @@ final class Company extends Model
         return $this->hasMany(Contact::class, 'company_id');
     }
 
+    /** @return HasMany<Opportunity, $this> */
+    public function opportunities(): HasMany
+    {
+        return $this->hasMany(Opportunity::class, 'company_id');
+    }
+
     /** @return MorphMany<Attachment, $this> */
     public function attachments(): MorphMany
     {
