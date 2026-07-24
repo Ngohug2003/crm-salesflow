@@ -80,6 +80,22 @@ final class OpportunityKanban extends Component
         }
     }
 
+    /** @return array<string, string> */
+    public function getListeners(): array
+    {
+        $listeners = [];
+        if ($this->pipelineId !== '') {
+            $listeners["echo-private:pipelines.{$this->pipelineId},.OpportunityStageUpdated"] = 'handleStageUpdatedRealtime';
+        }
+
+        return $listeners;
+    }
+
+    public function handleStageUpdatedRealtime(): void
+    {
+        // Dynamic refresh when stage updated by team members
+    }
+
     /** @return Collection<int, Pipeline> */
     #[Computed]
     public function pipelines(): Collection

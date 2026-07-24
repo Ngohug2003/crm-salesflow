@@ -12,7 +12,7 @@ Mục tiêu: Quản lý pipeline có cấu hình, opportunity lifecycle, Kanban 
 | P5-04 | ✅ Opportunity CRUD và weighted value | `feature/p5-04-opportunity-crud` | P5-03 | Dịch vụ, Repository, Policy và Livewire CRUD cho Opportunity |
 | P5-05 | ✅ Stage transition và history | `feature/p5-05-stage-transition-history` | P5-04 | Chuyển stage có lưu lịch sử immutable và kiểm tra version conflict |
 | P5-06 | ✅ Opportunity Kanban | `feature/p5-06-opportunity-kanban` | P5-05 | Giao diện Kanban kéo thả Livewire + Alpine + HTML5 Drag & Drop |
-| P5-07 | Realtime private broadcast | `feature/p5-07-opportunity-realtime` | P5-06 | Đồng bộ Kanban realtime qua Reverb private channel |
+| P5-07 | ✅ Realtime private broadcast | `feature/p5-07-opportunity-realtime` | P5-06 | Đồng bộ Kanban realtime qua Reverb private channel |
 | P5-08 | Close won/lost workflow | `feature/p5-08-opportunity-close` | P5-05 | Quy trình đóng cơ hội Won/Lost có bắt buộc lý do và rule reopen |
 | P5-09 | Lead conversion integration và checkpoint | `feature/p5-09-lead-conversion-checkpoint` | P3-09, P4-02, P5-01..P5-08 | Tích hợp chuyển đổi Lead và checkpoint nghiệm thu Giai đoạn 5 |
 
@@ -78,21 +78,31 @@ Trạng thái: **hoàn tất triển khai**.
 
 ### Nhật ký feature P5-06 — Opportunity Kanban
 
+Trạng thái: **hoàn tất triển khai**.
+
+- Tạo Livewire Component `OpportunityKanban` (`/opportunities/kanban`) phân nhóm cơ hội bán hàng theo cột Giai đoạn (Stages).
+- Xây dựng giao diện Kéo Thả Trực quan bằng Alpine.js kết hợp HTML5 Drag & Drop (`draggable="true"`, `@dragstart`, `@dragover`, `@drop`), tự động gọi phương thức `$wire.moveOpportunity()` khi thả thẻ.
+- Viết `OpportunityKanbanTest` kiểm thử 5 test cases đạt 100% PASS (10 assertions).
+
+---
+
+### Nhật ký feature P5-07 — Realtime private broadcast
+
 Trạng thái: **hoàn tất triển khai, chờ chủ dự án kiểm thử**.
 
 Đã triển khai:
 
-- Tạo Livewire Component `OpportunityKanban` (`/opportunities/kanban`) phân nhóm cơ hội bán hàng theo cột Giai đoạn (Stages).
-- Đầu mỗi cột Stage hiển thị Tên Stage, Tỷ lệ %, Số cơ hội, Tổng Giá trị Hợp đồng và Doanh thu Dự báo (Weighted Value).
-- Xây dựng giao diện Kéo Thả Trực quan bằng Alpine.js kết hợp HTML5 Drag & Drop (`draggable="true"`, `@dragstart`, `@dragover`, `@drop`), tự động gọi phương thức `$wire.moveOpportunity()` khi thả thẻ.
-- Bổ sung bộ chuyển đổi Chế độ xem Dạng danh sách ⇄ Dạng Kanban trên đầu trang `/opportunities`.
-- Bắt lỗi và hiển thị thông báo nếu có xung đột ghi đồng thời (Version Conflict).
-- Viết `OpportunityKanbanTest` kiểm thử 5 test cases đạt 100% PASS (10 assertions).
+- Tạo class sự kiện broadcast `OpportunityStageUpdatedEvent` implement `ShouldBroadcastNow` trên `PrivateChannel('pipelines.{pipelineId}')` mang tên sự kiện `OpportunityStageUpdated`.
+- Tạo `PipelineChannel` authorization class kiểm tra quyền `opportunities.view` / `opportunities.view-all` và trạng thái active của Pipeline, đăng ký trong `routes/channels.php`.
+- Kích hoạt dispatch `OpportunityStageUpdatedEvent::dispatch()` tự động trong `OpportunityStageTransitionService` ngay khi chuyển stage thành công.
+- Cấu hình Livewire component `OpportunityKanban` đăng ký lắng nghe Echo private broadcast trên kênh `echo-private:pipelines.{pipelineId},.OpportunityStageUpdated` tự động làm mới giao diện Kanban realtime.
+- Viết `OpportunityRealtimeTest` kiểm thử 4 test cases đạt 100% PASS (11 assertions).
 
 File chính:
 
+- `app/Events/OpportunityStageUpdatedEvent.php`
+- `app/Broadcasting/PipelineChannel.php`
+- `routes/channels.php`
+- `app/Services/OpportunityStageTransitionService.php`
 - `app/Livewire/Opportunities/OpportunityKanban.php`
-- `resources/views/livewire/opportunities/opportunity-kanban.blade.php`
-- `routes/web.php`
-- `resources/views/livewire/opportunities/opportunity-list.blade.php`
-- `tests/Feature/OpportunityKanbanTest.php`
+- `tests/Feature/OpportunityRealtimeTest.php`

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Events\OpportunityStageUpdatedEvent;
 use App\Exceptions\StaleOpportunityException;
 use App\Models\Opportunity;
 use App\Models\OpportunityStageHistory;
@@ -108,6 +109,13 @@ final readonly class OpportunityStageTransitionService
                 "Chuyển giai đoạn cơ hội sang '{$targetStage->name}' ({$targetStage->probability}%)",
                 $oldSnapshot,
                 $newSnapshot,
+            );
+
+            OpportunityStageUpdatedEvent::dispatch(
+                $updatedOpportunity,
+                $oldStageId,
+                $targetStage->id,
+                $actor,
             );
 
             return $updatedOpportunity;
