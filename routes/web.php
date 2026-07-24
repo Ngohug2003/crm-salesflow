@@ -12,6 +12,9 @@ use App\Livewire\Contacts\ContactDetail;
 use App\Livewire\Contacts\ContactEditor;
 use App\Livewire\Contacts\ContactList;
 use App\Livewire\Dashboard\DashboardOverview;
+use App\Livewire\Pipelines\PipelineDetail;
+use App\Livewire\Pipelines\PipelineEditor;
+use App\Livewire\Pipelines\PipelineList;
 use App\Livewire\Platform\SystemConsole;
 use App\Livewire\Settings\SessionManager;
 use Illuminate\Support\Facades\Route;
@@ -35,6 +38,11 @@ Route::middleware(['auth', 'request.context.authenticated', 'verified', 'account
     Route::get('/contacts/create', ContactEditor::class)->name('contacts.create');
     Route::get('/contacts/{contactId}', ContactDetail::class)->whereNumber('contactId')->name('contacts.show');
     Route::get('/contacts/{contactId}/edit', ContactEditor::class)->whereNumber('contactId')->name('contacts.edit');
+
+    Route::get('/pipelines', PipelineList::class)->name('pipelines.index');
+    Route::get('/pipelines/create', PipelineEditor::class)->name('pipelines.create');
+    Route::get('/pipelines/{pipelineId}', PipelineDetail::class)->whereNumber('pipelineId')->name('pipelines.show');
+    Route::get('/pipelines/{pipelineId}/edit', PipelineEditor::class)->whereNumber('pipelineId')->name('pipelines.edit');
 
     Route::get('/settings/users', [UserController::class, 'index'])->name('users.index');
     Route::get('/settings/departments', [DepartmentController::class, 'index'])->name('departments.index');

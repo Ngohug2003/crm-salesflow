@@ -6,7 +6,7 @@
      x-init="document.addEventListener('livewire:navigated', () => { path = window.location.pathname })">
     <div class="flex items-center justify-between gap-3 px-2 py-2">
         <a href="{{ route('dashboard') }}" wire:navigate.hover class="flex min-w-0 items-center gap-3">
-            <span class="grid size-10 shrink-0 place-items-center rounded-xl bg-emerald-500 font-black text-white">SF</span>
+            <!-- <span class="grid size-10 shrink-0 place-items-center rounded-xl bg-emerald-500 font-black text-white">SF</span> -->
             <span x-show="sidebar" x-cloak class="truncate font-semibold">SalesFlow CRM</span>
         </a>
         <button class="lg:hidden" @click="mobileNav=false" aria-label="Đóng menu">
@@ -47,6 +47,14 @@
                        :class="path.startsWith('/contacts') && 'nav-link-active'">
                         <flux:icon.user-circle class="nav-icon" />
                         <span x-show="sidebar">Người liên hệ</span>
+                    </a>
+                @endcan
+                @can('viewAny', \App\Models\Pipeline::class)
+                    <a href="{{ route('pipelines.index') }}" wire:navigate.hover
+                       class="nav-link"
+                       :class="path.startsWith('/pipelines') && 'nav-link-active'">
+                        <flux:icon.rectangle-stack class="nav-icon" />
+                        <span x-show="sidebar">Quy trình bán hàng</span>
                     </a>
                 @endcan
             </div>
