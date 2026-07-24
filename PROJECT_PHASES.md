@@ -19,7 +19,7 @@ Tài liệu này là lộ trình và trạng thái checkpoint chính của dự 
 | 0 | Phân tích kiến trúc và dữ liệu | Hoàn tất tài liệu ban đầu | Chưa xác nhận | [Chi tiết P0](docs/checkpoints/P0/ANALYSIS.md) |
 | 1 | Khởi tạo nền tảng và Docker | Hoàn tất triển khai | Chờ chủ dự án kiểm thử | [Chi tiết P1](docs/checkpoints/P1/PHASE_LOG.md) |
 | 2 | Users, Departments, Roles, Permissions | Hoàn tất P2-01 đến P2-08 | Đã qua checkpoint | [Chi tiết P2](docs/checkpoints/P2/PHASE_LOG.md) |
-| 3 | Leads | Hoàn tất P3-01 đến P3-08 & Remediation | P3-09 là feature tiếp theo | [Chi tiết P3](docs/checkpoints/P3/PHASE_LOG.md) / [Remediation](docs/checkpoints/technical/TECHNICAL_REMEDIATION_PHASES.md) |
+| 3 | Leads | Hoàn tất P3-01 đến P3-10 & Remediation | Đã sẵn sàng nghiệm thu | [Chi tiết P3](docs/checkpoints/P3/PHASE_LOG.md) / [Remediation](docs/checkpoints/technical/TECHNICAL_REMEDIATION_PHASES.md) |
 | 4 | Companies và Contacts | Chưa bắt đầu | — | — |
 | 5 | Pipelines và Opportunities | Chưa bắt đầu | — | — |
 | 6 | Activities và Tasks | Chưa bắt đầu | — | — |
@@ -74,8 +74,8 @@ Tài liệu này là lộ trình và trạng thái checkpoint chính của dự 
 | P3-06 | Form và chi tiết Lead | `feature/p3-06-lead-form-detail` | P3-05 | ✅ Hoàn tất |
 | P3-07 | Assignment và status history | `feature/p3-07-lead-assignment-status` | P3-06 | ✅ Hoàn tất |
 | P3-08 | Duplicate, soft delete và restore | `feature/p3-08-lead-duplicate-delete` | P3-06 | ✅ Hoàn tất |
-| P3-09 | Conversion eligibility và contract | `feature/p3-09-conversion-contract` | P3-07, P3-08 | Hoàn tất triển khai — chờ kiểm thử |
-| P3-10 | Lead test và checkpoint | `feature/p3-10-lead-checkpoint` | P3-01..P3-09 | 🔄 Sắp làm |
+| P3-09 | Conversion eligibility và contract | `feature/p3-09-conversion-contract` | P3-07, P3-08 | ✅ Hoàn tất |
+| P3-10 | Lead test và checkpoint | `feature/p3-10-lead-checkpoint` | P3-01..P3-09 | Hoàn tất triển khai — chờ kiểm thử |
 
 #### Technical Remediation sau P3-08
 - **Mục tiêu**: Chuẩn hóa cấu trúc hạ tầng, phân vùng dữ liệu an toàn, xử lý logic trùng lặp và xung đột ở database layer, đồng nhất hóa UI loaders & modal state.
