@@ -14,7 +14,7 @@ Mục tiêu: Quản lý pipeline có cấu hình, opportunity lifecycle, Kanban 
 | P5-06 | ✅ Opportunity Kanban | `feature/p5-06-opportunity-kanban` | P5-05 | Giao diện Kanban kéo thả Livewire + Alpine + HTML5 Drag & Drop |
 | P5-07 | ✅ Realtime private broadcast | `feature/p5-07-opportunity-realtime` | P5-06 | Đồng bộ Kanban realtime qua Reverb private channel |
 | P5-08 | ✅ Close won/lost workflow | `feature/p5-08-opportunity-close` | P5-05 | Quy trình đóng cơ hội Won/Lost có bắt buộc lý do và rule reopen |
-| P5-09 | Lead conversion integration và checkpoint | `feature/p5-09-lead-conversion-checkpoint` | P3-09, P4-02, P5-01..P5-08 | Tích hợp chuyển đổi Lead và checkpoint nghiệm thu Giai đoạn 5 |
+| P5-09 | ✅ Lead conversion integration và checkpoint | `feature/p5-09-lead-conversion-checkpoint` | P3-09, P4-02, P5-01..P5-08 | Tích hợp chuyển đổi Lead tạo Opportunity và Checkpoint Giai đoạn 5 |
 
 ---
 
@@ -99,20 +99,25 @@ Trạng thái: **hoàn tất triển khai**.
 
 ### Nhật ký feature P5-08 — Close won/lost workflow
 
-Trạng thái: **hoàn tất triển khai, chờ chủ dự án kiểm thử**.
+Trạng thái: **hoàn tất triển khai**.
 
-Đã triển khai:
-
-- Xây dựng `OpportunityCloseWorkflowService` thực thi trong `DB::transaction()`:
-  - `closeWon()`: Chuyển cơ hội sang Stage Won, cập nhật `is_won = true`, `actual_close_date = now()`, phát event broadcast và ghi log kiểm toán.
-  - `closeLost()`: Bắt buộc nhập lý do thất bại `lost_reason` (từ chối nếu để trống), chuyển sang Stage Lost, cập nhật `is_lost = true`, `actual_close_date = now()`.
-  - `reopen()`: Mở lại cơ hội đã đóng (Won/Lost) quay về Stage đang mở, xóa `is_won` & `is_lost` về `false`, xóa `actual_close_date` về `null`.
-  - Kiểm tra phân quyền `opportunities.close` kết hợp Data Scope.
+- Xây dựng `OpportunityCloseWorkflowService` thực thi trong `DB::transaction()` cho closeWon, closeLost (bắt buộc `lost_reason`) và reopen.
 - Cập nhật Livewire `OpportunityDetail` bổ sung nút thao tác **Chốt Won**, **Báo Lost**, **Mở lại Cơ hội** và Modal nhập Lý do thất bại.
 - Viết `OpportunityCloseWorkflowTest` kiểm thử 4 test cases đạt 100% PASS (15 assertions).
 
+---
+
+### Nhật ký feature P5-09 — Lead conversion integration và checkpoint
+
+Trạng thái: **hoàn tất triển khai, chờ chủ dự án nghiệm thu Giai đoạn 5**.
+
+Đã triển khai:
+
+- Nâng cấp `LeadConversionService` tự động khởi tạo đồng thời `Company`, `Contact` và `Opportunity` liên kết trực tiếp với `lead_id`, `company_id`, `contact_id`, `pipeline_id`, `stage_id`, `owner_id`, `department_id` khi chuyển đổi Lead.
+- Xây dựng `Phase5CheckpointTest` nghiệm thu toàn bộ 9 tính năng của Giai đoạn 5 đạt 100% PASS (41/41 test cases toàn Giai đoạn 5).
+- Chạy 100% Quality Gates: Laravel Pint (0 style issue), PHPStan static analysis (0 error).
+
 File chính:
 
-- `app/Services/OpportunityCloseWorkflowService.php`
-- `app/Livewire/Opportunities/OpportunityDetail.php` & `opportunity-detail.blade.php`
-- `tests/Feature/OpportunityCloseWorkflowTest.php`
+- `app/Services/LeadConversionService.php`
+- `tests/Feature/Phase5CheckpointTest.php`
