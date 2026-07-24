@@ -20,7 +20,7 @@ Tài liệu này là lộ trình và trạng thái checkpoint chính của dự 
 | 1 | Khởi tạo nền tảng và Docker | Hoàn tất triển khai | Chờ chủ dự án kiểm thử | [Chi tiết P1](docs/checkpoints/P1/PHASE_LOG.md) |
 | 2 | Users, Departments, Roles, Permissions | Hoàn tất P2-01 đến P2-08 | Đã qua checkpoint | [Chi tiết P2](docs/checkpoints/P2/PHASE_LOG.md) |
 | 3 | Leads | Hoàn tất P3-01 đến P3-10 & Remediation | Đã sẵn sàng nghiệm thu | [Chi tiết P3](docs/checkpoints/P3/PHASE_LOG.md) / [Remediation](docs/checkpoints/technical/TECHNICAL_REMEDIATION_PHASES.md) |
-| 4 | Companies và Contacts | Đang làm — P4-01 & P4-02 hoàn tất | P4-03 là feature tiếp theo | [Chi tiết P4](docs/checkpoints/P4/PHASE_LOG.md) |
+| 4 | Companies và Contacts | Đang làm — P4-01 đến P4-03 hoàn tất | P4-04 là feature tiếp theo | [Chi tiết P4](docs/checkpoints/P4/PHASE_LOG.md) |
 | 5 | Pipelines và Opportunities | Chưa bắt đầu | — | — |
 | 6 | Activities và Tasks | Chưa bắt đầu | — | — |
 | 7 | Dashboard và Reports | Chưa bắt đầu | — | — |
@@ -108,8 +108,8 @@ Tài liệu này là lộ trình và trạng thái checkpoint chính của dự 
 | Mã | Feature | Branch đề xuất | Phụ thuộc | Trạng thái |
 |---|---|---|---|---|
 | P4-01 | Company schema và domain | `feature/p4-01-company-domain` | P2-08 | ✅ Hoàn tất |
-| P4-02 | Contact schema và domain | `feature/p4-02-contact-domain` | P4-01 | Hoàn tất triển khai — chờ kiểm thử |
-| P4-03 | Company CRUD | `feature/p4-03-company-crud` | P4-01, P2-04 | ⏳ Chưa bắt đầu |
+| P4-02 | Contact schema và domain | `feature/p4-02-contact-domain` | P4-01 | ✅ Hoàn tất |
+| P4-03 | Company CRUD | `feature/p4-03-company-crud` | P4-01, P2-04 | Hoàn tất triển khai — chờ kiểm thử |
 | P4-04 | Contact CRUD và quan hệ | `feature/p4-04-contact-crud` | P4-02, P2-04 | ⏳ Chưa bắt đầu |
 | P4-05 | Duplicate handling | `feature/p4-05-customer-duplicates` | P4-03, P4-04 | ⏳ Chưa bắt đầu |
 | P4-06 | Attachment và timeline foundation | `feature/p4-06-customer-files-timeline` | P4-03, P4-04 | ⏳ Chưa bắt đầu |

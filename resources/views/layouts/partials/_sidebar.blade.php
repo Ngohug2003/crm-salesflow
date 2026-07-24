@@ -33,6 +33,14 @@
                         <span x-show="sidebar">Khách hàng tiềm năng</span>
                     </a>
                 @endcan
+                @can('viewAny', \App\Models\Company::class)
+                    <a href="{{ route('companies.index') }}" wire:navigate.hover
+                       class="nav-link"
+                       :class="path.startsWith('/companies') && 'nav-link-active'">
+                        <flux:icon.building-office-2 class="nav-icon" />
+                        <span x-show="sidebar">Doanh nghiệp</span>
+                    </a>
+                @endcan
             </div>
         </div>
 
@@ -99,7 +107,6 @@
             <p x-show="sidebar" class="nav-group-label">Sắp có</p>
             <div class="mt-1 space-y-0.5">
                 @foreach ([
-                    'Companies' => 'building-storefront',
                     'Contacts' => 'user-circle',
                     'Opportunities' => 'sparkles',
                     'Pipelines' => 'view-columns',

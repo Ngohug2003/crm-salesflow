@@ -8,7 +8,7 @@ Mục tiêu: Xây dựng hồ sơ khách hàng và quan hệ Company–Contact l
 |---|---|---|---|---|
 | P4-01 | ✅ Company schema và domain | `feature/p4-01-company-domain` | P2-08 | Schema/model/factory/test Company với PostgreSQL BIGINT tự tăng, Data Scope và soft delete |
 | P4-02 | ✅ Contact schema và domain | `feature/p4-02-contact-domain` | P4-01 | Schema/model/factory/test Contact và quan hệ với Company |
-| P4-03 | Company CRUD | `feature/p4-03-company-crud` | P4-01, P2-04 | Dịch vụ, Repository, Policy và Livewire CRUD cho Company |
+| P4-03 | ✅ Company CRUD | `feature/p4-03-company-crud` | P4-01, P2-04 | Dịch vụ, Repository, Policy và Livewire CRUD cho Company |
 | P4-04 | Contact CRUD và quan hệ | `feature/p4-04-contact-crud` | P4-02, P2-04 | Dịch vụ, Repository, Policy và Livewire CRUD cho Contact |
 | P4-05 | Duplicate handling | `feature/p4-05-customer-duplicates` | P4-03, P4-04 | Phát hiện trùng lặp khách hàng, cảnh báo và xử lý |
 | P4-06 | Attachment và timeline foundation | `feature/p4-06-customer-files-timeline` | P4-03, P4-04 | Đính kèm tệp tin và mốc thời gian khách hàng |
@@ -57,4 +57,37 @@ File chính:
 - `app/Models/Company.php`
 - `database/factories/ContactFactory.php`
 - `tests/Feature/ContactDomainTest.php`
+
+### Nhật ký feature P4-03 — Company CRUD
+
+Trạng thái: **hoàn tất triển khai, chờ chủ dự án kiểm thử**.
+
+Đã triển khai:
+
+- Tạo `CompanyFilterData` DTO đóng gói tham số tìm kiếm, ngành nghề, quy mô, owner_id, department_id, sorting.
+- Định nghĩa `CompanyRepository` contract và `EloquentCompanyRepository` thực thi Data Scope (`all`, `department`, `owned`, `read-only`) ở backend cùng allowlist sorting (`name`, `created_at`, `annual_revenue`, `tax_code`).
+- Tạo `CompanyPolicy` phân quyền `companies.view`, `companies.create`, `companies.update`, `companies.delete` và kiểm tra Data Scope.
+- Tạo `CompanyManagementService` thực thi logic nghiệp vụ CRUD trong `DB::transaction()` và tự động ghi log kiểm toán qua `SystemAuditService`.
+- Đăng ký Bind `CompanyRepository` ➔ `EloquentCompanyRepository` trong `RepositoryServiceProvider`.
+- Tạo các Livewire Components & Blade views: `CompanyList` (`/companies`), `CompanyEditor` (`/companies/create`, `/companies/{id}/edit`), `CompanyDetail` (`/companies/{id}`).
+- Khai báo các tuyến đường URL trong `routes/web.php` và thêm menu **Doanh nghiệp** vào Sidebar navigation.
+- Viết 5 test cases trong `CompanyCrudTest` kiểm thử phân quyền 5 vai trò, Data Scope isolation, CRUD và audit logs.
+
+File chính:
+
+- `app/Data/CompanyFilterData.php`
+- `app/Repositories/Contracts/CompanyRepository.php`
+- `app/Repositories/EloquentCompanyRepository.php`
+- `app/Policies/CompanyPolicy.php`
+- `app/Services/CompanyManagementService.php`
+- `app/Livewire/Companies/CompanyList.php`
+- `app/Livewire/Companies/CompanyEditor.php`
+- `app/Livewire/Companies/CompanyDetail.php`
+- `resources/views/livewire/companies/company-list.blade.php`
+- `resources/views/livewire/companies/company-editor.blade.php`
+- `resources/views/livewire/companies/company-detail.blade.php`
+- `routes/web.php`
+- `resources/views/layouts/partials/_sidebar.blade.php`
+- `tests/Feature/CompanyCrudTest.php`
+
 
