@@ -2,7 +2,7 @@
     <!-- Top Header -->
     <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-            <div class="flex items-center gap-3">
+            <div class="flex flex-wrap items-center gap-3">
                 <h1 class="text-2xl font-bold text-slate-900 dark:text-white">{{ $opportunity->title }}</h1>
 
                 <span class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold" style="background-color: {{ $opportunity->stage?->color }}20; color: {{ $opportunity->stage?->color }}; border: 1px solid {{ $opportunity->stage?->color }}40;">
@@ -20,14 +20,28 @@
             <p class="mt-1 text-sm text-slate-500">Mã cơ hội: <code class="font-mono text-slate-700 dark:text-slate-300">{{ $opportunity->code }}</code></p>
         </div>
 
-        <div class="flex items-center gap-3">
+        <div class="flex flex-wrap items-center gap-2">
             <flux:button href="{{ route('opportunities.index') }}" variant="ghost" icon="arrow-left" size="sm">
                 Danh sách
             </flux:button>
 
+            @if (! $opportunity->is_won && ! $opportunity->is_lost)
+                <flux:button wire:click="closeWon" wire:confirm="Bạn có chắc chắn muốn CHỐT THÀNH CÔNG cơ hội bán hàng này không?" variant="primary" color="emerald" icon="check-circle" size="sm">
+                    Chốt Won
+                </flux:button>
+
+                <flux:button wire:click="$set('showLostModal', true)" variant="danger" icon="x-circle" size="sm">
+                    Báo Lost
+                </flux:button>
+            @else
+                <flux:button wire:click="reopen" wire:confirm="Bạn có chắc chắn muốn MỞ LẠI cơ hội bán hàng này không?" variant="filled" icon="arrow-path" size="sm">
+                    Mở lại Cơ hội
+                </flux:button>
+            @endif
+
             @can('update', $opportunity)
-                <flux:button href="{{ route('opportunities.edit', $opportunity->id) }}" variant="primary" icon="pencil" size="sm">
-                    Chỉnh sửa Cơ hội
+                <flux:button href="{{ route('opportunities.edit', $opportunity->id) }}" variant="subtle" icon="pencil" size="sm">
+                    Sửa
                 </flux:button>
             @endcan
         </div>
@@ -174,4 +188,40 @@
             @endif
         </div>
     </div>
+
+    <!-- Modal Nhập Lý do Thất bại (Close Lost) -->
+    @if ($showLostModal)
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
+            <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-bold text-slate-900 dark:text-white">Báo Thất bại Cơ hội bán hàng</h3>
+                    <button wire:click="$set('showLostModal', false)" type="button" class="text-slate-400 hover:text-slate-600">
+                        <flux:icon.x-mark class="size-5" />
+                    </button>
+                </div>
+
+                <p class="text-xs text-slate-500">Vui lòng cung cấp lý do thất bại để hoàn tất đóng cơ hội này.</p>
+
+                <div>
+                    <flux:textarea
+                        wire:model="lostReason"
+                        label="Lý do thất bại *"
+                        placeholder="VD: Đối thủ cạnh tranh giảm giá 20%, đối tác tạm hoãn ngân sách năm nay..."
+                        rows="3"
+                    />
+                    @error('lostReason') <span class="text-xs text-red-500 mt-1 block">{{ $message }}</span> @enderror
+                </div>
+
+                <div class="flex items-center justify-end gap-3 pt-2">
+                    <flux:button wire:click="$set('showLostModal', false)" variant="ghost" size="sm">
+                        Hủy
+                    </flux:button>
+
+                    <flux:button wire:click="confirmCloseLost" variant="danger" size="sm">
+                        Xác nhận Thất bại
+                    </flux:button>
+                </div>
+            </div>
+        </div>
+    @endif
 </div>
