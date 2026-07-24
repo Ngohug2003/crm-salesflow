@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire\Companies;
 
+use App\Exceptions\DuplicateCompanyException;
 use App\Models\Company;
 use App\Models\User;
 use App\Services\CompanyManagementService;
@@ -47,6 +48,17 @@ final class CompanyEditor extends Component
     public string $notes = '';
 
     public string $ownerId = '';
+
+    /** @var list<array{id: int, name: string, tax_code: ?string, email: ?string, phone: ?string, owner: string, matched_fields: list<string>}> */
+    public array $duplicateCandidates = [];
+
+    public ?string $pendingDuplicateSignature = null;
+
+    public ?string $confirmedDuplicateSignature = null;
+
+    public bool $showDuplicateWarning = false;
+
+    public string $duplicateOverrideReason = '';
 
     public function mount(?int $companyId = null): void
     {
@@ -105,7 +117,7 @@ final class CompanyEditor extends Component
         ];
     }
 
-    public function save(): void
+    public function save(): mixed
     {
         $this->validate();
 
@@ -132,15 +144,71 @@ final class CompanyEditor extends Component
             'owner_id' => $this->ownerId !== '' ? (int) $this->ownerId : null,
         ];
 
-        if ($this->companyId === null) {
-            $company = $service->create($actor, $data);
-            session()->flash('message', 'Tạo mới Doanh nghiệp thành công.');
-            $this->redirect(route('companies.show', $company), navigate: true);
-        } else {
-            $company = $service->update($actor, $this->companyId, $data);
-            session()->flash('message', 'Cập nhật Doanh nghiệp thành công.');
-            $this->redirect(route('companies.show', $company), navigate: true);
+        try {
+            if ($this->companyId === null) {
+                $company = $service->create(
+                    $actor,
+                    $data,
+                    $this->confirmedDuplicateSignature,
+                    $this->duplicateOverrideReason,
+                );
+                session()->flash('message', 'Tạo mới Doanh nghiệp thành công.');
+
+                return $this->redirect(route('companies.show', $company), navigate: true);
+            } else {
+                $company = $service->update(
+                    $actor,
+                    $this->companyId,
+                    $data,
+                    $this->confirmedDuplicateSignature,
+                    $this->duplicateOverrideReason,
+                );
+                session()->flash('message', 'Cập nhật Doanh nghiệp thành công.');
+
+                return $this->redirect(route('companies.show', $company), navigate: true);
+            }
+        } catch (DuplicateCompanyException $e) {
+            $this->duplicateCandidates = $e->candidates;
+            $this->pendingDuplicateSignature = $e->signature;
+            $this->showDuplicateWarning = true;
+
+            if ($this->confirmedDuplicateSignature !== $e->signature) {
+                $this->confirmedDuplicateSignature = null;
+            }
+
+            return null;
         }
+    }
+
+    public function confirmDuplicateSave(): mixed
+    {
+        $this->duplicateOverrideReason = trim($this->duplicateOverrideReason);
+        if (empty($this->duplicateOverrideReason)) {
+            $this->addError('duplicateOverrideReason', 'Vui lòng nhập lý do lưu trùng lặp.');
+
+            return null;
+        }
+
+        if (mb_strlen($this->duplicateOverrideReason) < 10) {
+            $this->addError('duplicateOverrideReason', 'Lý do phải có ít nhất 10 ký tự.');
+
+            return null;
+        }
+
+        $this->confirmedDuplicateSignature = $this->pendingDuplicateSignature;
+        $this->showDuplicateWarning = false;
+
+        return $this->save();
+    }
+
+    public function dismissDuplicateWarning(): void
+    {
+        $this->duplicateCandidates = [];
+        $this->pendingDuplicateSignature = null;
+        $this->confirmedDuplicateSignature = null;
+        $this->duplicateOverrideReason = '';
+        $this->showDuplicateWarning = false;
+        $this->resetErrorBag('duplicateOverrideReason');
     }
 
     /** @return Collection<int, User> */

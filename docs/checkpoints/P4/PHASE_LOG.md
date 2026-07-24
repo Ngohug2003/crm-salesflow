@@ -10,7 +10,7 @@ Mục tiêu: Xây dựng hồ sơ khách hàng và quan hệ Company–Contact l
 | P4-02 | ✅ Contact schema và domain | `feature/p4-02-contact-domain` | P4-01 | Schema/model/factory/test Contact và quan hệ với Company |
 | P4-03 | ✅ Company CRUD | `feature/p4-03-company-crud` | P4-01, P2-04 | Dịch vụ, Repository, Policy và Livewire CRUD cho Company |
 | P4-04 | ✅ Contact CRUD và quan hệ | `feature/p4-04-contact-crud` | P4-02, P2-04 | Dịch vụ, Repository, Policy và Livewire CRUD cho Contact |
-| P4-05 | Duplicate handling | `feature/p4-05-customer-duplicates` | P4-03, P4-04 | Phát hiện trùng lặp khách hàng, cảnh báo và xử lý |
+| P4-05 | ✅ Duplicate handling | `feature/p4-05-customer-duplicates` | P4-03, P4-04 | Phát hiện trùng lặp khách hàng, cảnh báo và xử lý |
 | P4-06 | Attachment và timeline foundation | `feature/p4-06-customer-files-timeline` | P4-03, P4-04 | Đính kèm tệp tin và mốc thời gian khách hàng |
 | P4-07 | Customer authorization checkpoint | `feature/p4-07-customer-checkpoint` | P4-01..P4-06 | Kiểm thử phân quyền và checkpoint nghiệm thu Giai đoạn 4 |
 
@@ -121,6 +121,34 @@ File chính:
 - `routes/web.php`
 - `resources/views/layouts/partials/_sidebar.blade.php`
 - `tests/Feature/ContactCrudTest.php`
+
+### Nhật ký feature P4-05 — Duplicate handling
+
+Trạng thái: **hoàn tất triển khai, chờ chủ dự án kiểm thử**.
+
+Đã triển khai:
+
+- Tạo `DuplicateCompanyException` và `DuplicateContactException` nạp sẵn danh sách ứng viên trùng và chữ ký mã hóa signature.
+- Tạo `DuplicateCompanyService` phát hiện trùng lặp Doanh nghiệp theo Mã số thuế (tax_code), Tên công ty (name), Email hoặc Số điện thoại.
+- Tạo `DuplicateContactService` phát hiện trùng lặp Người liên hệ theo Email, Số điện thoại (phone/secondary_phone), hoặc Họ tên + Doanh nghiệp.
+- Cập nhật `CompanyManagementService` & `ContactManagementService` tích hợp duplicate guard tại backend: chặn tạo/sửa trùng khi chưa xác nhận signature & lý do ghi đè (min 10 ký tự), đồng thời lưu vết `duplicate_override` vào log kiểm toán.
+- Cập nhật Livewire Editors (`CompanyEditor`, `ContactEditor`) & Blade views hiển thị Banner cảnh báo trùng lặp màu vàng nổi bật với danh sách bản ghi bị trùng (kèm link), ô nhập lý do và nút xác nhận lưu trùng.
+- Viết `CustomerDuplicateTest` kiểm thử 2 test cases chính đạt 100% PASS (chặn trùng, xác nhận chữ ký, xác thực lý do >= 10 ký tự và ghi log audit).
+
+File chính:
+
+- `app/Exceptions/DuplicateCompanyException.php`
+- `app/Exceptions/DuplicateContactException.php`
+- `app/Services/DuplicateCompanyService.php`
+- `app/Services/DuplicateContactService.php`
+- `app/Services/CompanyManagementService.php`
+- `app/Services/ContactManagementService.php`
+- `app/Livewire/Companies/CompanyEditor.php`
+- `app/Livewire/Contacts/ContactEditor.php`
+- `resources/views/livewire/companies/company-editor.blade.php`
+- `resources/views/livewire/contacts/contact-editor.blade.php`
+- `tests/Feature/CustomerDuplicateTest.php`
+
 
 
 
