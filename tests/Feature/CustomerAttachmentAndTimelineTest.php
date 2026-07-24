@@ -19,7 +19,7 @@ uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
     $this->seed(RolePermissionSeeder::class);
-    Storage::fake('local');
+    Storage::fake((string) config('filesystems.default', 'local'));
 });
 
 function p406Actor(string $role): User
@@ -56,9 +56,9 @@ it('allows uploading valid attachments for Company and Contact', function (): vo
         ->and($attachmentCont->attachable_type)->toBe($contact->getMorphClass())
         ->and($attachmentCont->attachable_id)->toBe($contact->id);
 
-    // Verify storage file exists
-    Storage::disk('local')->assertExists($attachmentComp->file_path);
-    Storage::disk('local')->assertExists($attachmentCont->file_path);
+    $defaultDisk = (string) config('filesystems.default', 'local');
+    Storage::disk($defaultDisk)->assertExists($attachmentComp->file_path);
+    Storage::disk($defaultDisk)->assertExists($attachmentCont->file_path);
 });
 
 it('blocks uploading dangerous file extensions', function (): void {

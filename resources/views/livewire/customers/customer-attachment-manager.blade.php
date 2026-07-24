@@ -14,14 +14,17 @@
 
     <form wire:submit="uploadFile" class="mb-6 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
         <div class="flex-1 w-full">
-            <flux:input
-                wire:model="file"
+            <input
                 type="file"
-                placeholder="Chọn tệp tin (Tối đa 10MB)"
+                wire:model="file"
+                class="block w-full text-sm text-slate-500 rounded-lg border border-slate-300 bg-white p-2 file:mr-4 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:file:bg-slate-800 dark:file:text-slate-300 dark:hover:file:bg-slate-700"
             />
-            @error('file') <span class="mt-1 text-xs text-red-500 font-semibold">{{ $message }}</span> @enderror
+            <div wire:loading wire:target="file" class="mt-1.5 text-xs font-medium text-indigo-600 dark:text-indigo-400">
+                Đang xử lý tệp...
+            </div>
+            @error('file') <span class="mt-1.5 block text-xs font-semibold text-red-500">{{ $message }}</span> @enderror
         </div>
-        <flux:button type="submit" variant="primary" icon="arrow-up-tray" size="sm" class="mt-1 sm:mt-0">
+        <flux:button type="submit" variant="primary" icon="arrow-up-tray" size="sm" class="mt-1 sm:mt-0" wire:loading.attr="disabled">
             Tải lên tệp
         </flux:button>
     </form>
