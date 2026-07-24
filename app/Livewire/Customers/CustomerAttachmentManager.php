@@ -7,6 +7,7 @@ namespace App\Livewire\Customers;
 use App\Models\Attachment;
 use App\Models\Company;
 use App\Models\Contact;
+use App\Models\Opportunity;
 use App\Models\User;
 use App\Services\CustomerAttachmentService;
 use Illuminate\Contracts\View\View;
@@ -111,6 +112,12 @@ final class CustomerAttachmentManager extends Component
         }
         if ($this->modelType === Contact::class || $this->modelType === 'contact' || $this->modelType === (new Contact)->getMorphClass()) {
             return Contact::query()->find($this->modelId);
+        }
+        if ($this->modelType === Opportunity::class || $this->modelType === 'opportunity' || $this->modelType === (new Opportunity)->getMorphClass()) {
+            return Opportunity::query()->find($this->modelId);
+        }
+        if (class_exists($this->modelType) && is_subclass_of($this->modelType, Model::class)) {
+            return $this->modelType::query()->find($this->modelId);
         }
 
         return null;
