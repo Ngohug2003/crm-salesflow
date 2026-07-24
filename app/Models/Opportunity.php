@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -125,6 +126,12 @@ final class Opportunity extends Model
     public function attachments(): MorphMany
     {
         return $this->morphMany(Attachment::class, 'attachable');
+    }
+
+    /** @return HasMany<OpportunityStageHistory, $this> */
+    public function stageHistories(): HasMany
+    {
+        return $this->hasMany(OpportunityStageHistory::class, 'opportunity_id')->orderBy('created_at', 'desc');
     }
 
     /**

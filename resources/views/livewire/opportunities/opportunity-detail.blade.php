@@ -39,9 +39,18 @@
         </div>
     @endif
 
+    @error('stage_error')
+        <div class="rounded-lg bg-red-50 p-4 text-sm font-semibold text-red-800 dark:bg-red-950/40 dark:text-red-300">
+            {{ $message }}
+        </div>
+    @enderror
+
     <!-- Pipeline Stage Progress Bar -->
     <div class="crm-card">
-        <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-3">Tiến trình Quy trình: {{ $opportunity->pipeline?->name }}</h2>
+        <div class="flex items-center justify-between mb-3">
+            <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-500">Tiến trình Quy trình: {{ $opportunity->pipeline?->name }}</h2>
+            <span class="text-xs text-slate-400">Nhấp vào giai đoạn bên dưới để chuyển Stage nhanh</span>
+        </div>
 
         <div class="flex items-center gap-2 overflow-x-auto pb-2">
             @foreach ($opportunity->pipeline?->stages ?? [] as $stg)
@@ -49,7 +58,12 @@
                     $isCurrent = $stg->id === $opportunity->stage_id;
                     $isPassed = $stg->position < ($opportunity->stage?->position ?? 0);
                 @endphp
-                <div class="flex flex-1 min-w-[140px] flex-col gap-1.5 rounded-lg border p-2.5 transition-all {{ $isCurrent ? 'border-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/30 ring-2 ring-indigo-500/20' : ($isPassed ? 'border-emerald-300 bg-emerald-50/30 dark:border-emerald-900/50 dark:bg-emerald-950/20' : 'border-slate-200 bg-slate-50/50 dark:border-slate-800 dark:bg-slate-900/50') }}">
+                <button
+                    type="button"
+                    wire:click="changeStage({{ $stg->id }})"
+                    wire:confirm="Bạn có chắc chắn muốn chuyển Cơ hội bán hàng sang giai đoạn '{{ $stg->name }}' không?"
+                    class="flex flex-1 min-w-[140px] flex-col gap-1.5 rounded-lg border p-2.5 text-left transition-all hover:scale-[1.02] {{ $isCurrent ? 'border-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/30 ring-2 ring-indigo-500/20' : ($isPassed ? 'border-emerald-300 bg-emerald-50/30 dark:border-emerald-900/50 dark:bg-emerald-950/20' : 'border-slate-200 bg-slate-50/50 hover:border-indigo-300 dark:border-slate-800 dark:bg-slate-900/50') }}"
+                >
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-bold {{ $isCurrent ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-600 dark:text-slate-400' }}">
                             {{ $stg->position }}. {{ $stg->name }}
@@ -60,7 +74,7 @@
                     <div class="h-1.5 w-full rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
                         <div class="h-full transition-all" style="width: {{ $stg->probability }}%; background-color: {{ $stg->color }};"></div>
                     </div>
-                </div>
+                </button>
             @endforeach
         </div>
     </div>
