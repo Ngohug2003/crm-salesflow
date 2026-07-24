@@ -14,6 +14,61 @@
         </flux:button>
     </div>
 
+    @if ($showDuplicateWarning)
+        <div class="mb-6 rounded-xl border border-amber-300 bg-amber-50 p-5 dark:border-amber-900/50 dark:bg-amber-950/30">
+            <div class="flex items-start gap-3">
+                <flux:icon.exclamation-triangle class="mt-0.5 size-5 shrink-0 text-amber-600 dark:text-amber-400" />
+                <div class="flex-1">
+                    <h3 class="font-semibold text-amber-900 dark:text-amber-200">Cảnh báo: Phát hiện Người liên hệ trùng lặp!</h3>
+                    <p class="mt-1 text-sm text-amber-800 dark:text-amber-300">
+                        Hệ thống tìm thấy {{ count($duplicateCandidates) }} người liên hệ có thông tin trùng khớp với thông tin bạn đang nhập:
+                    </p>
+
+                    <div class="mt-3 divide-y divide-amber-200 rounded-lg border border-amber-200 bg-white dark:divide-amber-900/50 dark:border-amber-900/50 dark:bg-slate-900">
+                        @foreach ($duplicateCandidates as $candidate)
+                            <div class="flex items-center justify-between p-3 text-xs">
+                                <div>
+                                    <a href="{{ route('contacts.show', $candidate['id']) }}" target="_blank" class="font-semibold text-indigo-600 hover:underline dark:text-indigo-400">
+                                        {{ $candidate['full_name'] }}
+                                    </a>
+                                    <span class="ml-2 text-slate-500">Doanh nghiệp: {{ $candidate['company'] }} | {{ $candidate['email'] ?: $candidate['phone'] }}</span>
+                                    <div class="mt-0.5 text-slate-400">Người phụ trách: {{ $candidate['owner'] }}</div>
+                                </div>
+                                <div>
+                                    <span class="rounded bg-amber-100 px-2 py-0.5 font-medium text-amber-800 dark:bg-amber-900/50 dark:text-amber-300">
+                                        Trùng {{ implode(', ', $candidate['matched_fields']) }}
+                                    </span>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+
+                    <div class="mt-4 space-y-3">
+                        <div>
+                            <flux:input
+                                wire:model="duplicateOverrideReason"
+                                label="Lý do xác nhận tạo/lưu trùng lặp (tối thiểu 10 ký tự) *"
+                                placeholder="Nhập lý do nghiệp vụ giải thích tại sao cần tạo/lưu bản ghi trùng..."
+                            />
+                            @error('duplicateOverrideReason')
+                                <span class="mt-1 text-xs font-semibold text-red-500">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <flux:button wire:click="confirmDuplicateSave" variant="primary" size="sm">
+                                Vẫn xác nhận lưu người liên hệ này
+                            </flux:button>
+                            <flux:button wire:click="dismissDuplicateWarning" variant="ghost" size="sm">
+                                Bỏ qua
+                            </flux:button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
     <form wire:submit="save" class="space-y-6">
         <!-- Thông tin cá nhân -->
         <section class="crm-card" aria-labelledby="contact-personal-title">

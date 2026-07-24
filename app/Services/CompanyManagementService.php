@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Data\CompanyFilterData;
+use App\Exceptions\DuplicateCompanyException;
 use App\Models\Company;
 use App\Models\User;
 use App\Repositories\Contracts\CompanyRepository;
@@ -17,6 +18,7 @@ final readonly class CompanyManagementService
     public function __construct(
         private CompanyRepository $companies,
         private SystemAuditService $audit,
+        private DuplicateCompanyService $duplicates,
     ) {}
 
     /** @return LengthAwarePaginator<int, Company> */
@@ -36,11 +38,28 @@ final readonly class CompanyManagementService
     }
 
     /** @param array<string, mixed> $data */
-    public function create(User $actor, array $data): Company
-    {
+    public function create(
+        User $actor,
+        array $data,
+        ?string $duplicateConfirmedSignature = null,
+        ?string $duplicateOverrideReason = null,
+    ): Company {
         Gate::forUser($actor)->authorize('create', Company::class);
 
-        return DB::transaction(function () use ($actor, $data): Company {
+        $currentSignature = $this->duplicates->signature($data);
+        $candidates = $this->duplicates->candidates($actor, $data);
+
+        $duplicateOverride = false;
+        if ($candidates !== []) {
+            if ($duplicateConfirmedSignature !== $currentSignature
+                || empty(trim((string) $duplicateOverrideReason))
+                || mb_strlen(trim((string) $duplicateOverrideReason)) < 10) {
+                throw new DuplicateCompanyException($candidates, $currentSignature);
+            }
+            $duplicateOverride = true;
+        }
+
+        return DB::transaction(function () use ($actor, $data, $duplicateOverride, $duplicateOverrideReason): Company {
             $ownerId = isset($data['owner_id']) && $data['owner_id'] !== '' ? (int) $data['owner_id'] : null;
 
             if ($ownerId === null && ! $actor->hasAnyRole(['super-admin', 'admin'])) {
@@ -61,6 +80,13 @@ final readonly class CompanyManagementService
             ]);
 
             $company = $this->companies->create($payload);
+            $newSnapshot = $this->snapshot($company);
+
+            if ($duplicateOverride) {
+                $newSnapshot['duplicate_override'] = [
+                    'reason' => trim((string) $duplicateOverrideReason),
+                ];
+            }
 
             $this->audit->record(
                 $actor,
@@ -68,7 +94,7 @@ final readonly class CompanyManagementService
                 'created',
                 'Tạo mới Doanh nghiệp',
                 null,
-                $this->snapshot($company),
+                $newSnapshot,
             );
 
             return $company;
@@ -76,9 +102,27 @@ final readonly class CompanyManagementService
     }
 
     /** @param array<string, mixed> $data */
-    public function update(User $actor, int $id, array $data): Company
-    {
-        return DB::transaction(function () use ($actor, $id, $data): Company {
+    public function update(
+        User $actor,
+        int $id,
+        array $data,
+        ?string $duplicateConfirmedSignature = null,
+        ?string $duplicateOverrideReason = null,
+    ): Company {
+        $currentSignature = $this->duplicates->signature($data);
+        $candidates = $this->duplicates->candidates($actor, $data, $id);
+
+        $duplicateOverride = false;
+        if ($candidates !== []) {
+            if ($duplicateConfirmedSignature !== $currentSignature
+                || empty(trim((string) $duplicateOverrideReason))
+                || mb_strlen(trim((string) $duplicateOverrideReason)) < 10) {
+                throw new DuplicateCompanyException($candidates, $currentSignature);
+            }
+            $duplicateOverride = true;
+        }
+
+        return DB::transaction(function () use ($actor, $id, $data, $duplicateOverride, $duplicateOverrideReason): Company {
             $company = $this->companies->findVisibleForUpdateOrFail($actor, $id);
             Gate::forUser($actor)->authorize('update', $company);
 
@@ -99,6 +143,13 @@ final readonly class CompanyManagementService
             ]);
 
             $updatedCompany = $this->companies->update($company, $payload);
+            $newSnapshot = $this->snapshot($updatedCompany);
+
+            if ($duplicateOverride) {
+                $newSnapshot['duplicate_override'] = [
+                    'reason' => trim((string) $duplicateOverrideReason),
+                ];
+            }
 
             $this->audit->record(
                 $actor,
@@ -106,7 +157,7 @@ final readonly class CompanyManagementService
                 'updated',
                 'Cập nhật thông tin Doanh nghiệp',
                 $oldSnapshot,
-                $this->snapshot($updatedCompany),
+                $newSnapshot,
             );
 
             return $updatedCompany;

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Data\ContactFilterData;
+use App\Exceptions\DuplicateContactException;
 use App\Models\Contact;
 use App\Models\User;
 use App\Repositories\Contracts\ContactRepository;
@@ -17,6 +18,7 @@ final readonly class ContactManagementService
     public function __construct(
         private ContactRepository $contacts,
         private SystemAuditService $audit,
+        private DuplicateContactService $duplicates,
     ) {}
 
     /** @return LengthAwarePaginator<int, Contact> */
@@ -36,11 +38,28 @@ final readonly class ContactManagementService
     }
 
     /** @param array<string, mixed> $data */
-    public function create(User $actor, array $data): Contact
-    {
+    public function create(
+        User $actor,
+        array $data,
+        ?string $duplicateConfirmedSignature = null,
+        ?string $duplicateOverrideReason = null,
+    ): Contact {
         Gate::forUser($actor)->authorize('create', Contact::class);
 
-        return DB::transaction(function () use ($actor, $data): Contact {
+        $currentSignature = $this->duplicates->signature($data);
+        $candidates = $this->duplicates->candidates($actor, $data);
+
+        $duplicateOverride = false;
+        if ($candidates !== []) {
+            if ($duplicateConfirmedSignature !== $currentSignature
+                || empty(trim((string) $duplicateOverrideReason))
+                || mb_strlen(trim((string) $duplicateOverrideReason)) < 10) {
+                throw new DuplicateContactException($candidates, $currentSignature);
+            }
+            $duplicateOverride = true;
+        }
+
+        return DB::transaction(function () use ($actor, $data, $duplicateOverride, $duplicateOverrideReason): Contact {
             $ownerId = isset($data['owner_id']) && $data['owner_id'] !== '' ? (int) $data['owner_id'] : null;
 
             if ($ownerId === null && ! $actor->hasAnyRole(['super-admin', 'admin'])) {
@@ -75,6 +94,13 @@ final readonly class ContactManagementService
             ]);
 
             $contact = $this->contacts->create($payload);
+            $newSnapshot = $this->snapshot($contact);
+
+            if ($duplicateOverride) {
+                $newSnapshot['duplicate_override'] = [
+                    'reason' => trim((string) $duplicateOverrideReason),
+                ];
+            }
 
             $this->audit->record(
                 $actor,
@@ -82,7 +108,7 @@ final readonly class ContactManagementService
                 'created',
                 'Tạo mới Người liên hệ',
                 null,
-                $this->snapshot($contact),
+                $newSnapshot,
             );
 
             return $contact;
@@ -90,9 +116,27 @@ final readonly class ContactManagementService
     }
 
     /** @param array<string, mixed> $data */
-    public function update(User $actor, int $id, array $data): Contact
-    {
-        return DB::transaction(function () use ($actor, $id, $data): Contact {
+    public function update(
+        User $actor,
+        int $id,
+        array $data,
+        ?string $duplicateConfirmedSignature = null,
+        ?string $duplicateOverrideReason = null,
+    ): Contact {
+        $currentSignature = $this->duplicates->signature($data);
+        $candidates = $this->duplicates->candidates($actor, $data, $id);
+
+        $duplicateOverride = false;
+        if ($candidates !== []) {
+            if ($duplicateConfirmedSignature !== $currentSignature
+                || empty(trim((string) $duplicateOverrideReason))
+                || mb_strlen(trim((string) $duplicateOverrideReason)) < 10) {
+                throw new DuplicateContactException($candidates, $currentSignature);
+            }
+            $duplicateOverride = true;
+        }
+
+        return DB::transaction(function () use ($actor, $id, $data, $duplicateOverride, $duplicateOverrideReason): Contact {
             $contact = $this->contacts->findVisibleForUpdateOrFail($actor, $id);
             Gate::forUser($actor)->authorize('update', $contact);
 
@@ -129,6 +173,13 @@ final readonly class ContactManagementService
             ]);
 
             $updatedContact = $this->contacts->update($contact, $payload);
+            $newSnapshot = $this->snapshot($updatedContact);
+
+            if ($duplicateOverride) {
+                $newSnapshot['duplicate_override'] = [
+                    'reason' => trim((string) $duplicateOverrideReason),
+                ];
+            }
 
             $this->audit->record(
                 $actor,
@@ -136,7 +187,7 @@ final readonly class ContactManagementService
                 'updated',
                 'Cập nhật thông tin Người liên hệ',
                 $oldSnapshot,
-                $this->snapshot($updatedContact),
+                $newSnapshot,
             );
 
             return $updatedContact;
