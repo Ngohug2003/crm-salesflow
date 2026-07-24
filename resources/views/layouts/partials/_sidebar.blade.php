@@ -49,6 +49,14 @@
                         <span x-show="sidebar">Người liên hệ</span>
                     </a>
                 @endcan
+                @can('viewAny', \App\Models\Opportunity::class)
+                    <a href="{{ route('opportunities.index') }}" wire:navigate.hover
+                       class="nav-link"
+                       :class="path.startsWith('/opportunities') && 'nav-link-active'">
+                        <flux:icon.briefcase class="nav-icon" />
+                        <span x-show="sidebar">Cơ hội bán hàng</span>
+                    </a>
+                @endcan
                 @can('viewAny', \App\Models\Pipeline::class)
                     <a href="{{ route('pipelines.index') }}" wire:navigate.hover
                        class="nav-link"

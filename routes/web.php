@@ -12,6 +12,9 @@ use App\Livewire\Contacts\ContactDetail;
 use App\Livewire\Contacts\ContactEditor;
 use App\Livewire\Contacts\ContactList;
 use App\Livewire\Dashboard\DashboardOverview;
+use App\Livewire\Opportunities\OpportunityDetail;
+use App\Livewire\Opportunities\OpportunityEditor;
+use App\Livewire\Opportunities\OpportunityList;
 use App\Livewire\Pipelines\PipelineDetail;
 use App\Livewire\Pipelines\PipelineEditor;
 use App\Livewire\Pipelines\PipelineList;
@@ -38,6 +41,11 @@ Route::middleware(['auth', 'request.context.authenticated', 'verified', 'account
     Route::get('/contacts/create', ContactEditor::class)->name('contacts.create');
     Route::get('/contacts/{contactId}', ContactDetail::class)->whereNumber('contactId')->name('contacts.show');
     Route::get('/contacts/{contactId}/edit', ContactEditor::class)->whereNumber('contactId')->name('contacts.edit');
+
+    Route::get('/opportunities', OpportunityList::class)->name('opportunities.index');
+    Route::get('/opportunities/create', OpportunityEditor::class)->name('opportunities.create');
+    Route::get('/opportunities/{opportunityId}', OpportunityDetail::class)->whereNumber('opportunityId')->name('opportunities.show');
+    Route::get('/opportunities/{opportunityId}/edit', OpportunityEditor::class)->whereNumber('opportunityId')->name('opportunities.edit');
 
     Route::get('/pipelines', PipelineList::class)->name('pipelines.index');
     Route::get('/pipelines/create', PipelineEditor::class)->name('pipelines.create');
