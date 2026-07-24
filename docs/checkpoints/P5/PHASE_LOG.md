@@ -8,7 +8,7 @@ Mục tiêu: Quản lý pipeline có cấu hình, opportunity lifecycle, Kanban 
 |---|---|---|---|---|
 | P5-01 | ✅ Pipeline và stage schema | `feature/p5-01-pipeline-domain` | P2-08 | Schema/model/factory/test Pipeline và Stage với PostgreSQL BIGINT tự tăng |
 | P5-02 | ✅ Quản lý pipeline/stage | `feature/p5-02-pipeline-management` | P5-01 | Quản lý danh sách, cấu hình stage, sắp xếp và quy định bảo vệ |
-| P5-03 | Opportunity schema và domain | `feature/p5-03-opportunity-domain` | P4-02, P5-01 | Schema/model/factory/test Opportunity liên kết Company/Contact/Pipeline/Stage |
+| P5-03 | ✅ Opportunity schema và domain | `feature/p5-03-opportunity-domain` | P4-02, P5-01 | Schema/model/factory/test Opportunity liên kết Company/Contact/Pipeline/Stage |
 | P5-04 | Opportunity CRUD và weighted value | `feature/p5-04-opportunity-crud` | P5-03 | Dịch vụ, Repository, Policy và Livewire CRUD cho Opportunity |
 | P5-05 | Stage transition và history | `feature/p5-05-stage-transition-history` | P5-04 | Chuyển stage có lưu lịch sử immutable và kiểm tra version conflict |
 | P5-06 | Opportunity Kanban | `feature/p5-06-opportunity-kanban` | P5-05 | Giao diện Kanban kéo thả Livewire + Alpine + SortableJS |
@@ -31,33 +31,35 @@ Trạng thái: **hoàn tất triển khai**.
 
 ### Nhật ký feature P5-02 — Quản lý pipeline/stage
 
+Trạng thái: **hoàn tất triển khai**.
+
+- Tạo `PipelineFilterData` DTO, `PipelineRepository` & `EloquentPipelineRepository`.
+- Tạo `PipelinePolicy` cưỡng chế phân quyền 5 vai trò và Data Scope.
+- Tạo `PipelineManagementService` thực thi trong `DB::transaction()`, quản lý thứ tự `position`, bảo vệ stage system và ghi log kiểm toán.
+- Tạo Livewire Components `PipelineList`, `PipelineEditor`, `PipelineDetail` và bật menu Sidebar.
+- Viết `PipelineManagementTest` kiểm thử 6 test cases đạt 100% PASS (17 assertions).
+
+---
+
+### Nhật ký feature P5-03 — Opportunity schema và domain
+
 Trạng thái: **hoàn tất triển khai, chờ chủ dự án kiểm thử**.
 
 Đã triển khai:
 
-- Tạo `PipelineFilterData` DTO đóng gói bộ lọc quy trình.
-- Xây dựng `PipelineRepository` & `EloquentPipelineRepository` thực thi Data Scope isolation và duy nhất cờ `is_default`. Đăng ký binding trong `RepositoryServiceProvider`.
-- Tạo `PipelinePolicy` cưỡng chế phân quyền `pipelines.view`, `pipelines.create`, `pipelines.update`, `pipelines.delete`, `pipelines.manage` kết hợp Data Scope.
-- Tạo `PipelineManagementService` xử lý CRUD Quy trình & Giai đoạn trong `DB::transaction()`, tự động sắp xếp thứ tự `position`, bảo vệ giai đoạn hệ thống (`is_system = true`) và ghi log kiểm toán qua `SystemAuditService`.
-- Tạo các Livewire Components & Blade views Full-width:
-  - `PipelineList` (`/pipelines`): Danh sách quy trình, tìm kiếm, lọc trạng thái, phân trang, toggle kích hoạt và chọn mặc định nhanh.
-  - `PipelineEditor` (`/pipelines/create`, `/pipelines/{id}/edit`): Form tạo/sửa quy trình và quản lý giai đoạn (thêm stage, sửa tên/mã/xác suất %/màu sắc, di chuyển thứ tự lên/xuống, xóa stage không phải system).
-  - `PipelineDetail` (`/pipelines/{id}`): Trang xem chi tiết Quy trình bán hàng và sơ đồ giai đoạn.
-- Cấu hình routes `/pipelines/*` trong `routes/web.php` và bật menu **Quy trình bán hàng** trên Sidebar.
-- Viết `PipelineManagementTest` kiểm thử 6 test cases đạt 100% PASS (17 assertions).
+- Tạo migration `2026_07_25_000003_create_opportunities_table.php` khóa chính PostgreSQL `BIGINT` tự tăng (`id`), số tiền `amount` (`decimal(15, 2)`), liên kết `pipeline_id`, `stage_id`, `company_id`, `contact_id`, `lead_id`, `owner_id`, `department_id`, `expected_close_date`, `actual_close_date`, `lost_reason`, `is_won`, `is_lost`, `softDeletes`.
+- Tạo Eloquent Model `Opportunity` với các quan hệ đa hướng (`pipeline`, `stage`, `company`, `contact`, `lead`, `owner`, `department`, `attachments`), thuộc tính tính toán `weighted_value` (`amount * probability / 100`) và local scopes (`scopeWon`, `scopeLost`, `scopeOpen`).
+- Bổ sung quan hệ `opportunities(): HasMany` trong model `Company` và `Contact`.
+- Tạo `OpportunityFactory` và `DemoOpportunitySeeder` tạo 5 Cơ hội bán hàng mẫu ở các giai đoạn khác nhau. Đăng ký vào `DatabaseSeeder`.
+- Viết `OpportunityDomainTest` kiểm thử 4 test cases đạt 100% PASS (18 assertions).
 
 File chính:
 
-- `app/Data/PipelineFilterData.php`
-- `app/Repositories/Contracts/PipelineRepository.php`
-- `app/Repositories/EloquentPipelineRepository.php`
-- `app/Providers/RepositoryServiceProvider.php`
-- `app/Policies/PipelinePolicy.php`
-- `app/Services/PipelineManagementService.php`
-- `app/Livewire/Pipelines/PipelineList.php` & `pipeline-list.blade.php`
-- `app/Livewire/Pipelines/PipelineEditor.php` & `pipeline-editor.blade.php`
-- `app/Livewire/Pipelines/PipelineDetail.php` & `pipeline-detail.blade.php`
-- `config/crm.php`
-- `routes/web.php`
-- `resources/views/layouts/partials/_sidebar.blade.php`
-- `tests/Feature/PipelineManagementTest.php`
+- `database/migrations/2026_07_25_000003_create_opportunities_table.php`
+- `app/Models/Opportunity.php`
+- `app/Models/Company.php`
+- `app/Models/Contact.php`
+- `database/factories/OpportunityFactory.php`
+- `database/seeders/DemoOpportunitySeeder.php`
+- `database/seeders/DatabaseSeeder.php`
+- `tests/Feature/OpportunityDomainTest.php`
