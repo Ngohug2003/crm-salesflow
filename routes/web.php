@@ -8,6 +8,9 @@ use App\Http\Controllers\UserController;
 use App\Livewire\Companies\CompanyDetail;
 use App\Livewire\Companies\CompanyEditor;
 use App\Livewire\Companies\CompanyList;
+use App\Livewire\Contacts\ContactDetail;
+use App\Livewire\Contacts\ContactEditor;
+use App\Livewire\Contacts\ContactList;
 use App\Livewire\Dashboard\DashboardOverview;
 use App\Livewire\Platform\SystemConsole;
 use App\Livewire\Settings\SessionManager;
@@ -27,6 +30,11 @@ Route::middleware(['auth', 'request.context.authenticated', 'verified', 'account
     Route::get('/companies/create', CompanyEditor::class)->name('companies.create');
     Route::get('/companies/{companyId}', CompanyDetail::class)->whereNumber('companyId')->name('companies.show');
     Route::get('/companies/{companyId}/edit', CompanyEditor::class)->whereNumber('companyId')->name('companies.edit');
+
+    Route::get('/contacts', ContactList::class)->name('contacts.index');
+    Route::get('/contacts/create', ContactEditor::class)->name('contacts.create');
+    Route::get('/contacts/{contactId}', ContactDetail::class)->whereNumber('contactId')->name('contacts.show');
+    Route::get('/contacts/{contactId}/edit', ContactEditor::class)->whereNumber('contactId')->name('contacts.edit');
 
     Route::get('/settings/users', [UserController::class, 'index'])->name('users.index');
     Route::get('/settings/departments', [DepartmentController::class, 'index'])->name('departments.index');
