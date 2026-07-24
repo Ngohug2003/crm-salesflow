@@ -21,7 +21,7 @@ Tài liệu này là lộ trình và trạng thái checkpoint chính của dự 
 | 2 | Users, Departments, Roles, Permissions | Hoàn tất P2-01 đến P2-08 | Đã qua checkpoint | [Chi tiết P2](docs/checkpoints/P2/PHASE_LOG.md) |
 | 3 | Leads | Hoàn tất P3-01 đến P3-10 & Remediation | Đã sẵn sàng nghiệm thu | [Chi tiết P3](docs/checkpoints/P3/PHASE_LOG.md) / [Remediation](docs/checkpoints/technical/TECHNICAL_REMEDIATION_PHASES.md) |
 | 4 | Companies và Contacts | Hoàn tất P4-01 đến P4-07 | Đã qua checkpoint nghiệm thu | [Chi tiết P4](docs/checkpoints/P4/PHASE_LOG.md) |
-| 5 | Pipelines và Opportunities | Chưa bắt đầu | — | — |
+| 5 | Pipelines và Opportunities | Đang làm — P5-01 hoàn tất | P5-02 là feature tiếp theo | [Chi tiết P5](docs/checkpoints/P5/PHASE_LOG.md) |
 | 6 | Activities và Tasks | Chưa bắt đầu | — | — |
 | 7 | Dashboard và Reports | Chưa bắt đầu | — | — |
 | 8 | Import, Export, Notifications và Audit | Chưa bắt đầu | — | — |
@@ -122,7 +122,7 @@ Tài liệu này là lộ trình và trạng thái checkpoint chính của dự 
 
 | Mã | Feature | Branch đề xuất | Phụ thuộc | Trạng thái |
 |---|---|---|---|---|
-| P5-01 | Pipeline và stage schema | `feature/p5-01-pipeline-domain` | P2-08 | ⏳ Chưa bắt đầu |
+| P5-01 | Pipeline và stage schema | `feature/p5-01-pipeline-domain` | P2-08 | Hoàn tất triển khai — chờ kiểm thử |
 | P5-02 | Quản lý pipeline/stage | `feature/p5-02-pipeline-management` | P5-01 | ⏳ Chưa bắt đầu |
 | P5-03 | Opportunity schema và domain | `feature/p5-03-opportunity-domain` | P4-02, P5-01 | ⏳ Chưa bắt đầu |
 | P5-04 | Opportunity CRUD và weighted value | `feature/p5-04-opportunity-crud` | P5-03 | ⏳ Chưa bắt đầu |
