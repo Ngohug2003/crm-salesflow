@@ -19,7 +19,7 @@
                 </flux:button>
             @endcan
             @can('delete', $company)
-                <flux:button wire:click="deleteCompany" wire:confirm="Bạn có chắc chắn muốn xóa doanh nghiệp này không?" variant="danger" icon="trash">
+                <flux:button wire:click="confirmDeleteCompany" variant="danger" icon="trash">
                     Xóa
                 </flux:button>
             @endcan
@@ -152,6 +152,54 @@
                     </div>
                 </dl>
             </section>
+        </div>
+    </div>
+
+    <!-- Modal Xác nhận xóa Doanh nghiệp -->
+    <div
+        x-data="{ open: @entangle('confirmingDeleteCompany') }"
+        x-show="open"
+        x-cloak
+        x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-150"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm"
+    >
+        <div
+            x-show="open"
+            x-transition:enter="transition ease-out duration-200 transform"
+            x-transition:enter-start="opacity-0 scale-95"
+            x-transition:enter-end="opacity-100 scale-100"
+            x-transition:leave="transition ease-in duration-150 transform"
+            x-transition:leave-start="opacity-100 scale-100"
+            x-transition:leave-end="opacity-0 scale-95"
+            class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4"
+        >
+            <div class="flex items-center gap-3 text-red-600 dark:text-red-400">
+                <div class="rounded-full bg-red-100 p-2.5 dark:bg-red-950/60">
+                    <flux:icon.exclamation-triangle class="size-6" />
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-slate-900 dark:text-white">Xác nhận xóa Doanh nghiệp</h3>
+                    <p class="text-xs text-slate-500">Hành động này sẽ chuyển doanh nghiệp vào thùng rác.</p>
+                </div>
+            </div>
+
+            <p class="text-sm text-slate-600 dark:text-slate-300">
+                Bạn có chắc chắn muốn xóa doanh nghiệp <strong class="text-slate-900 dark:text-white">{{ $company->name }}</strong> không?
+            </p>
+
+            <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+                <flux:button wire:click="$set('confirmingDeleteCompany', false)" variant="ghost" size="sm">
+                    Hủy bỏ
+                </flux:button>
+                <flux:button wire:click="deleteCompany" variant="danger" size="sm">
+                    Xác nhận xóa
+                </flux:button>
+            </div>
         </div>
     </div>
 </div>

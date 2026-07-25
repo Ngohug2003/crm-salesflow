@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Repositories\Contracts\ActivityRepository;
 use App\Repositories\Contracts\AuditLogRepository;
 use App\Repositories\Contracts\CompanyRepository;
 use App\Repositories\Contracts\ContactRepository;
@@ -16,6 +17,7 @@ use App\Repositories\Contracts\PipelineRepository;
 use App\Repositories\Contracts\SessionRepository;
 use App\Repositories\Contracts\TagRepository;
 use App\Repositories\Contracts\UserRepository;
+use App\Repositories\EloquentActivityRepository;
 use App\Repositories\EloquentAuditLogRepository;
 use App\Repositories\EloquentCompanyRepository;
 use App\Repositories\EloquentContactRepository;
@@ -36,6 +38,7 @@ final class RepositoryServiceProvider extends ServiceProvider
 {
     /** @var array<class-string, class-string> */
     public array $bindings = [
+        ActivityRepository::class => EloquentActivityRepository::class,
         AuditLogRepository::class => EloquentAuditLogRepository::class,
         CompanyRepository::class => EloquentCompanyRepository::class,
         ContactRepository::class => EloquentContactRepository::class,

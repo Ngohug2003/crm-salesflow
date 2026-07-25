@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Data\CustomerTimelineItemData;
+use App\Models\Activity as CrmActivity;
 use App\Models\Attachment;
 use App\Models\Opportunity;
 use App\Models\OpportunityStageHistory;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
-use Spatie\Activitylog\Models\Activity;
+use Spatie\Activitylog\Models\Activity as SpatieActivity;
 
 final readonly class CustomerTimelineService
 {
@@ -20,11 +21,18 @@ final readonly class CustomerTimelineService
      */
     public function timelineForModel(User $actor, Model $model): array
     {
-        $activities = Activity::query()
+        $spatieActivities = SpatieActivity::query()
             ->where('subject_type', $model->getMorphClass())
             ->where('subject_id', $model->getKey())
             ->with('causer')
             ->orderByDesc('created_at')
+            ->get();
+
+        $crmActivities = CrmActivity::query()
+            ->where('subject_type', $model->getMorphClass())
+            ->where('subject_id', $model->getKey())
+            ->with(['user', 'creator'])
+            ->orderByDesc('performed_at')
             ->get();
 
         $attachments = Attachment::query()
@@ -37,7 +45,38 @@ final readonly class CustomerTimelineService
         /** @var list<CustomerTimelineItemData> $items */
         $items = [];
 
-        foreach ($activities as $act) {
+        foreach ($crmActivities as $crmAct) {
+            $causer = $crmAct->user ? $crmAct->user->name : ($crmAct->creator ? $crmAct->creator->name : 'Hệ thống');
+            $desc = $crmAct->description ?: '';
+            if ($crmAct->duration_minutes) {
+                $desc .= ($desc !== '' ? ' • ' : '')."Thời lượng: {$crmAct->duration_minutes} phút";
+            }
+            if ($crmAct->location) {
+                $desc .= ($desc !== '' ? ' • ' : '')."Địa điểm: {$crmAct->location}";
+            }
+
+            $type = $crmAct->activity_type;
+
+            $items[] = new CustomerTimelineItemData(
+                type: 'activity',
+                event: $type->value,
+                title: "[{$type->label()}] {$crmAct->title}",
+                description: $desc !== '' ? $desc : null,
+                causer: $causer,
+                timestamp: $crmAct->performed_at ?? $crmAct->created_at ?? now(),
+                metadata: [
+                    'activity_id' => $crmAct->id,
+                    'activity_type' => $type->value,
+                    'activity_type_label' => $type->label(),
+                    'activity_type_icon' => $type->icon(),
+                    'activity_type_color' => $type->color(),
+                    'location' => $crmAct->location,
+                    'duration_minutes' => $crmAct->duration_minutes,
+                ],
+            );
+        }
+
+        foreach ($spatieActivities as $act) {
             $causer = $act->causer instanceof User ? $act->causer->name : 'Hệ thống';
             $desc = (string) $act->description;
             $props = $act->properties ? $act->properties->toArray() : [];

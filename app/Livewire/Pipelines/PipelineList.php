@@ -37,6 +37,8 @@ final class PipelineList extends Component
 
     public int $perPage = 15;
 
+    public ?int $confirmingDeletePipelineId = null;
+
     public function mount(): void
     {
         /** @var User $actor */
@@ -80,6 +82,19 @@ final class PipelineList extends Component
 
         $statusText = $newActiveState ? 'kích hoạt' : 'tạm ngừng';
         session()->flash('message', "Đã {$statusText} quy trình '{$pipeline->name}'.");
+    }
+
+    public function confirmDeletePipeline(int $pipelineId): void
+    {
+        $this->confirmingDeletePipelineId = $pipelineId;
+    }
+
+    public function deleteConfirmedPipeline(): void
+    {
+        if ($this->confirmingDeletePipelineId !== null) {
+            $this->deletePipeline($this->confirmingDeletePipelineId);
+            $this->confirmingDeletePipelineId = null;
+        }
     }
 
     public function deletePipeline(int $pipelineId): void

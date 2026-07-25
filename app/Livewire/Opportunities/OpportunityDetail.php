@@ -30,6 +30,10 @@ final class OpportunityDetail extends Component
 
     public bool $showLostModal = false;
 
+    public bool $showWonModal = false;
+
+    public bool $showReopenModal = false;
+
     public ?int $selectedTargetStageId = null;
 
     public function mount(int $opportunityId): void
@@ -64,18 +68,18 @@ final class OpportunityDetail extends Component
             );
 
             $this->reloadOpportunity();
-            $this->reset(['transitionNotes', 'selectedTargetStageId']);
+            $this->transitionNotes = '';
             $this->dispatch('attachment-updated');
-            session()->flash('message', "Đã chuyển giai đoạn cơ hội sang '{$updated->stage?->name}'.");
+            session()->flash('message', "Đã chuyển cơ hội sang '{$updated->stage?->name}'.");
         } catch (StaleOpportunityException $e) {
-            $this->addError('stage_error', $e->getMessage());
             $this->reloadOpportunity();
+            $this->addError('stage_error', $e->getMessage());
         } catch (\Throwable $e) {
             $this->addError('stage_error', $e->getMessage());
         }
     }
 
-    public function closeWon(): void
+    public function confirmCloseWon(): void
     {
         /** @var User $actor */
         $actor = Auth::user();
@@ -85,8 +89,9 @@ final class OpportunityDetail extends Component
         try {
             $updated = $workflow->closeWon($actor, $this->opportunityId);
             $this->reloadOpportunity();
+            $this->showWonModal = false;
             $this->dispatch('attachment-updated');
-            session()->flash('message', "Đã chốt thành công Cơ hội bán hàng '{$updated->title}' (Won).");
+            session()->flash('message', "Đã CHỐT THÀNH CÔNG Cơ hội bán hàng '{$updated->title}'.");
         } catch (\Throwable $e) {
             $this->addError('stage_error', $e->getMessage());
         }
@@ -117,7 +122,7 @@ final class OpportunityDetail extends Component
         }
     }
 
-    public function reopen(): void
+    public function confirmReopen(): void
     {
         /** @var User $actor */
         $actor = Auth::user();
@@ -127,6 +132,7 @@ final class OpportunityDetail extends Component
         try {
             $updated = $workflow->reopen($actor, $this->opportunityId);
             $this->reloadOpportunity();
+            $this->showReopenModal = false;
             $this->dispatch('attachment-updated');
             session()->flash('message', "Đã mở lại Cơ hội bán hàng '{$updated->title}'.");
         } catch (\Throwable $e) {
@@ -140,8 +146,8 @@ final class OpportunityDetail extends Component
         $actor = Auth::user();
         /** @var OpportunityManagementService $service */
         $service = app(OpportunityManagementService::class);
-
         $this->opportunity = $service->get($actor, $this->opportunityId);
+
         Gate::forUser($actor)->authorize('view', $this->opportunity);
     }
 

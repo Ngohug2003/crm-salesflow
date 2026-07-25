@@ -62,6 +62,21 @@ final class CustomerAttachmentManager extends Component
         }
     }
 
+    public ?int $confirmingDeleteAttachmentId = null;
+
+    public function confirmDeleteAttachment(int $attachmentId): void
+    {
+        $this->confirmingDeleteAttachmentId = $attachmentId;
+    }
+
+    public function deleteConfirmedAttachment(): void
+    {
+        if ($this->confirmingDeleteAttachmentId !== null) {
+            $this->deleteAttachment($this->confirmingDeleteAttachmentId);
+            $this->confirmingDeleteAttachmentId = null;
+        }
+    }
+
     public function deleteAttachment(int $attachmentId): void
     {
         /** @var User $actor */

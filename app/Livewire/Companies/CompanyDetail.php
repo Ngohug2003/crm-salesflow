@@ -17,6 +17,8 @@ final class CompanyDetail extends Component
 {
     public int $companyId;
 
+    public bool $confirmingDeleteCompany = false;
+
     public function mount(int $companyId): void
     {
         $this->companyId = $companyId;
@@ -28,6 +30,11 @@ final class CompanyDetail extends Component
         $company = $service->get($actor, $companyId);
 
         Gate::forUser($actor)->authorize('view', $company);
+    }
+
+    public function confirmDeleteCompany(): void
+    {
+        $this->confirmingDeleteCompany = true;
     }
 
     public function deleteCompany(): void

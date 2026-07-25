@@ -26,7 +26,7 @@
             </flux:button>
 
             @if (! $opportunity->is_won && ! $opportunity->is_lost)
-                <flux:button wire:click="closeWon" wire:confirm="Bạn có chắc chắn muốn CHỐT THÀNH CÔNG cơ hội bán hàng này không?" variant="primary" color="emerald" icon="check-circle" size="sm">
+                <flux:button wire:click="$set('showWonModal', true)" variant="primary" color="emerald" icon="check-circle" size="sm">
                     Chốt Won
                 </flux:button>
 
@@ -34,7 +34,7 @@
                     Báo Lost
                 </flux:button>
             @else
-                <flux:button wire:click="reopen" wire:confirm="Bạn có chắc chắn muốn MỞ LẠI cơ hội bán hàng này không?" variant="filled" icon="arrow-path" size="sm">
+                <flux:button wire:click="$set('showReopenModal', true)" variant="filled" icon="arrow-path" size="sm">
                     Mở lại Cơ hội
                 </flux:button>
             @endif
@@ -75,7 +75,6 @@
                 <button
                     type="button"
                     wire:click="changeStage({{ $stg->id }})"
-                    wire:confirm="Bạn có chắc chắn muốn chuyển Cơ hội bán hàng sang giai đoạn '{{ $stg->name }}' không?"
                     class="flex flex-1 min-w-[140px] flex-col gap-1.5 rounded-lg border p-2.5 text-left transition-all hover:scale-[1.02] {{ $isCurrent ? 'border-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/30 ring-2 ring-indigo-500/20' : ($isPassed ? 'border-emerald-300 bg-emerald-50/30 dark:border-emerald-900/50 dark:bg-emerald-950/20' : 'border-slate-200 bg-slate-50/50 hover:border-indigo-300 dark:border-slate-800 dark:bg-slate-900/50') }}"
                 >
                     <div class="flex items-center justify-between">
@@ -190,38 +189,152 @@
     </div>
 
     <!-- Modal Nhập Lý do Thất bại (Close Lost) -->
-    @if ($showLostModal)
-        <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
-            <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4">
-                <div class="flex items-center justify-between">
-                    <h3 class="text-lg font-bold text-slate-900 dark:text-white">Báo Thất bại Cơ hội bán hàng</h3>
-                    <button wire:click="$set('showLostModal', false)" type="button" class="text-slate-400 hover:text-slate-600">
-                        <flux:icon.x-mark class="size-5" />
-                    </button>
-                </div>
+    <div
+        x-data="{ open: @entangle('showLostModal') }"
+        x-show="open"
+        x-cloak
+        x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-150"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm"
+    >
+        <div
+            x-show="open"
+            x-transition:enter="transition ease-out duration-200 transform"
+            x-transition:enter-start="opacity-0 scale-95"
+            x-transition:enter-end="opacity-100 scale-100"
+            x-transition:leave="transition ease-in duration-150 transform"
+            x-transition:leave-start="opacity-100 scale-100"
+            x-transition:leave-end="opacity-0 scale-95"
+            class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4"
+        >
+            <div class="flex items-center justify-between">
+                <h3 class="text-lg font-bold text-slate-900 dark:text-white">Báo Thất bại Cơ hội bán hàng</h3>
+                <button wire:click="$set('showLostModal', false)" type="button" class="text-slate-400 hover:text-slate-600">
+                    <flux:icon.x-mark class="size-5" />
+                </button>
+            </div>
 
-                <p class="text-xs text-slate-500">Vui lòng cung cấp lý do thất bại để hoàn tất đóng cơ hội này.</p>
+            <p class="text-xs text-slate-500">Vui lòng cung cấp lý do thất bại để hoàn tất đóng cơ hội này.</p>
 
-                <div>
-                    <flux:textarea
-                        wire:model="lostReason"
-                        label="Lý do thất bại *"
-                        placeholder="VD: Đối thủ cạnh tranh giảm giá 20%, đối tác tạm hoãn ngân sách năm nay..."
-                        rows="3"
-                    />
-                    @error('lostReason') <span class="text-xs text-red-500 mt-1 block">{{ $message }}</span> @enderror
-                </div>
+            <div>
+                <flux:textarea
+                    wire:model="lostReason"
+                    label="Lý do thất bại *"
+                    placeholder="VD: Đối thủ cạnh tranh giảm giá 20%, đối tác tạm hoãn ngân sách năm nay..."
+                    rows="3"
+                />
+                @error('lostReason') <span class="text-xs text-red-500 mt-1 block">{{ $message }}</span> @enderror
+            </div>
 
-                <div class="flex items-center justify-end gap-3 pt-2">
-                    <flux:button wire:click="$set('showLostModal', false)" variant="ghost" size="sm">
-                        Hủy
-                    </flux:button>
+            <div class="flex items-center justify-end gap-3 pt-2 border-t border-slate-100 dark:border-slate-800">
+                <flux:button wire:click="$set('showLostModal', false)" variant="ghost" size="sm">
+                    Hủy
+                </flux:button>
 
-                    <flux:button wire:click="confirmCloseLost" variant="danger" size="sm">
-                        Xác nhận Thất bại
-                    </flux:button>
-                </div>
+                <flux:button wire:click="confirmCloseLost" variant="danger" size="sm">
+                    Xác nhận Thất bại
+                </flux:button>
             </div>
         </div>
-    @endif
+    </div>
+
+    <!-- Modal Xác nhận Chốt Won -->
+    <div
+        x-data="{ open: @entangle('showWonModal') }"
+        x-show="open"
+        x-cloak
+        x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-150"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm"
+    >
+        <div
+            x-show="open"
+            x-transition:enter="transition ease-out duration-200 transform"
+            x-transition:enter-start="opacity-0 scale-95"
+            x-transition:enter-end="opacity-100 scale-100"
+            x-transition:leave="transition ease-in duration-150 transform"
+            x-transition:leave-start="opacity-100 scale-100"
+            x-transition:leave-end="opacity-0 scale-95"
+            class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4"
+        >
+            <div class="flex items-center gap-3 text-emerald-600 dark:text-emerald-400">
+                <div class="rounded-full bg-emerald-100 p-2.5 dark:bg-emerald-950/60">
+                    <flux:icon.check-circle class="size-6" />
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-slate-900 dark:text-white">Chốt thành công Cơ hội</h3>
+                    <p class="text-xs text-slate-500">Chúc mừng! Bạn đã hoàn thành chốt thương vụ.</p>
+                </div>
+            </div>
+
+            <p class="text-sm text-slate-600 dark:text-slate-300">
+                Bạn có chắc chắn muốn chốt thành công cơ hội <strong class="text-slate-900 dark:text-white">{{ $opportunity->title }}</strong> với giá trị dự kiến {{ number_format((float) $opportunity->amount, 0, ',', '.') }} VNĐ không?
+            </p>
+
+            <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+                <flux:button wire:click="$set('showWonModal', false)" variant="ghost" size="sm">
+                    Hủy bỏ
+                </flux:button>
+                <flux:button wire:click="confirmCloseWon" variant="primary" color="emerald" size="sm">
+                    Xác nhận Chốt Won
+                </flux:button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Xác nhận Mở lại Cơ hội -->
+    <div
+        x-data="{ open: @entangle('showReopenModal') }"
+        x-show="open"
+        x-cloak
+        x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-150"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm"
+    >
+        <div
+            x-show="open"
+            x-transition:enter="transition ease-out duration-200 transform"
+            x-transition:enter-start="opacity-0 scale-95"
+            x-transition:enter-end="opacity-100 scale-100"
+            x-transition:leave="transition ease-in duration-150 transform"
+            x-transition:leave-start="opacity-100 scale-100"
+            x-transition:leave-end="opacity-0 scale-95"
+            class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4"
+        >
+            <div class="flex items-center gap-3 text-indigo-600 dark:text-indigo-400">
+                <div class="rounded-full bg-indigo-100 p-2.5 dark:bg-indigo-950/60">
+                    <flux:icon.arrow-path class="size-6" />
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-slate-900 dark:text-white">Mở lại Cơ hội bán hàng</h3>
+                    <p class="text-xs text-slate-500">Khôi phục cơ hội về trạng thái mở.</p>
+                </div>
+            </div>
+
+            <p class="text-sm text-slate-600 dark:text-slate-300">
+                Bạn có chắc chắn muốn mở lại cơ hội bán hàng <strong class="text-slate-900 dark:text-white">{{ $opportunity->title }}</strong> không?
+            </p>
+
+            <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+                <flux:button wire:click="$set('showReopenModal', false)" variant="ghost" size="sm">
+                    Hủy bỏ
+                </flux:button>
+                <flux:button wire:click="confirmReopen" variant="primary" size="sm">
+                    Xác nhận Mở lại
+                </flux:button>
+            </div>
+        </div>
+    </div>
 </div>
