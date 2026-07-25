@@ -141,7 +141,7 @@ Tài liệu này là lộ trình và trạng thái checkpoint chính của dự 
 |---|---|---|---|---|
 | P6-01 | Activity polymorphic domain | `feature/p6-01-activity-domain` | P3-10, P4-07, P5-09 | Hoàn tất triển khai — chờ kiểm thử |
 | P6-02 | Activity timeline CRUD | `feature/p6-02-activity-timeline` | P6-01 | Hoàn tất triển khai — chờ kiểm thử |
-| P6-03 | Task domain và CRUD | `feature/p6-03-task-crud` | P6-01 | ⏳ Chưa bắt đầu |
+| P6-03 | Task domain và CRUD | `feature/p6-03-task-crud` | P6-01 | Hoàn tất triển khai — chờ kiểm thử |
 | P6-04 | Checklist và comments | `feature/p6-04-task-collaboration` | P6-03 | ⏳ Chưa bắt đầu |
 | P6-05 | Task list và Kanban | `feature/p6-05-task-views` | P6-03, P6-04 | ⏳ Chưa bắt đầu |
 | P6-06 | Calendar và reminders | `feature/p6-06-calendar-reminders` | P6-03 | ⏳ Chưa bắt đầu |

@@ -92,7 +92,7 @@ final class OpportunityList extends Component
         }
     }
 
-    /** @return LengthAwarePaginator<Opportunity> */
+    /** @return LengthAwarePaginator<int, Opportunity> */
     #[Computed]
     public function opportunities(): LengthAwarePaginator
     {

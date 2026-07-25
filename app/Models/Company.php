@@ -98,6 +98,12 @@ final class Company extends Model
         return $this->morphMany(Attachment::class, 'attachable');
     }
 
+    /** @return MorphMany<Task, $this> */
+    public function tasks(): MorphMany
+    {
+        return $this->morphMany(Task::class, 'subject');
+    }
+
     /**
      * @param  Builder<$this>  $query
      * @return Builder<$this>

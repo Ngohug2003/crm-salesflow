@@ -96,6 +96,12 @@ final class Contact extends Model
         return $this->morphMany(Activity::class, 'subject');
     }
 
+    /** @return MorphMany<Task, $this> */
+    public function tasks(): MorphMany
+    {
+        return $this->morphMany(Task::class, 'subject');
+    }
+
     /** @return MorphMany<Attachment, $this> */
     public function attachments(): MorphMany
     {

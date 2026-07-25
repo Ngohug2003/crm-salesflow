@@ -65,6 +65,14 @@
                         <span x-show="sidebar">Quy trình bán hàng</span>
                     </a>
                 @endcan
+                @can('viewAny', \App\Models\Task::class)
+                    <a href="{{ route('tasks.index') }}" wire:navigate.hover
+                       class="nav-link"
+                       :class="path.startsWith('/tasks') && 'nav-link-active'">
+                        <flux:icon.check-circle class="nav-icon" />
+                        <span x-show="sidebar">Công việc (Tasks)</span>
+                    </a>
+                @endcan
             </div>
         </div>
 

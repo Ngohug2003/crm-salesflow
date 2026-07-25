@@ -9,6 +9,7 @@ use App\Models\Activity as CrmActivity;
 use App\Models\Attachment;
 use App\Models\Opportunity;
 use App\Models\OpportunityStageHistory;
+use App\Models\Task;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
@@ -39,6 +40,13 @@ final readonly class CustomerTimelineService
             ->where('attachable_type', $model->getMorphClass())
             ->where('attachable_id', $model->getKey())
             ->with('createdBy')
+            ->orderByDesc('created_at')
+            ->get();
+
+        $tasks = Task::query()
+            ->where('subject_type', $model->getMorphClass())
+            ->where('subject_id', $model->getKey())
+            ->with(['assignee', 'creator'])
             ->orderByDesc('created_at')
             ->get();
 
@@ -96,18 +104,38 @@ final readonly class CustomerTimelineService
 
         foreach ($attachments as $att) {
             $causer = $att->createdBy ? $att->createdBy->name : 'Hệ thống';
-
             $items[] = new CustomerTimelineItemData(
                 type: 'attachment',
-                event: 'attachment_added',
-                title: "Tải lên tệp đính kèm: {$att->file_name}",
+                event: 'file_uploaded',
+                title: "Tải lên tệp {$att->file_name}",
                 description: "Dung lượng: {$att->humanSize()}",
                 causer: $causer,
-                timestamp: $att->created_at ?? now(),
+                timestamp: Carbon::parse((string) $att->created_at),
                 metadata: [
-                    'attachment_id' => $att->id,
                     'file_name' => $att->file_name,
                     'file_size' => $att->humanSize(),
+                ],
+            );
+        }
+
+        foreach ($tasks as $t) {
+            $assignee = $t->assignee;
+            $causer = $assignee !== null ? $assignee->name : $t->creator->name;
+            $statusLabel = $t->status->label();
+            $priorityLabel = $t->priority->label();
+            $dueStr = $t->due_date ? ' • Hạn: '.$t->due_date->format('d/m/Y H:i') : '';
+
+            $items[] = new CustomerTimelineItemData(
+                type: 'task',
+                event: 'task_created',
+                title: "[Công việc - {$statusLabel}] {$t->title}",
+                description: "Mức độ: {$priorityLabel}{$dueStr}".($t->description ? " • {$t->description}" : ''),
+                causer: $causer,
+                timestamp: $t->created_at ?? now(),
+                metadata: [
+                    'task_id' => $t->id,
+                    'status' => $t->status->value,
+                    'priority' => $t->priority->value,
                 ],
             );
         }
