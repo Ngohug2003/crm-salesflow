@@ -21,6 +21,7 @@ use App\Livewire\Pipelines\PipelineEditor;
 use App\Livewire\Pipelines\PipelineList;
 use App\Livewire\Platform\SystemConsole;
 use App\Livewire\Settings\SessionManager;
+use App\Livewire\Tasks\TaskCalendar;
 use App\Livewire\Tasks\TaskKanban;
 use App\Livewire\Tasks\TaskList;
 use Illuminate\Support\Facades\Route;
@@ -58,6 +59,7 @@ Route::middleware(['auth', 'request.context.authenticated', 'verified', 'account
 
     Route::get('/tasks', TaskList::class)->name('tasks.index');
     Route::get('/tasks/kanban', TaskKanban::class)->name('tasks.kanban');
+    Route::get('/tasks/calendar', TaskCalendar::class)->name('tasks.calendar');
 
     Route::get('/settings/users', [UserController::class, 'index'])->name('users.index');
     Route::get('/settings/departments', [DepartmentController::class, 'index'])->name('departments.index');
