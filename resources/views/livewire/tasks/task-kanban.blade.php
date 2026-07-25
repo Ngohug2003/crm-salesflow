@@ -9,6 +9,9 @@
             <flux:button href="{{ route('tasks.index') }}" variant="subtle" icon="list-bullet" size="sm">
                 Xem dạng Danh sách
             </flux:button>
+            <flux:button href="{{ route('tasks.calendar') }}" variant="subtle" icon="calendar" size="sm">
+                Xem Lịch
+            </flux:button>
         </div>
     </div>
 

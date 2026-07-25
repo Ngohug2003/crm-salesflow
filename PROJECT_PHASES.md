@@ -144,7 +144,7 @@ Tài liệu này là lộ trình và trạng thái checkpoint chính của dự 
 | P6-03 | Task domain và CRUD | `feature/p6-03-task-crud` | P6-01 | Hoàn tất triển khai — chờ kiểm thử |
 | P6-04 | Checklist và comments | `feature/p6-04-task-collaboration` | P6-03 | Hoàn tất triển khai — chờ kiểm thử |
 | P6-05 | Task list và Kanban | `feature/p6-05-task-views` | P6-03, P6-04 | Hoàn tất triển khai — chờ kiểm thử |
-| P6-06 | Calendar và reminders | `feature/p6-06-calendar-reminders` | P6-03 | ⏳ Chưa bắt đầu |
+| P6-06 | Calendar và reminders | `feature/p6-06-calendar-reminders` | P6-03 | Hoàn tất triển khai — chờ kiểm thử |
 | P6-07 | Activity/Task checkpoint | `feature/p6-07-activity-task-checkpoint` | P6-01..P6-06 | ⏳ Chưa bắt đầu |
 
 ---

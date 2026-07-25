@@ -11,7 +11,7 @@ Mục tiêu: Timeline tương tác, công việc, lịch và nhắc hạn cho c�
 | P6-03 | ✅ Task domain và CRUD | `feature/p6-03-task-crud` | P6-01 | Schema/model/CRUD Task với priority, assignee, deadline, status |
 | P6-04 | ✅ Checklist và comments | `feature/p6-04-task-collaboration` | P6-03 | Tải file đính kèm, checklist công việc và thảo luận comment |
 | P6-05 | ✅ Task list và Kanban | `feature/p6-05-task-views` | P6-03, P6-04 | Chế độ xem Công việc dạng Danh sách và Bảng Kanban |
-| P6-06 | Calendar và reminders | `feature/p6-06-calendar-reminders` | P6-03 | Lịch công việc, nhắc hạn tự động và scheduler |
+| P6-06 | ✅ Calendar và reminders | `feature/p6-06-calendar-reminders` | P6-03 | Lịch công việc, nhắc hạn tự động và scheduler |
 | P6-07 | Activity/Task checkpoint | `feature/p6-07-activity-task-checkpoint` | P6-01..P6-06 | Checkpoint nghiệm thu toàn bộ Giai đoạn 6 |
 
 ---
@@ -137,11 +137,37 @@ Trạng thái: **hoàn tất triển khai, chờ chủ dự án kiểm thử**.
 
 File chính:
 
-- `app/Services/TaskManagementService.php`
 - `app/Livewire/Tasks/TaskKanban.php` & `task-kanban.blade.php`
-- `resources/views/livewire/tasks/task-list.blade.php`
-- `routes/web.php`
 - `tests/Feature/TaskViewsTest.php`
+
+---
+
+### Nhật ký feature P6-06 — Calendar và reminders
+
+Trạng thái: **hoàn tất triển khai, chờ chủ dự án kiểm thử**.
+
+Đã triển khai:
+
+- Tạo migration `2026_07_29_000001_add_reminder_fields_to_tasks_table.php` bổ sung 2 cột `reminder_at` và `reminder_sent_at`.
+- Cập nhật Model `Task` và `TaskManagementService` hỗ trợ thời gian nhắc hạn `reminder_at`.
+- Tạo Console Command `SendTaskRemindersCommand` (`php artisan tasks:send-reminders`) quét các Task quá hạn chưa hoàn thành, đánh dấu `reminder_sent_at` và phát thông báo kèm Log Audit.
+- Khai báo Cron Scheduler `Schedule::command('tasks:send-reminders')->everyFiveMinutes()` trong `routes/console.php`.
+- Tạo Livewire Component `TaskCalendar` và Blade View `task-calendar.blade.php`:
+  - Giao diện Lịch tháng tổng hợp các sự kiện Task và Activity.
+  - Bộ chuyển đổi Tháng trước / Tháng sau / Tháng hiện tại.
+  - Tích hợp click vào sự kiện Task trên Lịch để mở `TaskDetailModal`.
+- Khai báo route `/tasks/calendar` và thêm nút **Xem Lịch** trên thanh tiêu đề của `task-list` và `task-kanban`.
+- Viết `TaskCalendarReminderTest` kiểm thử giao diện Lịch và Console Command phát nhắc hạn đạt 100% PASS (6 assertions).
+
+File chính:
+
+- `database/migrations/2026_07_29_000001_add_reminder_fields_to_tasks_table.php`
+- `app/Console/Commands/SendTaskRemindersCommand.php`
+- `app/Livewire/Tasks/TaskCalendar.php` & `task-calendar.blade.php`
+- `routes/console.php`
+- `routes/web.php`
+- `tests/Feature/TaskCalendarReminderTest.php`
+
 
 
 

@@ -24,6 +24,8 @@ use Illuminate\Support\Carbon;
  * @property TaskStatus $status
  * @property TaskPriority $priority
  * @property Carbon|null $due_date
+ * @property Carbon|null $reminder_at
+ * @property Carbon|null $reminder_sent_at
  * @property Carbon|null $completed_at
  * @property int|null $assigned_to
  * @property int $created_by
@@ -47,6 +49,8 @@ final class Task extends Model
         'status',
         'priority',
         'due_date',
+        'reminder_at',
+        'reminder_sent_at',
         'completed_at',
         'assigned_to',
         'created_by',
@@ -60,6 +64,8 @@ final class Task extends Model
             'status' => TaskStatus::class,
             'priority' => TaskPriority::class,
             'due_date' => 'datetime',
+            'reminder_at' => 'datetime',
+            'reminder_sent_at' => 'datetime',
             'completed_at' => 'datetime',
         ];
     }

@@ -59,6 +59,8 @@ final class TaskList extends Component
 
     public ?string $dueDate = null;
 
+    public ?string $reminderDate = null;
+
     public ?int $assigneeId = null;
 
     public ?int $confirmingDeleteTaskId = null;
@@ -99,6 +101,7 @@ final class TaskList extends Component
         $this->taskStatus = $task->status->value;
         $this->taskPriority = $task->priority->value;
         $this->dueDate = $task->due_date?->format('Y-m-d\TH:i') ?? null;
+        $this->reminderDate = $task->reminder_at?->format('Y-m-d\TH:i') ?? null;
         $this->assigneeId = $task->assigned_to;
 
         $this->showModal = true;
@@ -112,6 +115,7 @@ final class TaskList extends Component
             'taskStatus' => ['required', 'string'],
             'taskPriority' => ['required', 'string'],
             'dueDate' => ['nullable', 'date'],
+            'reminderDate' => ['nullable', 'date'],
             'assigneeId' => ['nullable', 'integer', 'exists:users,id'],
         ]);
 
@@ -126,6 +130,7 @@ final class TaskList extends Component
             'status' => $this->taskStatus,
             'priority' => $this->taskPriority,
             'due_date' => $this->dueDate !== '' ? $this->dueDate : null,
+            'reminder_at' => $this->reminderDate !== '' ? $this->reminderDate : null,
             'assigned_to' => $this->assigneeId,
         ];
 
@@ -219,6 +224,7 @@ final class TaskList extends Component
         $this->taskStatus = 'todo';
         $this->taskPriority = 'medium';
         $this->dueDate = null;
+        $this->reminderDate = null;
         $this->assigneeId = null;
         $this->resetErrorBag();
     }

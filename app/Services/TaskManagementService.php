@@ -58,6 +58,7 @@ final readonly class TaskManagementService
                 'status' => $data['status'] ?? TaskStatus::Todo->value,
                 'priority' => $data['priority'] ?? TaskPriority::Medium->value,
                 'due_date' => $data['due_date'] ?? null,
+                'reminder_at' => $data['reminder_at'] ?? null,
                 'assigned_to' => $data['assigned_to'] ?? $actor->id,
                 'created_by' => $actor->id,
                 'subject_type' => $data['subject_type'] ?? null,
@@ -104,6 +105,10 @@ final readonly class TaskManagementService
             }
             if (array_key_exists('due_date', $data)) {
                 $updateData['due_date'] = $data['due_date'];
+            }
+            if (array_key_exists('reminder_at', $data)) {
+                $updateData['reminder_at'] = $data['reminder_at'];
+                $updateData['reminder_sent_at'] = null; // Reset sent flag when reminder time changes
             }
             if (array_key_exists('assigned_to', $data)) {
                 $updateData['assigned_to'] = $data['assigned_to'];

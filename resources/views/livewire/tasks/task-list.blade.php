@@ -9,6 +9,9 @@
             <flux:button href="{{ route('tasks.kanban') }}" variant="subtle" icon="view-columns" size="sm">
                 Xem dạng Kanban
             </flux:button>
+            <flux:button href="{{ route('tasks.calendar') }}" variant="subtle" icon="calendar" size="sm">
+                Xem Lịch
+            </flux:button>
 
             @can('create', App\Models\Task::class)
                 <flux:button wire:click="openCreateModal" variant="primary" icon="plus" size="sm">
@@ -209,6 +212,10 @@
                 <div class="grid grid-cols-2 gap-4">
                     <flux:input type="datetime-local" wire:model="dueDate" label="Hạn chót (Due date)" />
 
+                    <flux:input type="datetime-local" wire:model="reminderDate" label="Thời gian Nhắc hạn" />
+                </div>
+
+                <div class="w-full">
                     <flux:select wire:model="assigneeId" label="Người thực hiện">
                         <option value="">Chưa phân công</option>
                         @foreach ($this->users as $u)
