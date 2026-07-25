@@ -23,6 +23,10 @@ final class SessionManager extends Component
 
     public ?string $errorMessage = null;
 
+    public ?string $confirmingRevokeToken = null;
+
+    public bool $confirmingRevokeOthers = false;
+
     public function mount(): void
     {
         $this->refreshSessions();
@@ -49,6 +53,35 @@ final class SessionManager extends Component
             ],
             $this->service()->listFor($this->user(), request()->session()->getId()),
         );
+    }
+
+    public function confirmRevoke(string $token): void
+    {
+        $this->confirmingRevokeToken = $token;
+    }
+
+    public function revokeConfirmed(): mixed
+    {
+        if ($this->confirmingRevokeToken !== null) {
+            $token = $this->confirmingRevokeToken;
+            $this->confirmingRevokeToken = null;
+
+            return $this->revoke($token);
+        }
+
+        return null;
+    }
+
+    public function confirmRevokeOthers(): void
+    {
+        $this->confirmingRevokeOthers = true;
+    }
+
+    public function revokeOthersConfirmed(): mixed
+    {
+        $this->confirmingRevokeOthers = false;
+
+        return $this->revokeOthers();
     }
 
     public function revoke(string $token): mixed

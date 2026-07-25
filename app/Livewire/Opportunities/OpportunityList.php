@@ -45,6 +45,8 @@ final class OpportunityList extends Component
 
     public int $perPage = 15;
 
+    public ?int $confirmingDeleteOpportunityId = null;
+
     public function mount(): void
     {
         /** @var User $actor */
@@ -59,18 +61,20 @@ final class OpportunityList extends Component
 
     public function updatingPipelineId(): void
     {
-        $this->stageId = '';
         $this->resetPage();
     }
 
-    public function updatingStageId(): void
+    public function confirmDeleteOpportunity(int $opportunityId): void
     {
-        $this->resetPage();
+        $this->confirmingDeleteOpportunityId = $opportunityId;
     }
 
-    public function updatingStatus(): void
+    public function deleteConfirmedOpportunity(): void
     {
-        $this->resetPage();
+        if ($this->confirmingDeleteOpportunityId !== null) {
+            $this->deleteOpportunity($this->confirmingDeleteOpportunityId);
+            $this->confirmingDeleteOpportunityId = null;
+        }
     }
 
     public function deleteOpportunity(int $opportunityId): void
@@ -80,11 +84,15 @@ final class OpportunityList extends Component
         /** @var OpportunityManagementService $service */
         $service = app(OpportunityManagementService::class);
 
-        $deleted = $service->delete($actor, $opportunityId);
-        session()->flash('message', "Đã xóa cơ hội bán hàng '{$deleted->title}'.");
+        try {
+            $service->delete($actor, $opportunityId);
+            session()->flash('message', 'Đã xóa Cơ hội bán hàng thành công.');
+        } catch (\Throwable $e) {
+            $this->addError('opportunity_error', $e->getMessage());
+        }
     }
 
-    /** @return LengthAwarePaginator<int, Opportunity> */
+    /** @return LengthAwarePaginator<Opportunity> */
     #[Computed]
     public function opportunities(): LengthAwarePaginator
     {

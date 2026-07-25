@@ -17,6 +17,8 @@ final class ContactDetail extends Component
 {
     public int $contactId;
 
+    public bool $confirmingDeleteContact = false;
+
     public function mount(int $contactId): void
     {
         $this->contactId = $contactId;
@@ -28,6 +30,11 @@ final class ContactDetail extends Component
         $contact = $service->get($actor, $contactId);
 
         Gate::forUser($actor)->authorize('view', $contact);
+    }
+
+    public function confirmDeleteContact(): void
+    {
+        $this->confirmingDeleteContact = true;
     }
 
     public function deleteContact(): void

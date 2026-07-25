@@ -11,7 +11,25 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property ActivityType $activity_type
+ * @property string $subject_type
+ * @property int $subject_id
+ * @property string $title
+ * @property string|null $description
+ * @property int $user_id
+ * @property Carbon|null $performed_at
+ * @property int|null $duration_minutes
+ * @property string|null $location
+ * @property int|null $created_by
+ * @property int|null $updated_by
+ * @property Model|null $subject
+ * @property User|null $user
+ * @property User|null $creator
+ */
 final class Activity extends Model
 {
     /** @use HasFactory<ActivityFactory> */
