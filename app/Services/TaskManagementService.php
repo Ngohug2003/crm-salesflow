@@ -142,6 +142,14 @@ final readonly class TaskManagementService
         return $this->update($actor, $id, ['status' => $newStatus]);
     }
 
+    public function updateStatus(User $actor, int $id, string $status): Task
+    {
+        $task = $this->tasks->findVisibleForUserOrFail($actor, $id);
+        Gate::forUser($actor)->authorize('update', $task);
+
+        return $this->update($actor, $id, ['status' => $status]);
+    }
+
     public function delete(User $actor, int $id): bool
     {
         $task = $this->tasks->findVisibleForUserOrFail($actor, $id);
