@@ -10,7 +10,7 @@ Mục tiêu: Timeline tương tác, công việc, lịch và nhắc hạn cho c�
 | P6-02 | ✅ Activity timeline CRUD | `feature/p6-02-activity-timeline` | P6-01 | UI Timeline tương tác CRUD cho Lead, Company, Contact, Opportunity |
 | P6-03 | ✅ Task domain và CRUD | `feature/p6-03-task-crud` | P6-01 | Schema/model/CRUD Task với priority, assignee, deadline, status |
 | P6-04 | ✅ Checklist và comments | `feature/p6-04-task-collaboration` | P6-03 | Tải file đính kèm, checklist công việc và thảo luận comment |
-| P6-05 | Task list và Kanban | `feature/p6-05-task-views` | P6-03, P6-04 | Chế độ xem Công việc dạng Danh sách và Bảng Kanban |
+| P6-05 | ✅ Task list và Kanban | `feature/p6-05-task-views` | P6-03, P6-04 | Chế độ xem Công việc dạng Danh sách và Bảng Kanban |
 | P6-06 | Calendar và reminders | `feature/p6-06-calendar-reminders` | P6-03 | Lịch công việc, nhắc hạn tự động và scheduler |
 | P6-07 | Activity/Task checkpoint | `feature/p6-07-activity-task-checkpoint` | P6-01..P6-06 | Checkpoint nghiệm thu toàn bộ Giai đoạn 6 |
 
@@ -117,5 +117,31 @@ File chính:
 - `app/Services/TaskChecklistService.php` & `TaskCommentService.php`
 - `app/Livewire/Tasks/TaskDetailModal.php` & `task-detail-modal.blade.php`
 - `tests/Feature/TaskCollaborationTest.php`
+
+---
+
+### Nhật ký feature P6-05 — Task list và Kanban
+
+Trạng thái: **hoàn tất triển khai, chờ chủ dự án kiểm thử**.
+
+Đã triển khai:
+
+- Bổ sung phương thức `updateStatus(User $actor, int $id, string $status)` trong `TaskManagementService` hỗ trợ đổi trạng thái trực tiếp.
+- Tạo Livewire Component `TaskKanban` và Blade View `task-kanban.blade.php`:
+  - Bảng Kanban 4 cột tương ứng theo các trạng thái công việc (`Cần làm`, `Đang làm`, `Hoàn thành`, `Đã hủy`).
+  - Thẻ công việc (Task card) thiết kế trực quan với mã màu theo mức độ ưu tiên, hiển thị người thực hiện và hạn chót.
+  - Các nút thao tác chuyển nhanh công việc giữa các cột Kanban.
+  - Tích hợp Modal xem chi tiết Task (`TaskDetailModal`) mở trực tiếp từ thẻ Kanban.
+- Khai báo route `/tasks/kanban` và bổ sung nút Toggle chuyển đổi chế độ xem (List / Kanban) trên tiêu đề trang Quản lý công việc.
+- Viết `TaskViewsTest` kiểm thử 1 test case chuyển cột trạng thái Kanban đạt 100% PASS (6 assertions).
+
+File chính:
+
+- `app/Services/TaskManagementService.php`
+- `app/Livewire/Tasks/TaskKanban.php` & `task-kanban.blade.php`
+- `resources/views/livewire/tasks/task-list.blade.php`
+- `routes/web.php`
+- `tests/Feature/TaskViewsTest.php`
+
 
 

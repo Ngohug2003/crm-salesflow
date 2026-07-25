@@ -5,11 +5,17 @@
             <p class="mt-1 text-sm text-slate-500">Theo dõi, phân công và xử lý các nhiệm vụ bán hàng.</p>
         </div>
 
-        @can('create', App\Models\Task::class)
-            <flux:button wire:click="openCreateModal" variant="primary" icon="plus" size="sm">
-                Tạo Công việc mới
+        <div class="flex items-center gap-2">
+            <flux:button href="{{ route('tasks.kanban') }}" variant="subtle" icon="view-columns" size="sm">
+                Xem dạng Kanban
             </flux:button>
-        @endcan
+
+            @can('create', App\Models\Task::class)
+                <flux:button wire:click="openCreateModal" variant="primary" icon="plus" size="sm">
+                    Tạo Công việc mới
+                </flux:button>
+            @endcan
+        </div>
     </div>
 
     @if (session()->has('message'))
