@@ -9,7 +9,7 @@ Mục tiêu: Timeline tương tác, công việc, lịch và nhắc hạn cho c�
 | P6-01 | ✅ Activity polymorphic domain | `feature/p6-01-activity-domain` | P3-10, P4-07, P5-09 | Schema/model/enum/factory/seeder/test Activity đa hình với PostgreSQL BIGINT |
 | P6-02 | ✅ Activity timeline CRUD | `feature/p6-02-activity-timeline` | P6-01 | UI Timeline tương tác CRUD cho Lead, Company, Contact, Opportunity |
 | P6-03 | ✅ Task domain và CRUD | `feature/p6-03-task-crud` | P6-01 | Schema/model/CRUD Task với priority, assignee, deadline, status |
-| P6-04 | Checklist và comments | `feature/p6-04-task-collaboration` | P6-03 | Tải file đính kèm, checklist công việc và thảo luận comment |
+| P6-04 | ✅ Checklist và comments | `feature/p6-04-task-collaboration` | P6-03 | Tải file đính kèm, checklist công việc và thảo luận comment |
 | P6-05 | Task list và Kanban | `feature/p6-05-task-views` | P6-03, P6-04 | Chế độ xem Công việc dạng Danh sách và Bảng Kanban |
 | P6-06 | Calendar và reminders | `feature/p6-06-calendar-reminders` | P6-03 | Lịch công việc, nhắc hạn tự động và scheduler |
 | P6-07 | Activity/Task checkpoint | `feature/p6-07-activity-task-checkpoint` | P6-01..P6-06 | Checkpoint nghiệm thu toàn bộ Giai đoạn 6 |
@@ -88,4 +88,34 @@ File chính:
 - `app/Services/TaskManagementService.php`
 - `app/Livewire/Tasks/TaskList.php` & `task-list.blade.php`
 - `tests/Feature/TaskDomainTest.php`
+
+---
+
+### Nhật ký feature P6-04 — Checklist và comments
+
+Trạng thái: **hoàn tất triển khai, chờ chủ dự án kiểm thử**.
+
+Đã triển khai:
+
+- Tạo migration `2026_07_28_000001_create_task_checklists_and_comments_tables.php` khóa chính PostgreSQL `BIGINT` tự tăng (`id`).
+- Tạo các Eloquent Model `TaskChecklist` và `TaskComment` (hỗ trợ SoftDeletes cho bình luận).
+- Cập nhật Model `Task` bổ sung các quan hệ `checklists()`, `comments()`, `attachments()`.
+- Tạo `TaskChecklistService` quản lý các thao tác thêm, toggle hoàn thành, xóa hạng mục checklist trong `DB::transaction()` kèm Log Audit.
+- Tạo `TaskCommentService` quản lý đăng bình luận và xóa thảo luận trong `DB::transaction()` kèm Log Audit.
+- Tạo Livewire component `TaskDetailModal` và Blade view `task-detail-modal.blade.php`:
+  - Giao diện Modal xem chi tiết Task tập trung.
+  - Quản lý danh sách kiểm tra (Checklist) có thanh tiến độ `%` tự động tính toán.
+  - Tích hợp `CustomerAttachmentManager` để quản lý tệp đính kèm trên Task.
+  - Khu vực thảo luận & bình luận thời gian thực cho thành viên dự án.
+- Bổ sung nút **Chi tiết** trên từng dòng Task ở danh sách `task-list.blade.php`.
+- Viết `TaskCollaborationTest` kiểm thử 2 test cases đạt 100% PASS (7 assertions).
+
+File chính:
+
+- `database/migrations/2026_07_28_000001_create_task_checklists_and_comments_tables.php`
+- `app/Models/TaskChecklist.php` & `TaskComment.php`
+- `app/Services/TaskChecklistService.php` & `TaskCommentService.php`
+- `app/Livewire/Tasks/TaskDetailModal.php` & `task-detail-modal.blade.php`
+- `tests/Feature/TaskCollaborationTest.php`
+
 

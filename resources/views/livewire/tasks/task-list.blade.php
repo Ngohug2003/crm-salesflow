@@ -123,6 +123,10 @@
                     </div>
 
                     <div class="flex items-center gap-2 self-end sm:self-center">
+                        <flux:button wire:click="$dispatch('open-task-detail', { taskId: {{ $task->id }} })" size="sm" variant="subtle" icon="eye">
+                            Chi tiết
+                        </flux:button>
+
                         @can('update', $task)
                             <flux:button wire:click="openEditModal({{ $task->id }})" size="sm" variant="ghost" icon="pencil">
                                 Sửa
@@ -266,4 +270,7 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal Xem Chi tiết Task (Checklist, Tệp đính kèm, Bình luận) -->
+    <livewire:tasks.task-detail-modal />
 </div>
