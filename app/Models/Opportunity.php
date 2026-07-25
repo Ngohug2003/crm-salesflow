@@ -140,6 +140,12 @@ final class Opportunity extends Model
         return $this->morphMany(Activity::class, 'subject');
     }
 
+    /** @return MorphMany<Task, $this> */
+    public function tasks(): MorphMany
+    {
+        return $this->morphMany(Task::class, 'subject');
+    }
+
     /**
      * @param  Builder<$this>  $query
      * @return Builder<$this>

@@ -8,7 +8,7 @@ Mục tiêu: Timeline tương tác, công việc, lịch và nhắc hạn cho c�
 |---|---|---|---|---|
 | P6-01 | ✅ Activity polymorphic domain | `feature/p6-01-activity-domain` | P3-10, P4-07, P5-09 | Schema/model/enum/factory/seeder/test Activity đa hình với PostgreSQL BIGINT |
 | P6-02 | ✅ Activity timeline CRUD | `feature/p6-02-activity-timeline` | P6-01 | UI Timeline tương tác CRUD cho Lead, Company, Contact, Opportunity |
-| P6-03 | Task domain và CRUD | `feature/p6-03-task-crud` | P6-01 | Schema/model/CRUD Task với priority, assignee, deadline, status |
+| P6-03 | ✅ Task domain và CRUD | `feature/p6-03-task-crud` | P6-01 | Schema/model/CRUD Task với priority, assignee, deadline, status |
 | P6-04 | Checklist và comments | `feature/p6-04-task-collaboration` | P6-03 | Tải file đính kèm, checklist công việc và thảo luận comment |
 | P6-05 | Task list và Kanban | `feature/p6-05-task-views` | P6-03, P6-04 | Chế độ xem Công việc dạng Danh sách và Bảng Kanban |
 | P6-06 | Calendar và reminders | `feature/p6-06-calendar-reminders` | P6-03 | Lịch công việc, nhắc hạn tự động và scheduler |
@@ -53,3 +53,39 @@ File chính:
 - `app/Services/CustomerTimelineService.php`
 - `app/Livewire/Customers/CustomerTimelineFeed.php` & `customer-timeline-feed.blade.php`
 - `tests/Feature/ActivityTimelineTest.php`
+
+---
+
+### Nhật ký feature P6-03 — Task domain và CRUD
+
+Trạng thái: **hoàn tất triển khai, chờ chủ dự án kiểm thử**.
+
+Đã triển khai:
+
+- Tạo migration `2026_07_27_000001_create_tasks_table.php` khóa chính PostgreSQL `BIGINT` tự tăng (`id`), composite indexes và quan hệ đa hình (`subject`).
+- Tạo các Enum `TaskStatus` (`todo`, `in_progress`, `completed`, `cancelled`) và `TaskPriority` (`low`, `medium`, `high`, `urgent`).
+- Tạo Eloquent Model `Task` với casts và quan hệ `subject(): MorphTo`, `assignee(): BelongsTo`, `creator(): BelongsTo`.
+- Cập nhật quan hệ `tasks(): MorphMany` cho các Model `Lead`, `Company`, `Contact`, `Opportunity`.
+- Tạo `TaskFilterData` DTO, `TaskRepository` contract & `EloquentTaskRepository` thực thi Data Scope isolation. Đăng ký binding trong `RepositoryServiceProvider`.
+- Tạo `TaskPolicy` cưỡng chế phân quyền `tasks.view`, `tasks.create`, `tasks.update`, `tasks.delete`.
+- Tạo `TaskManagementService` quản lý CRUD Task trong `DB::transaction()` và ghi vết kiểm toán qua `SystemAuditService`.
+- Nâng cấp `CustomerTimelineService` tổng hợp hiển thị các bản ghi `Task` trên Customer Timeline feed.
+- Tạo Livewire component `TaskList` và Blade view `task-list.blade.php`:
+  - Giao diện quản lý danh sách công việc, lọc theo tiêu đề, trạng thái, mức độ ưu tiên, người thực hiện.
+  - Modal tạo/chỉnh sửa công việc mượt mà sử dụng Tailwind & Alpine.js transition.
+  - Chức năng đánh dấu hoàn thành nhanh qua checkbox.
+- Khai báo route `/tasks` và thêm menu "Công việc (Tasks)" trên Sidebar navigation.
+- Viết `TaskDomainTest` kiểm thử 3 test cases đạt 100% PASS (15 assertions).
+
+File chính:
+
+- `database/migrations/2026_07_27_000001_create_tasks_table.php`
+- `app/Enums/TaskStatus.php` & `TaskPriority.php`
+- `app/Models/Task.php`
+- `app/Data/TaskFilterData.php`
+- `app/Repositories/Contracts/TaskRepository.php` & `EloquentTaskRepository.php`
+- `app/Policies/TaskPolicy.php`
+- `app/Services/TaskManagementService.php`
+- `app/Livewire/Tasks/TaskList.php` & `task-list.blade.php`
+- `tests/Feature/TaskDomainTest.php`
+

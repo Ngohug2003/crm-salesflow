@@ -21,6 +21,7 @@ use App\Livewire\Pipelines\PipelineEditor;
 use App\Livewire\Pipelines\PipelineList;
 use App\Livewire\Platform\SystemConsole;
 use App\Livewire\Settings\SessionManager;
+use App\Livewire\Tasks\TaskList;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/dashboard');
@@ -53,6 +54,8 @@ Route::middleware(['auth', 'request.context.authenticated', 'verified', 'account
     Route::get('/pipelines/create', PipelineEditor::class)->name('pipelines.create');
     Route::get('/pipelines/{pipelineId}', PipelineDetail::class)->whereNumber('pipelineId')->name('pipelines.show');
     Route::get('/pipelines/{pipelineId}/edit', PipelineEditor::class)->whereNumber('pipelineId')->name('pipelines.edit');
+
+    Route::get('/tasks', TaskList::class)->name('tasks.index');
 
     Route::get('/settings/users', [UserController::class, 'index'])->name('users.index');
     Route::get('/settings/departments', [DepartmentController::class, 'index'])->name('departments.index');

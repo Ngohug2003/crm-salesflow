@@ -112,6 +112,12 @@ final class Lead extends Model
         return $this->morphMany(Activity::class, 'subject');
     }
 
+    /** @return MorphMany<Task, $this> */
+    public function tasks(): MorphMany
+    {
+        return $this->morphMany(Task::class, 'subject');
+    }
+
     /** @return array<string, string> */
     protected function casts(): array
     {
