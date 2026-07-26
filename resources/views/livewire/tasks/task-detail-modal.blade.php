@@ -48,8 +48,8 @@
                 </div>
 
                 @if ($task->description)
-                    <div class="rounded-lg bg-slate-50 p-3 text-sm text-slate-700 dark:bg-slate-800/50 dark:text-slate-300">
-                        {{ $task->description }}
+                    <div class="task-rich-text-output rounded-lg bg-slate-50 p-3 text-sm text-slate-700 dark:bg-slate-800/50 dark:text-slate-300">
+                        <div class="ql-editor">{!! $task->description !!}</div>
                     </div>
                 @endif
 

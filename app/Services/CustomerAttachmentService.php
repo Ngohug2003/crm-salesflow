@@ -8,6 +8,7 @@ use App\Models\Attachment;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use InvalidArgumentException;
 
@@ -25,6 +26,8 @@ final readonly class CustomerAttachmentService
 
     public function upload(User $actor, Model $attachable, UploadedFile $file, ?string $customName = null): Attachment
     {
+        Gate::forUser($actor)->authorize('update', $attachable);
+
         $extension = strtolower($file->getClientOriginalExtension());
         if (in_array($extension, self::DISALLOWED_EXTENSIONS, true)) {
             throw new InvalidArgumentException("Định dạng tệp .{$extension} không được phép tải lên do lý do an toàn bảo mật.");
@@ -73,6 +76,8 @@ final readonly class CustomerAttachmentService
     {
         $attachable = $attachment->attachable;
         if ($attachable instanceof Model) {
+            Gate::forUser($actor)->authorize('update', $attachable);
+
             $this->audit->record(
                 $actor,
                 $attachable,

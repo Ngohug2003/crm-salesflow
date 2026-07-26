@@ -12,6 +12,13 @@
     </div>
 
     <section class="crm-card">
+        <div class="data-list-heading">
+            <div>
+                <h2 class="font-semibold">Danh sách phiên đăng nhập</h2>
+                <p class="mt-1 text-sm text-slate-500">Có {{ count($sessions) }} phiên đang được ghi nhận cho tài khoản này.</p>
+            </div>
+        </div>
+
         @if ($statusMessage)
             <div class="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200" role="status">
                 {{ $statusMessage }}
@@ -24,22 +31,23 @@
             </div>
         @enderror
 
-        @if ($sessions === [])
-            <div class="grid min-h-52 place-items-center rounded-xl border border-dashed border-slate-300 text-center dark:border-slate-700">
-                <div class="px-6">
-                    <p class="font-medium">Chưa có phiên đăng nhập nào trong bảng session</p>
-                    <p class="mt-1 text-sm text-slate-500">Màn này cần `SESSION_DRIVER=database` để theo dõi và thu hồi phiên.</p>
-                </div>
-            </div>
-        @else
-            <div class="overflow-x-auto">
+        <div class="data-list-content">
+            <x-data-list.loading target="refreshSessions,revokeConfirmed,revokeOthersConfirmed" />
+
+            @if ($sessions === [])
+                <x-data-list.empty
+                    title="Chưa có phiên đăng nhập"
+                    description="Màn này cần SESSION_DRIVER=database để theo dõi và thu hồi phiên."
+                    icon="computer-desktop"
+                />
+            @else
                 <flux:table>
                     <flux:table.columns>
                         <flux:table.column>Thiết bị</flux:table.column>
                         <flux:table.column>Vị trí mạng</flux:table.column>
                         <flux:table.column>Hoạt động gần nhất</flux:table.column>
                         <flux:table.column>Nhận diện</flux:table.column>
-                        <flux:table.column></flux:table.column>
+                        <flux:table.column align="end">Thao tác</flux:table.column>
                     </flux:table.columns>
                     <flux:table.rows>
                         @foreach ($sessions as $session)
@@ -64,7 +72,7 @@
                                 <flux:table.cell>
                                     <span class="font-mono text-xs text-slate-500">#{{ $session['fingerprint'] }}</span>
                                 </flux:table.cell>
-                                <flux:table.cell>
+                                <flux:table.cell align="end">
                                     <flux:button
                                         size="sm"
                                         variant="{{ $session['isCurrent'] ? 'danger' : 'ghost' }}"
@@ -77,8 +85,8 @@
                         @endforeach
                     </flux:table.rows>
                 </flux:table>
-            </div>
-        @endif
+            @endif
+        </div>
     </section>
 
     <!-- Modal Xác nhận Thu hồi Phiên cụ thể -->

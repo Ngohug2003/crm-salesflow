@@ -11,9 +11,11 @@ use App\Models\Opportunity;
 use App\Models\User;
 use App\Services\CustomerAttachmentService;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
@@ -34,6 +36,13 @@ final class CustomerAttachmentManager extends Component
     {
         $this->modelType = $modelType;
         $this->modelId = $modelId;
+
+        $targetModel = $this->resolveModel();
+        abort_if($targetModel === null, 404);
+
+        /** @var User $actor */
+        $actor = Auth::user();
+        Gate::forUser($actor)->authorize('view', $targetModel);
     }
 
     public function uploadFile(): void
@@ -48,9 +57,8 @@ final class CustomerAttachmentManager extends Component
         $service = app(CustomerAttachmentService::class);
 
         $targetModel = $this->resolveModel();
-        if ($targetModel === null) {
-            return;
-        }
+        abort_if($targetModel === null, 404);
+        Gate::forUser($actor)->authorize('update', $targetModel);
 
         try {
             $service->upload($actor, $targetModel, $this->file);
@@ -84,8 +92,12 @@ final class CustomerAttachmentManager extends Component
         /** @var CustomerAttachmentService $service */
         $service = app(CustomerAttachmentService::class);
 
-        $attachment = Attachment::query()->find($attachmentId);
+        $attachment = $this->attachmentQuery()->find($attachmentId);
         if ($attachment !== null) {
+            $targetModel = $this->resolveModel();
+            abort_if($targetModel === null, 404);
+            Gate::forUser($actor)->authorize('update', $targetModel);
+
             $service->delete($actor, $attachment);
             $this->dispatch('attachment-updated');
             session()->flash('attachment_message', 'Đã xóa tệp đính kèm.');
@@ -94,7 +106,13 @@ final class CustomerAttachmentManager extends Component
 
     public function downloadAttachment(int $attachmentId): mixed
     {
-        $attachment = Attachment::query()->find($attachmentId);
+        /** @var User $actor */
+        $actor = Auth::user();
+        $targetModel = $this->resolveModel();
+        abort_if($targetModel === null, 404);
+        Gate::forUser($actor)->authorize('view', $targetModel);
+
+        $attachment = $this->attachmentQuery()->find($attachmentId);
         if ($attachment === null) {
             return null;
         }
@@ -112,9 +130,13 @@ final class CustomerAttachmentManager extends Component
     #[Computed]
     public function attachments(): Collection
     {
-        return Attachment::query()
-            ->where('attachable_type', $this->modelType)
-            ->where('attachable_id', $this->modelId)
+        /** @var User $actor */
+        $actor = Auth::user();
+        $targetModel = $this->resolveModel();
+        abort_if($targetModel === null, 404);
+        Gate::forUser($actor)->authorize('view', $targetModel);
+
+        return $this->attachmentQuery()
             ->with('createdBy')
             ->orderByDesc('created_at')
             ->get();
@@ -136,6 +158,17 @@ final class CustomerAttachmentManager extends Component
         }
 
         return null;
+    }
+
+    /** @return Builder<Attachment> */
+    private function attachmentQuery(): Builder
+    {
+        $targetModel = $this->resolveModel();
+        abort_if($targetModel === null, 404);
+
+        return Attachment::query()
+            ->where('attachable_type', $targetModel->getMorphClass())
+            ->where('attachable_id', $targetModel->getKey());
     }
 
     public function render(): View

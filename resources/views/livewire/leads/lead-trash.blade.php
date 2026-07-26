@@ -13,31 +13,33 @@
     @endif
 
     <section class="crm-card">
-        <div class="mb-5 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+        <div class="data-list-heading">
             <div>
                 <h2 class="font-semibold">Thùng rác</h2>
                 <p class="mt-1 text-sm text-slate-500">Có {{ $this->leads->total() }} Lead đã xóa trong phạm vi.</p>
             </div>
             <div class="w-full sm:w-80">
-                <flux:input wire:model.live.debounce.300ms="search" icon="magnifying-glass" placeholder="Tên, email, điện thoại, công ty" aria-label="Tìm Lead đã xóa" />
+                <flux:input wire:model.live.debounce.300ms="search" icon="magnifying-glass" label="Tìm kiếm" placeholder="Tên, email, điện thoại, công ty" />
             </div>
         </div>
 
-        <div class="relative">
-            <div wire:loading.delay.longest class="absolute inset-0 bg-white/50 dark:bg-slate-900/50 backdrop-blur-[1px] z-10 flex items-center justify-center rounded-xl">
-                <svg class="animate-spin h-8 w-8 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-            </div>
+        <div class="data-list-content">
+            <x-data-list.loading target="search,gotoPage,nextPage,previousPage" />
 
             @if ($this->leads->isEmpty())
-                <div class="grid min-h-52 place-items-center rounded-xl border border-dashed border-slate-300 text-center dark:border-slate-700">
-                    <div><p class="font-medium">Thùng rác đang trống</p><p class="mt-1 text-sm text-slate-500">Lead bị xóa mềm sẽ xuất hiện tại đây.</p></div>
-                </div>
+                <x-data-list.empty
+                    :title="$search !== '' ? 'Không tìm thấy Lead đã xóa' : 'Thùng rác đang trống'"
+                    :description="$search !== '' ? 'Thử thay đổi từ khóa tìm kiếm hiện tại.' : 'Lead bị xóa mềm sẽ xuất hiện tại đây.'"
+                    icon="trash"
+                >
+                    @if ($search !== '')
+                        <x-slot:action>
+                            <flux:button size="sm" variant="ghost" icon="x-mark" wire:click="$set('search', '')">Xóa tìm kiếm</flux:button>
+                        </x-slot:action>
+                    @endif
+                </x-data-list.empty>
             @else
-                <div class="overflow-x-auto">
-                    <flux:table>
+                <flux:table>
                         <flux:table.columns>
                             <flux:table.column>Lead</flux:table.column>
                             <flux:table.column>Phụ trách</flux:table.column>
@@ -56,9 +58,8 @@
                                 </flux:table.row>
                             @endforeach
                         </flux:table.rows>
-                    </flux:table>
-                </div>
-                <div class="mt-5">{{ $this->leads->onEachSide(1)->links() }}</div>
+                </flux:table>
+                <x-data-list.pagination :paginator="$this->leads" />
             @endif
         </div>
     </section>

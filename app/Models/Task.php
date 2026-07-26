@@ -8,9 +8,12 @@ namespace App\Models;
 
 use App\Enums\TaskPriority;
 use App\Enums\TaskStatus;
+use App\Services\TaskDescriptionSanitizer;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
@@ -70,6 +73,15 @@ final class Task extends Model
         ];
     }
 
+    /** @return Attribute<string|null, string|null> */
+    protected function description(): Attribute
+    {
+        return Attribute::make(
+            get: fn (?string $value): ?string => app(TaskDescriptionSanitizer::class)->sanitize($value),
+            set: fn (?string $value): ?string => app(TaskDescriptionSanitizer::class)->sanitize($value),
+        );
+    }
+
     /** @return MorphTo<Model, $this> */
     public function subject(): MorphTo
     {
@@ -80,6 +92,12 @@ final class Task extends Model
     public function assignee(): BelongsTo
     {
         return $this->belongsTo(User::class, 'assigned_to');
+    }
+
+    /** @return BelongsToMany<User, $this> */
+    public function assignees(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'task_assignees')->withTimestamps();
     }
 
     /** @return BelongsTo<User, $this> */
@@ -97,7 +115,7 @@ final class Task extends Model
     /** @return HasMany<TaskComment, $this> */
     public function comments(): HasMany
     {
-        return $this->hasMany(TaskComment::class)->orderBy('created_at', 'desc');
+        return $this->hasMany(TaskComment::class)->orderBy('created_at', 'asc');
     }
 
     /** @return MorphMany<Attachment, $this> */

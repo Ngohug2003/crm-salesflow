@@ -11,7 +11,9 @@ use App\Models\Company;
 use App\Models\Opportunity;
 use App\Models\Task;
 use App\Models\User;
+use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
 use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
@@ -28,6 +30,7 @@ final class TaskDomainTest extends TestCase
         Permission::findOrCreate('tasks.create');
         Permission::findOrCreate('tasks.update');
         Permission::findOrCreate('tasks.delete');
+        $this->seed(RolePermissionSeeder::class);
     }
 
     public function test_it_creates_task_with_postgresql_bigint_key_and_enums(): void
@@ -93,15 +96,34 @@ final class TaskDomainTest extends TestCase
         $this->assertCount(1, $opp->tasks);
     }
 
+    public function test_it_sanitizes_rich_text_description_before_persistence(): void
+    {
+        $user = User::factory()->create();
+        $task = Task::query()->create([
+            'title' => 'Kiểm tra mô tả an toàn',
+            'description' => '<p onclick="alert(1)">Nội dung <strong>quan trọng</strong></p><script>alert(2)</script>',
+            'created_by' => $user->id,
+        ]);
+
+        $storedDescription = (string) DB::table('tasks')
+            ->where('id', $task->id)
+            ->value('description');
+
+        $this->assertStringContainsString('<strong>quan trọng</strong>', $storedDescription);
+        $this->assertStringNotContainsString('onclick', $storedDescription);
+        $this->assertStringNotContainsString('<script', $storedDescription);
+        $this->assertStringNotContainsString('alert(2)', $storedDescription);
+    }
+
     public function test_it_renders_task_list_component_and_supports_crud(): void
     {
         /** @var User $user */
         $user = User::factory()->create();
-        $user->givePermissionTo(['tasks.view', 'tasks.create', 'tasks.update', 'tasks.delete']);
+        $user->assignRole('sales');
 
         Livewire::actingAs($user)
             ->test(TaskList::class)
-            ->assertSee('Quản lý Công việc (Tasks)')
+            ->assertSee('Danh sách công việc')
             ->set('title', 'Họp chiến lược Quý 3')
             ->set('assigneeId', $user->id)
             ->set('taskPriority', 'urgent')

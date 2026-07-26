@@ -64,6 +64,14 @@ final class OpportunityList extends Component
         $this->resetPage();
     }
 
+    public function clearFilters(): void
+    {
+        $this->reset('search', 'pipelineId', 'stageId', 'status');
+        $this->sortBy = 'created_at';
+        $this->sortDirection = 'desc';
+        $this->resetPage();
+    }
+
     public function confirmDeleteOpportunity(int $opportunityId): void
     {
         $this->confirmingDeleteOpportunityId = $opportunityId;

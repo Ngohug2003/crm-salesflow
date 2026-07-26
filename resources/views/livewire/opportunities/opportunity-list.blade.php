@@ -1,32 +1,33 @@
 <div class="space-y-6">
-    <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+    <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Cơ hội bán hàng (Opportunities)</h1>
-            <p class="mt-1 text-sm text-slate-500">Quản lý các cơ hội kinh doanh, theo dõi doanh thu và giá trị dự báo (Weighted Value).</p>
+            <p class="text-sm text-slate-500">CRM / Bán hàng</p>
+            <h1 class="mt-1 text-3xl font-semibold tracking-tight">Cơ hội bán hàng</h1>
+            <p class="mt-2 max-w-3xl text-slate-500">Quản lý các cơ hội kinh doanh, theo dõi doanh thu và giá trị dự báo.</p>
         </div>
 
         <div class="flex items-center gap-3">
             <div class="inline-flex rounded-lg border border-slate-200 bg-slate-100 p-1 dark:border-slate-800 dark:bg-slate-900">
-                <span class="inline-flex items-center gap-1.5 rounded-md bg-white px-3 py-1.5 text-xs font-semibold text-indigo-600 shadow-sm dark:bg-slate-800 dark:text-indigo-400">
+                <span class="inline-flex items-center gap-1.5 rounded-md bg-white px-3 py-1.5 text-xs font-semibold text-emerald-600 shadow-sm dark:bg-slate-800 dark:text-emerald-400">
                     <flux:icon.bars-3-bottom-left class="size-4" />
                     Danh sách
                 </span>
-                <a href="{{ route('opportunities.kanban') }}" class="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white">
+                <a href="{{ route('opportunities.kanban') }}" wire:navigate class="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white">
                     <flux:icon.view-columns class="size-4" />
                     Kanban
                 </a>
             </div>
 
             @can('create', App\Models\Opportunity::class)
-                <flux:button href="{{ route('opportunities.create') }}" variant="primary" icon="plus" size="sm">
-                    Tạo Cơ hội mới
+                <flux:button :href="route('opportunities.create')" wire:navigate variant="primary" icon="plus">
+                    Tạo cơ hội
                 </flux:button>
             @endcan
         </div>
     </div>
 
     @if (session()->has('message'))
-        <div class="rounded-lg bg-emerald-50 p-4 text-sm font-semibold text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300">
+        <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200" role="status">
             {{ session('message') }}
         </div>
     @endif
@@ -64,44 +65,62 @@
         </div>
     </div>
 
-    <!-- Main Card Container -->
-    <div class="crm-card">
-        <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div class="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
-                <div class="w-full sm:w-72">
-                    <flux:input
-                        wire:model.live.debounce.300ms="search"
-                        placeholder="Tìm tên, mã cơ hội, ghi chú..."
-                        icon="magnifying-glass"
-                    />
-                </div>
-
-                <div class="w-full sm:w-48">
-                    <flux:select wire:model.live="pipelineId" placeholder="Quy trình">
-                        <option value="">Tất cả Quy trình</option>
-                        @foreach ($this->pipelines as $pipe)
-                            <option value="{{ $pipe->id }}">{{ $pipe->name }}</option>
-                        @endforeach
-                    </flux:select>
-                </div>
-
-                <div class="w-full sm:w-44">
-                    <flux:select wire:model.live="status" placeholder="Trạng thái">
-                        <option value="">Tất cả trạng thái</option>
-                        <option value="open">Đang mở (Open)</option>
-                        <option value="won">Thành công (Won)</option>
-                        <option value="lost">Thất bại (Lost)</option>
-                    </flux:select>
-                </div>
+    <div class="crm-card relative">
+        <div class="data-list-heading">
+            <div>
+                <h2 class="font-semibold">Danh sách cơ hội bán hàng</h2>
+                <p class="mt-1 text-sm text-slate-500">Có {{ $this->opportunities->total() }} cơ hội phù hợp trong phạm vi.</p>
             </div>
+            @if ($search !== '' || $pipelineId !== '' || $stageId !== '' || $status !== '')
+                <flux:button size="sm" variant="ghost" icon="x-mark" wire:click="clearFilters">Xóa bộ lọc</flux:button>
+            @endif
         </div>
 
-        <div class="divide-y divide-slate-200 dark:divide-slate-800">
-            @forelse ($this->opportunities as $opp)
-                <div class="flex flex-col justify-between gap-4 py-4 sm:flex-row sm:items-center">
+        <div class="data-list-filters mb-5 xl:grid-cols-3">
+            <flux:input
+                wire:model.live.debounce.300ms="search"
+                label="Tìm kiếm"
+                placeholder="Tên, mã cơ hội, ghi chú..."
+                icon="magnifying-glass"
+            />
+
+            <flux:select wire:model.live="pipelineId" label="Quy trình">
+                <option value="">Tất cả quy trình</option>
+                @foreach ($this->pipelines as $pipelineOption)
+                    <option value="{{ $pipelineOption->id }}">{{ $pipelineOption->name }}</option>
+                @endforeach
+            </flux:select>
+
+            <flux:select wire:model.live="status" label="Trạng thái">
+                <option value="">Tất cả trạng thái</option>
+                <option value="open">Đang mở</option>
+                <option value="won">Thành công</option>
+                <option value="lost">Thất bại</option>
+            </flux:select>
+        </div>
+
+        <div class="data-list-content">
+            <x-data-list.loading target="search,pipelineId,status,clearFilters,gotoPage,nextPage,previousPage" />
+
+            @if ($this->opportunities->isEmpty())
+                <x-data-list.empty
+                    title="Không tìm thấy cơ hội bán hàng"
+                    description="Thử thay đổi từ khóa hoặc các bộ lọc hiện tại."
+                    icon="briefcase"
+                >
+                    @if ($search !== '' || $pipelineId !== '' || $stageId !== '' || $status !== '')
+                        <x-slot:action>
+                            <flux:button size="sm" variant="ghost" icon="x-mark" wire:click="clearFilters">Đặt lại bộ lọc</flux:button>
+                        </x-slot:action>
+                    @endif
+                </x-data-list.empty>
+            @else
+                <div class="data-list-feed">
+                    @foreach ($this->opportunities as $opp)
+                        <div class="data-list-feed-item">
                     <div class="space-y-2">
                         <div class="flex items-center gap-3">
-                            <a href="{{ route('opportunities.show', $opp->id) }}" class="text-base font-semibold text-slate-900 hover:text-indigo-600 dark:text-white dark:hover:text-indigo-400">
+                            <a href="{{ route('opportunities.show', $opp->id) }}" wire:navigate class="text-base font-semibold text-slate-900 hover:text-emerald-600 dark:text-white dark:hover:text-emerald-400">
                                 {{ $opp->title }}
                             </a>
 
@@ -148,7 +167,7 @@
 
                     <div class="flex items-center gap-2">
                         @can('update', $opp)
-                            <flux:button href="{{ route('opportunities.edit', $opp->id) }}" size="sm" variant="ghost" icon="pencil">
+                            <flux:button :href="route('opportunities.edit', $opp->id)" wire:navigate size="sm" variant="ghost" icon="pencil">
                                 Sửa
                             </flux:button>
                         @endcan
@@ -159,16 +178,12 @@
                             </flux:button>
                         @endcan
                     </div>
+                        </div>
+                    @endforeach
                 </div>
-            @empty
-                <div class="py-12 text-center text-sm text-slate-500">
-                    Không tìm thấy cơ hội bán hàng nào phù hợp.
-                </div>
-            @endforelse
-        </div>
 
-        <div class="mt-6">
-            {{ $this->opportunities->links() }}
+                <x-data-list.pagination :paginator="$this->opportunities" />
+            @endif
         </div>
 
         <!-- Modal Xác nhận xóa Cơ hội bán hàng -->

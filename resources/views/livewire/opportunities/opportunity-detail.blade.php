@@ -94,8 +94,100 @@
 
     <!-- Main 2-Column Grid -->
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <!-- Left 2-Columns: Files & Timeline -->
+        <!-- Left 2-Columns: Tasks, Files & Timeline -->
         <div class="lg:col-span-2 space-y-6">
+            <!-- Danh sách Công việc (Tasks) thuộc Cơ hội bán hàng này -->
+            <div class="crm-card space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                    <div class="flex items-center gap-2">
+                        <flux:icon.check-circle class="size-5 text-indigo-600 dark:text-indigo-400" />
+                        <h3 class="text-base font-bold text-slate-900 dark:text-white">Công việc (Tasks) liên quan</h3>
+                        @if ($opportunity->tasks->count() > 0)
+                            <flux:badge color="indigo" size="sm">{{ $opportunity->tasks->count() }}</flux:badge>
+                        @endif
+                    </div>
+
+                    @can('create', App\Models\Task::class)
+                        <flux:button
+                            href="{{ route('tasks.create', ['subject_type' => App\Models\Opportunity::class, 'subject_id' => $opportunity->id]) }}"
+                            wire:navigate
+                            variant="primary"
+                            icon="plus"
+                            size="sm"
+                        >
+                            + Tạo Công việc
+                        </flux:button>
+                    @endcan
+                </div>
+
+                <div class="divide-y divide-slate-100 dark:divide-slate-800/80">
+                    @forelse ($opportunity->tasks as $t)
+                        <div class="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div class="space-y-1">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <a
+                                        href="{{ route('tasks.show', $t->id) }}"
+                                        wire:navigate
+                                        class="text-sm font-bold text-slate-900 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline"
+                                    >
+                                        {{ $t->title }}
+                                    </a>
+
+                                    <flux:badge color="{{ $t->status->color() }}" size="sm">
+                                        {{ $t->status->label() }}
+                                    </flux:badge>
+
+                                    <flux:badge color="{{ $t->priority->color() }}" size="sm" variant="subtle">
+                                        {{ $t->priority->label() }}
+                                    </flux:badge>
+                                </div>
+
+                                <div class="flex flex-wrap items-center gap-3 text-xs text-slate-500 pt-0.5">
+                                    <div class="flex items-center gap-1.5">
+                                        <span>Phân công:</span>
+                                        @php
+                                            $mems = collect();
+                                            if ($t->assignee) $mems->push($t->assignee);
+                                            foreach ($t->assignees as $a) $mems->push($a);
+                                            $uniq = $mems->unique('id');
+                                        @endphp
+                                        @if ($uniq->count() > 0)
+                                            <div class="flex items-center -space-x-1.5">
+                                                @foreach ($uniq->take(4) as $mb)
+                                                    <span title="{{ $mb->name }}" class="inline-flex items-center justify-center size-5 rounded-full border border-white dark:border-slate-900 bg-gradient-to-br from-indigo-500 to-purple-600 text-white text-[8px] font-bold shadow-sm">
+                                                        {{ mb_strtoupper(mb_substr($mb->name, 0, 1)) }}
+                                                    </span>
+                                                @endforeach
+                                            </div>
+                                            <span class="text-slate-400 font-medium">{{ $uniq->pluck('name')->implode(', ') }}</span>
+                                        @else
+                                            <span class="text-slate-400 italic">Chưa phân công</span>
+                                        @endif
+                                    </div>
+
+                                    @if ($t->due_date)
+                                        <span>•</span>
+                                        <span class="{{ $t->due_date->isPast() && !$t->status->isFinished() ? 'font-bold text-red-600 dark:text-red-400' : '' }}">
+                                            Hạn chót: {{ $t->due_date->format('d/m/Y H:i') }}
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-2 shrink-0">
+                                <flux:button href="{{ route('tasks.show', $t->id) }}" wire:navigate size="sm" variant="subtle" icon="eye">
+                                    Xem / Sửa
+                                </flux:button>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="py-6 text-center text-xs text-slate-400">
+                            Chưa có công việc nào gắn với Cơ hội bán hàng này.
+                        </div>
+                    @endforelse
+                </div>
+            </div>
+
             <!-- Tệp đính kèm -->
             <livewire:customers.customer-attachment-manager :modelType="App\Models\Opportunity::class" :modelId="$opportunity->id" />
 

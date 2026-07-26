@@ -8,7 +8,9 @@ use App\Enums\TaskStatus;
 use App\Livewire\Tasks\TaskCalendar;
 use App\Models\Task;
 use App\Models\User;
+use App\Notifications\TaskReminderNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Livewire\Livewire;
 use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
@@ -50,6 +52,8 @@ final class TaskCalendarReminderTest extends TestCase
 
     public function test_it_sends_task_reminders_via_console_command(): void
     {
+        Notification::fake();
+
         /** @var User $user */
         $user = User::factory()->create();
 
@@ -70,5 +74,13 @@ final class TaskCalendarReminderTest extends TestCase
             ->expectsOutputToContain("Đã gửi nhắc hạn cho công việc #{$task->id}");
 
         $this->assertNotNull($task->fresh()->reminder_sent_at);
+
+        Notification::assertSentTo(
+            $user,
+            TaskReminderNotification::class
+        );
+
+        $this->artisan('tasks:send-reminders')->assertSuccessful();
+        Notification::assertSentToTimes($user, TaskReminderNotification::class, 1);
     }
 }

@@ -1,92 +1,108 @@
 <div class="space-y-6">
-    <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+    <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Quản lý Công việc (Tasks)</h1>
-            <p class="mt-1 text-sm text-slate-500">Theo dõi, phân công và xử lý các nhiệm vụ bán hàng.</p>
+            <p class="text-sm text-slate-500">CRM / Công việc</p>
+            <h1 class="mt-1 text-3xl font-semibold tracking-tight">Công việc</h1>
+            <p class="mt-2 max-w-3xl text-slate-500">Theo dõi, phân công và xử lý các nhiệm vụ bán hàng.</p>
         </div>
 
         <div class="flex items-center gap-2">
-            <flux:button href="{{ route('tasks.kanban') }}" variant="subtle" icon="view-columns" size="sm">
-                Xem dạng Kanban
+            <flux:button :href="route('tasks.kanban')" wire:navigate variant="ghost" icon="view-columns">
+                Kanban
             </flux:button>
-            <flux:button href="{{ route('tasks.calendar') }}" variant="subtle" icon="calendar" size="sm">
-                Xem Lịch
+            <flux:button :href="route('tasks.calendar')" wire:navigate variant="ghost" icon="calendar">
+                Lịch
             </flux:button>
 
             @can('create', App\Models\Task::class)
-                <flux:button wire:click="openCreateModal" variant="primary" icon="plus" size="sm">
-                    Tạo Công việc mới
+                <flux:button :href="route('tasks.create')" wire:navigate variant="primary" icon="plus">
+                    Tạo công việc
                 </flux:button>
             @endcan
         </div>
     </div>
 
     @if (session()->has('message'))
-        <div class="rounded-lg bg-emerald-50 p-4 text-sm font-semibold text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300">
+        <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200" role="status">
             {{ session('message') }}
         </div>
     @endif
 
     @error('task_error')
-        <div class="rounded-lg bg-red-50 p-4 text-sm font-semibold text-red-800 dark:bg-red-950/40 dark:text-red-300">
+        <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200" role="alert">
             {{ $message }}
         </div>
     @enderror
 
-    <div class="crm-card">
-        <!-- Filter Bar -->
-        <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div class="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
-                <div class="w-full sm:w-72">
-                    <flux:input
-                        wire:model.live.debounce.300ms="search"
-                        placeholder="Tìm theo tiêu đề, nội dung..."
-                        icon="magnifying-glass"
-                    />
-                </div>
-
-                <div class="w-full sm:w-44">
-                    <flux:select wire:model.live="status" placeholder="Trạng thái">
-                        <option value="">Tất cả trạng thái</option>
-                        <option value="todo">Cần làm</option>
-                        <option value="in_progress">Đang làm</option>
-                        <option value="completed">Hoàn thành</option>
-                        <option value="cancelled">Đã hủy</option>
-                    </flux:select>
-                </div>
-
-                <div class="w-full sm:w-44">
-                    <flux:select wire:model.live="priority" placeholder="Độ ưu tiên">
-                        <option value="">Tất cả độ ưu tiên</option>
-                        <option value="low">Thấp</option>
-                        <option value="medium">Trung bình</option>
-                        <option value="high">Cao</option>
-                        <option value="urgent">Khẩn cấp</option>
-                    </flux:select>
-                </div>
-
-                <div class="w-full sm:w-48">
-                    <flux:select wire:model.live="assignedTo" placeholder="Người thực hiện">
-                        <option value="">Tất cả thành viên</option>
-                        @foreach ($this->users as $u)
-                            <option value="{{ $u->id }}">{{ $u->name }}</option>
-                        @endforeach
-                    </flux:select>
-                </div>
+    <div class="crm-card relative">
+        <div class="data-list-heading">
+            <div>
+                <h2 class="font-semibold">Danh sách công việc</h2>
+                <p class="mt-1 text-sm text-slate-500">Có {{ $this->tasks->total() }} công việc phù hợp trong phạm vi.</p>
             </div>
+            @if ($search !== '' || $status !== '' || $priority !== '' || $assignedTo !== '')
+                <flux:button size="sm" variant="ghost" icon="x-mark" wire:click="clearFilters">Xóa bộ lọc</flux:button>
+            @endif
         </div>
 
-        <!-- Task List Feed -->
-        <div class="divide-y divide-slate-200 dark:divide-slate-800">
-            @forelse ($this->tasks as $task)
-                <div class="flex flex-col justify-between gap-4 py-4 sm:flex-row sm:items-center">
+        <div class="data-list-filters mb-5">
+            <flux:input
+                wire:model.live.debounce.300ms="search"
+                label="Tìm kiếm"
+                placeholder="Tiêu đề hoặc nội dung..."
+                icon="magnifying-glass"
+            />
+
+            <flux:select wire:model.live="status" label="Trạng thái">
+                <option value="">Tất cả trạng thái</option>
+                <option value="todo">Cần làm</option>
+                <option value="in_progress">Đang làm</option>
+                <option value="completed">Hoàn thành</option>
+                <option value="cancelled">Đã hủy</option>
+            </flux:select>
+
+            <flux:select wire:model.live="priority" label="Độ ưu tiên">
+                <option value="">Tất cả độ ưu tiên</option>
+                <option value="low">Thấp</option>
+                <option value="medium">Trung bình</option>
+                <option value="high">Cao</option>
+                <option value="urgent">Khẩn cấp</option>
+            </flux:select>
+
+            <flux:select wire:model.live="assignedTo" label="Người thực hiện">
+                <option value="">Tất cả thành viên</option>
+                @foreach ($this->users as $userOption)
+                    <option value="{{ $userOption->id }}">{{ $userOption->name }}</option>
+                @endforeach
+            </flux:select>
+        </div>
+
+        <div class="data-list-content">
+            <x-data-list.loading target="search,status,priority,assignedTo,clearFilters,gotoPage,nextPage,previousPage" />
+
+            @if ($this->tasks->isEmpty())
+                <x-data-list.empty
+                    title="Không tìm thấy công việc"
+                    description="Thử thay đổi từ khóa hoặc các bộ lọc hiện tại."
+                    icon="clipboard-document-list"
+                >
+                    @if ($search !== '' || $status !== '' || $priority !== '' || $assignedTo !== '')
+                        <x-slot:action>
+                            <flux:button size="sm" variant="ghost" icon="x-mark" wire:click="clearFilters">Đặt lại bộ lọc</flux:button>
+                        </x-slot:action>
+                    @endif
+                </x-data-list.empty>
+            @else
+                <div class="data-list-feed">
+                    @foreach ($this->tasks as $task)
+                        <div class="data-list-feed-item">
                     <div class="flex items-start gap-3">
                         @can('update', $task)
                             <input
                                 type="checkbox"
                                 wire:click="toggleTaskStatus({{ $task->id }})"
                                 {{ $task->status->isFinished() ? 'checked' : '' }}
-                                class="mt-1 size-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-900"
+                                class="mt-1 size-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 dark:border-slate-700 dark:bg-slate-900"
                             />
                         @endcan
 
@@ -107,12 +123,40 @@
 
                             @if ($task->description)
                                 <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">
-                                    {{ $task->description }}
+                                    {{ str($task->description)->stripTags()->squish()->limit(100) }}
                                 </p>
                             @endif
 
                             <div class="flex flex-wrap items-center gap-3 text-xs text-slate-500 pt-1">
-                                <span>Phân công: <strong>{{ $task->assignee?->name ?: 'Chưa phân công' }}</strong></span>
+                                <div class="flex items-center gap-1.5">
+                                    <span>Phân công:</span>
+                                    @if ($task->assignees->count() > 0 || $task->assignee)
+                                        <div class="flex items-center -space-x-2">
+                                            @php
+                                                $allMembers = collect();
+                                                if ($task->assignee) $allMembers->push($task->assignee);
+                                                foreach ($task->assignees as $a) $allMembers->push($a);
+                                                $uniqueMembers = $allMembers->unique('id');
+                                            @endphp
+                                            @foreach ($uniqueMembers->take(5) as $member)
+                                                <span
+                                                    title="{{ $member->name }}"
+                                                    class="inline-flex items-center justify-center size-6 rounded-full border-2 border-white dark:border-slate-900 bg-gradient-to-br from-indigo-500 to-purple-600 text-white text-[9px] font-bold shadow-sm"
+                                                >
+                                                    {{ mb_strtoupper(mb_substr($member->name, 0, 1)) }}
+                                                </span>
+                                            @endforeach
+                                            @if ($uniqueMembers->count() > 5)
+                                                <span class="inline-flex items-center justify-center size-6 rounded-full border-2 border-white dark:border-slate-900 bg-slate-200 dark:bg-slate-700 text-[9px] font-bold text-slate-600 dark:text-slate-300">
+                                                    +{{ $uniqueMembers->count() - 5 }}
+                                                </span>
+                                            @endif
+                                        </div>
+                                        <span class="text-slate-400">{{ $uniqueMembers->pluck('name')->implode(', ') }}</span>
+                                    @else
+                                        <span class="text-slate-400 italic">Chưa phân công</span>
+                                    @endif
+                                </div>
                                 <span>•</span>
                                 <span>Tạo bởi: {{ $task->creator?->name ?: 'Hệ thống' }}</span>
                                 @if ($task->due_date)
@@ -132,12 +176,12 @@
                     </div>
 
                     <div class="flex items-center gap-2 self-end sm:self-center">
-                        <flux:button wire:click="$dispatch('open-task-detail', { taskId: {{ $task->id }} })" size="sm" variant="subtle" icon="eye">
+                        <flux:button href="{{ route('tasks.show', $task->id) }}" wire:navigate size="sm" variant="subtle" icon="eye">
                             Chi tiết
                         </flux:button>
 
                         @can('update', $task)
-                            <flux:button wire:click="openEditModal({{ $task->id }})" size="sm" variant="ghost" icon="pencil">
+                            <flux:button href="{{ route('tasks.show', $task->id) }}" wire:navigate size="sm" variant="ghost" icon="pencil">
                                 Sửa
                             </flux:button>
                         @endcan
@@ -148,16 +192,12 @@
                             </flux:button>
                         @endcan
                     </div>
+                        </div>
+                    @endforeach
                 </div>
-            @empty
-                <div class="py-12 text-center text-sm text-slate-500">
-                    Chưa có công việc nào phù hợp với bộ lọc.
-                </div>
-            @endforelse
-        </div>
 
-        <div class="mt-6">
-            {{ $this->tasks->links() }}
+                <x-data-list.pagination :paginator="$this->tasks" />
+            @endif
         </div>
     </div>
 
@@ -191,7 +231,12 @@
             <div class="space-y-4">
                 <flux:input wire:model="title" label="Tiêu đề công việc *" placeholder="Nhập tiêu đề công việc..." />
 
-                <flux:textarea wire:model="description" label="Mô tả chi tiết" placeholder="Ghi chú thêm nội dung công việc..." rows="3" />
+                <x-rich-text-editor
+                    model="description"
+                    label="Mô tả chi tiết"
+                    placeholder="Nhập nội dung mô tả công việc chi tiết..."
+                    editor-key="task-list-description-{{ $editingTaskId ?? 'create' }}"
+                />
 
                 <div class="grid grid-cols-2 gap-4">
                     <flux:select wire:model="taskStatus" label="Trạng thái">
@@ -216,12 +261,35 @@
                 </div>
 
                 <div class="w-full">
-                    <flux:select wire:model="assigneeId" label="Người thực hiện">
+                    <flux:select wire:model="assigneeId" label="Người thực hiện chính">
                         <option value="">Chưa phân công</option>
                         @foreach ($this->users as $u)
                             <option value="{{ $u->id }}">{{ $u->name }}</option>
                         @endforeach
                     </flux:select>
+                </div>
+
+                <!-- Multi-Assignee Checkboxes -->
+                <div class="space-y-2">
+                    <label class="text-sm font-semibold text-slate-700 dark:text-slate-300">Thành viên cùng tham gia</label>
+                    <div class="max-h-40 overflow-y-auto rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950/40 p-3 space-y-2">
+                        @foreach ($this->users as $u)
+                            <label class="flex items-center gap-3 cursor-pointer rounded-lg px-2 py-1.5 transition hover:bg-white dark:hover:bg-slate-800/60">
+                                <input
+                                    type="checkbox"
+                                    value="{{ $u->id }}"
+                                    wire:model="assigneeIds"
+                                    class="size-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-900"
+                                />
+                                <div class="flex items-center gap-2">
+                                    <span class="inline-flex items-center justify-center size-7 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white text-[10px] font-bold shrink-0">
+                                        {{ mb_strtoupper(mb_substr($u->name, 0, 1)) }}
+                                    </span>
+                                    <span class="text-sm text-slate-700 dark:text-slate-300">{{ $u->name }}</span>
+                                </div>
+                            </label>
+                        @endforeach
+                    </div>
                 </div>
             </div>
 
@@ -287,3 +355,6 @@
     <!-- Modal Xem Chi tiết Task (Checklist, Tệp đính kèm, Bình luận) -->
     <livewire:tasks.task-detail-modal />
 </div>
+
+@push('head')
+@endpush

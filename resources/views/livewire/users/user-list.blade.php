@@ -103,7 +103,7 @@
 
     <section class="crm-card">
         <div class="mb-5">
-            <div class="flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
+            <div class="data-list-heading">
                 <div>
                     <h2 class="font-semibold">Danh sách người dùng</h2>
                     <p class="mt-1 text-sm text-slate-500">Có {{ $this->users->total() }} tài khoản phù hợp trong phạm vi bạn được phép xem.</p>
@@ -113,10 +113,10 @@
                 @endif
             </div>
 
-            <div class="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(16rem,1fr)_14rem_13rem_12rem]">
-                <flux:input wire:model.live.debounce.300ms="search" icon="magnifying-glass" placeholder="Tìm theo tên hoặc email" aria-label="Tìm người dùng" />
+            <div class="data-list-filters xl:grid-cols-[minmax(16rem,1fr)_14rem_13rem_12rem]">
+                <flux:input wire:model.live.debounce.300ms="search" icon="magnifying-glass" label="Tìm kiếm" placeholder="Tên hoặc email" />
 
-                <flux:select wire:model.live="department" aria-label="Lọc phòng ban">
+                <flux:select wire:model.live="department" label="Phòng ban">
                     <option value="all">Tất cả phòng ban</option>
                     <option value="unassigned">Chưa gán phòng ban</option>
                     @foreach ($this->departmentOptions as $departmentOption)
@@ -124,14 +124,14 @@
                     @endforeach
                 </flux:select>
 
-                <flux:select wire:model.live="role" aria-label="Lọc vai trò">
+                <flux:select wire:model.live="role" label="Vai trò">
                     <option value="all">Tất cả vai trò</option>
                     @foreach ($this->roleOptions as $roleKey => $roleLabel)
                         <option value="{{ $roleKey }}">{{ $roleLabel }}</option>
                     @endforeach
                 </flux:select>
 
-                <flux:select wire:model.live="status" aria-label="Lọc trạng thái">
+                <flux:select wire:model.live="status" label="Trạng thái">
                     <option value="all">Tất cả trạng thái</option>
                     <option value="active">Đang hoạt động</option>
                     <option value="inactive">Ngừng hoạt động</option>
@@ -139,23 +139,23 @@
             </div>
         </div>
 
-        <div class="relative">
-            <div wire:loading.delay.longest class="absolute inset-0 bg-white/50 dark:bg-slate-900/50 backdrop-blur-[1px] z-10 flex items-center justify-center rounded-xl">
-                <svg class="animate-spin h-8 w-8 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-            </div>
+        <div class="data-list-content">
+            <x-data-list.loading target="search,department,role,status,clearFilters,gotoPage,nextPage,previousPage" />
 
             @if ($this->users->isEmpty())
-                <div class="grid min-h-52 place-items-center rounded-xl border border-dashed border-slate-300 text-center dark:border-slate-700">
-                    <div class="px-6">
-                        <p class="font-medium">Không tìm thấy người dùng</p>
-                        <p class="mt-1 text-sm text-slate-500">Thử thay đổi từ khóa hoặc các bộ lọc hiện tại.</p>
-                    </div>
-                </div>
+                <x-data-list.empty
+                    title="Không tìm thấy người dùng"
+                    description="Thử thay đổi từ khóa hoặc các bộ lọc hiện tại."
+                    icon="users"
+                >
+                    @if ($search !== '' || $department !== 'all' || $role !== 'all' || $status !== 'all')
+                        <x-slot:action>
+                            <flux:button size="sm" variant="ghost" icon="x-mark" wire:click="clearFilters">Đặt lại bộ lọc</flux:button>
+                        </x-slot:action>
+                    @endif
+                </x-data-list.empty>
             @else
-                <flux:table :paginate="$this->users">
+                <flux:table>
                     <flux:table.columns>
                         <flux:table.column>Người dùng</flux:table.column>
                         <flux:table.column>Phòng ban</flux:table.column>
@@ -221,6 +221,8 @@
                         @endforeach
                     </flux:table.rows>
                 </flux:table>
+
+                <x-data-list.pagination :paginator="$this->users" />
             @endif
         </div>
     </section>

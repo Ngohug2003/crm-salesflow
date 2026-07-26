@@ -8,6 +8,7 @@ use App\Data\TaskFilterData;
 use App\Enums\TaskStatus;
 use App\Models\Task;
 use App\Models\User;
+use App\Repositories\Contracts\UserRepository;
 use App\Services\TaskManagementService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
@@ -96,7 +97,10 @@ final class TaskKanban extends Component
     #[Computed]
     public function users(): Collection
     {
-        return User::query()->orderBy('name')->get();
+        /** @var User $actor */
+        $actor = Auth::user();
+
+        return app(UserRepository::class)->visibleActiveUsers($actor);
     }
 
     public function render(): View

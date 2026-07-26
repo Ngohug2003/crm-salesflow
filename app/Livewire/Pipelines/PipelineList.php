@@ -56,6 +56,14 @@ final class PipelineList extends Component
         $this->resetPage();
     }
 
+    public function clearFilters(): void
+    {
+        $this->reset('search', 'isActive');
+        $this->sortBy = 'created_at';
+        $this->sortDirection = 'desc';
+        $this->resetPage();
+    }
+
     public function toggleDefault(int $pipelineId): void
     {
         /** @var User $actor */
