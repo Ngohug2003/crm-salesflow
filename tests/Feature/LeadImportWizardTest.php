@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Jobs\ProcessImportChunkJob;
 use App\Livewire\Imports\LeadImportWizard;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -105,8 +107,9 @@ final class LeadImportWizardTest extends TestCase
             ->assertSee('Báo cáo Kiểm tra dữ liệu');
     }
 
-    public function test_it_proceeds_to_step_3_when_mapping_is_valid(): void
+    public function test_it_proceeds_to_step_3_and_dispatches_import_batch(): void
     {
+        Queue::fake();
         $admin = User::query()->where('email', 'admin@salesflow.test')->sole();
 
         $csvContent = implode("\n", [
@@ -122,7 +125,13 @@ final class LeadImportWizardTest extends TestCase
             ->call('proceedToMapping')
             ->call('proceedToDuplicates')
             ->assertSet('step', 3)
-            ->assertSee('Cấu hình ghép nối cột hoàn tất!');
+            ->assertSee('Chiến lược xử lý trùng lặp')
+            ->set('duplicateStrategy', 'update')
+            ->call('startImport')
+            ->assertSet('step', 4)
+            ->assertSee('Tiến trình Import đã khởi chạy thành công');
+
+        Queue::assertPushed(ProcessImportChunkJob::class, 1);
     }
 
     public function test_it_rejects_invalid_file_extension(): void

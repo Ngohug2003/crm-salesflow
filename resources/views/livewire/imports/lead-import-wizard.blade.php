@@ -10,7 +10,7 @@
                 <span class="text-slate-900 dark:text-white">Nhập dữ liệu</span>
             </div>
             <h1 class="mt-1 text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Nhập dữ liệu Lead hàng loạt</h1>
-            <p class="mt-0.5 text-sm text-slate-500 dark:text-slate-400">Ghép nối các cột dữ liệu trong tệp CSV với trường thông tin CRM tương ứng.</p>
+            <p class="mt-0.5 text-sm text-slate-500 dark:text-slate-400">Cấu hình chiến lược xử lý trùng lặp và kích hoạt tiến trình xử lý bất đồng bộ.</p>
         </div>
 
         <div class="flex items-center gap-3">
@@ -69,19 +69,25 @@
             <div class="hidden h-0.5 w-12 bg-slate-200 dark:bg-slate-800 sm:block"></div>
 
             <li class="flex items-center gap-3 {{ $step >= 3 ? '' : 'opacity-50' }}">
-                <span class="flex size-8 items-center justify-center rounded-full {{ $step === 3 ? 'bg-indigo-600 text-white' : 'border border-slate-300 bg-slate-100 text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400' }} text-xs font-bold shadow-xs">3</span>
+                <span class="flex size-8 items-center justify-center rounded-full {{ $step === 3 ? 'bg-indigo-600 text-white' : ($step > 3 ? 'bg-emerald-600 text-white' : 'border border-slate-300 bg-slate-100 text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400') }} text-xs font-bold shadow-xs">
+                    @if ($step > 3)
+                        <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+                    @else
+                        3
+                    @endif
+                </span>
                 <div>
-                    <div class="text-xs font-semibold text-slate-500">Bước 3</div>
-                    <div class="text-xs font-medium text-slate-700 dark:text-slate-300">Xử lý Trùng lặp & Queue</div>
+                    <div class="text-xs font-semibold {{ $step === 3 ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-500' }}">Bước 3</div>
+                    <div class="text-xs font-medium text-slate-900 dark:text-white">Chiến lược Trùng lặp</div>
                 </div>
             </li>
             <div class="hidden h-0.5 w-12 bg-slate-200 dark:bg-slate-800 sm:block"></div>
 
-            <li class="flex items-center gap-3 opacity-50">
-                <span class="flex size-8 items-center justify-center rounded-full border border-slate-300 bg-slate-100 text-xs font-bold text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">4</span>
+            <li class="flex items-center gap-3 {{ $step >= 4 ? '' : 'opacity-50' }}">
+                <span class="flex size-8 items-center justify-center rounded-full {{ $step === 4 ? 'bg-indigo-600 text-white' : 'border border-slate-300 bg-slate-100 text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400' }} text-xs font-bold shadow-xs">4</span>
                 <div>
-                    <div class="text-xs font-semibold text-slate-500">Bước 4</div>
-                    <div class="text-xs font-medium text-slate-700 dark:text-slate-300">Hoàn thành</div>
+                    <div class="text-xs font-semibold {{ $step === 4 ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-500' }}">Bước 4</div>
+                    <div class="text-xs font-medium text-slate-900 dark:text-white">Tiến trình Import</div>
                 </div>
             </li>
         </ol>
@@ -354,7 +360,7 @@
                     wire:click="proceedToDuplicates"
                     class="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-indigo-500 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:bg-indigo-500 dark:hover:bg-indigo-400"
                 >
-                    <span>Tiếp tục: Cấu hình Trùng lặp & Queue (Step 3)</span>
+                    <span>Tiếp tục: Chiến lược Trùng lặp (Step 3)</span>
                     <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
                     </svg>
@@ -362,24 +368,136 @@
             </div>
         </div>
     @elseif ($step === 3)
-        {{-- STEP 3 PLACEHOLDER FOR P8-03 --}}
-        <div class="crm-card space-y-6 text-center py-12">
-            <div class="mx-auto flex size-12 items-center justify-center rounded-full bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400">
-                <svg class="size-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+        {{-- STEP 3 VIEW: DUPLICATE STRATEGY & START IMPORT --}}
+        <div class="crm-card space-y-6">
+            <div>
+                <h2 class="text-base font-semibold text-slate-900 dark:text-white">3. Cấu hình Chiến lược xử lý trùng lặp</h2>
+                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Chọn cách hệ thống xử lý khi phát hiện thông tin trùng lặp (Email hoặc Số điện thoại) với dữ liệu sẵn có.</p>
+            </div>
+
+            {{-- Strategy Radio Options --}}
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <label
+                    class="relative flex cursor-pointer flex-col rounded-xl border p-4 shadow-xs transition-colors"
+                    :class="$wire.duplicateStrategy === 'skip' ? 'border-indigo-600 bg-indigo-50/50 dark:border-indigo-500 dark:bg-indigo-950/30 ring-2 ring-indigo-600' : 'border-slate-200 hover:border-slate-300 dark:border-slate-800 dark:hover:border-slate-700'"
+                >
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm font-bold text-slate-900 dark:text-white">Bỏ qua (Skip)</span>
+                        <input type="radio" wire:model.live="duplicateStrategy" value="skip" class="size-4 text-indigo-600">
+                    </div>
+                    <span class="mt-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400">Khuyên dùng</span>
+                    <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Bỏ qua dòng trong tệp nếu tìm thấy Lead đã tồn tại cùng Email hoặc Số điện thoại. Giữ nguyên dữ liệu hiện tại.</p>
+                </label>
+
+                <label
+                    class="relative flex cursor-pointer flex-col rounded-xl border p-4 shadow-xs transition-colors"
+                    :class="$wire.duplicateStrategy === 'update' ? 'border-indigo-600 bg-indigo-50/50 dark:border-indigo-500 dark:bg-indigo-950/30 ring-2 ring-indigo-600' : 'border-slate-200 hover:border-slate-300 dark:border-slate-800 dark:hover:border-slate-700'"
+                >
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm font-bold text-slate-900 dark:text-white">Cập nhật (Update)</span>
+                        <input type="radio" wire:model.live="duplicateStrategy" value="update" class="size-4 text-indigo-600">
+                    </div>
+                    <span class="mt-2 text-xs font-semibold text-amber-600 dark:text-amber-400">Ghi đè thông tin</span>
+                    <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Cập nhật các trường thông tin mới từ tệp CSV vào record Lead sẵn có trong CRM.</p>
+                </label>
+
+                <label
+                    class="relative flex cursor-pointer flex-col rounded-xl border p-4 shadow-xs transition-colors"
+                    :class="$wire.duplicateStrategy === 'create_new' ? 'border-indigo-600 bg-indigo-50/50 dark:border-indigo-500 dark:bg-indigo-950/30 ring-2 ring-indigo-600' : 'border-slate-200 hover:border-slate-300 dark:border-slate-800 dark:hover:border-slate-700'"
+                >
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm font-bold text-slate-900 dark:text-white">Tạo mới (Create New)</span>
+                        <input type="radio" wire:model.live="duplicateStrategy" value="create_new" class="size-4 text-indigo-600">
+                    </div>
+                    <span class="mt-2 text-xs font-semibold text-indigo-600 dark:text-indigo-400">Luôn thêm mới</span>
+                    <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Bỏ qua kiểm tra trùng lặp, luôn luôn tạo một record Lead mới cho mỗi dòng dữ liệu.</p>
+                </label>
+            </div>
+
+            {{-- Summary Execution Box --}}
+            <div class="rounded-lg border border-slate-200 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-900/50">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Tóm tắt thông số Import</h3>
+                <dl class="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-3 text-xs">
+                    <div>
+                        <dt class="text-slate-500">Tệp nguồn:</dt>
+                        <dd class="font-semibold text-slate-900 dark:text-white">{{ $preview['original_filename'] ?? '' }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-slate-500">Tổng số dòng ước tính:</dt>
+                        <dd class="font-semibold text-slate-900 dark:text-white">{{ number_format($preview['total_rows_estimate'] ?? 0) }} dòng</dd>
+                    </div>
+                    <div>
+                        <dt class="text-slate-500">Người chịu trách nhiệm sở hữu:</dt>
+                        <dd class="font-semibold text-indigo-600 dark:text-indigo-400">{{ auth()->user()->name }} (Self-assigned)</dd>
+                    </div>
+                </dl>
+            </div>
+
+            {{-- Step 3 Action Bar --}}
+            <div class="flex items-center justify-between border-t border-slate-200 pt-4 dark:border-slate-800">
+                <button
+                    type="button"
+                    wire:click="backToMapping"
+                    class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-slate-700 shadow-xs hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+                >
+                    Quay lại Step 2
+                </button>
+
+                <button
+                    type="button"
+                    wire:click="startImport"
+                    class="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-5 py-2.5 text-xs font-bold text-white shadow-md hover:bg-emerald-500 focus:outline-hidden focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:bg-emerald-500 dark:hover:bg-emerald-400"
+                >
+                    <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" />
+                    </svg>
+                    <span>Bắt đầu Nhập dữ liệu (Start Queue)</span>
+                </button>
+            </div>
+        </div>
+    @elseif ($step === 4)
+        {{-- STEP 4 PLACEHOLDER FOR P8-04 REALTIME PROGRESS --}}
+        <div class="crm-card space-y-6 text-center py-8">
+            <div class="mx-auto flex size-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400">
+                <svg class="size-7 animate-pulse" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
                 </svg>
             </div>
-            <h2 class="text-lg font-bold text-slate-900 dark:text-white">Cấu hình ghép nối cột hoàn tất!</h2>
-            <p class="mx-auto max-w-md text-xs text-slate-500 dark:text-slate-400">Dữ liệu tệp đã sẵn sàng để cấu hình chiến lược xử lý trùng lặp và đẩy vào Queue ở tính năng tiếp theo (P8-03).</p>
+            <h2 class="text-xl font-bold text-slate-900 dark:text-white">Tiến trình Import đã khởi chạy thành công!</h2>
+            <p class="mx-auto max-w-lg text-xs text-slate-500 dark:text-slate-400">Tệp dữ liệu đã được chia thành từng Chunk nhỏ và đẩy vào hàng đợi Queue để xử lý bất đồng bộ. Đợt Import ID: <strong>#{{ $currentBatch->id ?? $batchId }}</strong>.</p>
+
+            @if ($currentBatch !== null)
+                <div class="mx-auto max-w-md rounded-lg border border-slate-200 bg-slate-50/70 p-4 text-left text-xs dark:border-slate-800 dark:bg-slate-900/50 space-y-2">
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Trạng thái:</span>
+                        <span class="font-bold text-indigo-600 uppercase">{{ $currentBatch->status }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Tổng dòng:</span>
+                        <span class="font-bold text-slate-900 dark:text-white">{{ number_format($currentBatch->total_rows) }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Đã xử lý:</span>
+                        <span class="font-bold text-slate-900 dark:text-white">{{ number_format($currentBatch->processed_rows) }}</span>
+                    </div>
+                </div>
+            @endif
 
             <div class="pt-4 flex justify-center gap-3">
                 <button
                     type="button"
-                    wire:click="proceedToMapping"
+                    wire:click="resetWizard"
                     class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
                 >
-                    Quay lại Step 2 (Mapping)
+                    Nhập tệp khác
                 </button>
+                <a
+                    href="{{ route('leads.index') }}"
+                    wire:navigate
+                    class="rounded-lg bg-indigo-600 px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-500"
+                >
+                    Về danh sách Lead
+                </a>
             </div>
         </div>
     @endif
