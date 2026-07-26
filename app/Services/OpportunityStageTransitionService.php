@@ -33,7 +33,7 @@ final readonly class OpportunityStageTransitionService
         return DB::transaction(function () use ($actor, $opportunityId, $targetStageId, $expectedCurrentStageId, $notes): Opportunity {
             $opportunity = $this->opportunities->findVisibleForUpdateOrFail($actor, $opportunityId);
 
-            if (! $actor->hasPermissionTo('opportunities.change-stage')) {
+            if (! $actor->can('opportunities.change-stage')) {
                 Gate::forUser($actor)->authorize('update', $opportunity);
             } else {
                 if (! $this->dataScope->allows($actor, $opportunity->owner_id, $opportunity->department_id)) {

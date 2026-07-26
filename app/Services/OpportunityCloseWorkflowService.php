@@ -290,7 +290,7 @@ final readonly class OpportunityCloseWorkflowService
 
     private function authorizeClosePermission(User $actor, Opportunity $opportunity): void
     {
-        if (! $actor->hasPermissionTo('opportunities.close')) {
+        if (! $actor->can('opportunities.close')) {
             Gate::forUser($actor)->authorize('update', $opportunity);
         } else {
             if (! $this->dataScope->allows($actor, $opportunity->owner_id, $opportunity->department_id)) {

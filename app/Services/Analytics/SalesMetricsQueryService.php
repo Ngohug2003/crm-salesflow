@@ -61,7 +61,9 @@ final readonly class SalesMetricsQueryService
      *     color: string,
      *     probability: int,
      *     opportunity_count: int,
-     *     total_amount: float
+     *     total_amount: float,
+     *     conversion_from_previous: float,
+     *     conversion_from_top: float
      * }>
      */
     public function getFunnelMetrics(User $actor, ReportFilterData $filters): array
