@@ -12,6 +12,7 @@ use App\Livewire\Contacts\ContactDetail;
 use App\Livewire\Contacts\ContactEditor;
 use App\Livewire\Contacts\ContactList;
 use App\Livewire\Dashboard\DashboardOverview;
+use App\Livewire\Imports\LeadImportWizard;
 use App\Livewire\Opportunities\OpportunityDetail;
 use App\Livewire\Opportunities\OpportunityEditor;
 use App\Livewire\Opportunities\OpportunityKanban;
@@ -40,6 +41,8 @@ Route::middleware(['auth', 'request.context.authenticated', 'verified', 'account
     Route::get('/leads/trash', [LeadController::class, 'trash'])->name('leads.trash');
     Route::get('/leads/{leadId}', [LeadController::class, 'show'])->whereNumber('leadId')->name('leads.show');
     Route::get('/leads/{leadId}/edit', [LeadController::class, 'edit'])->whereNumber('leadId')->name('leads.edit');
+
+    Route::get('/imports/leads', LeadImportWizard::class)->name('imports.leads');
 
     Route::get('/companies', CompanyList::class)->name('companies.index');
     Route::get('/companies/create', CompanyEditor::class)->name('companies.create');

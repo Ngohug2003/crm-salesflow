@@ -11,6 +11,7 @@
                 <flux:button :href="route('leads.trash')" wire:navigate variant="ghost" icon="trash">Thùng rác</flux:button>
             @endcan
             @can('create', \App\Models\Lead::class)
+                <flux:button :href="route('imports.leads')" wire:navigate variant="outline" icon="arrow-up-tray">Nhập Lead</flux:button>
                 <flux:button :href="route('leads.create')" wire:navigate variant="primary" icon="plus">Tạo Lead</flux:button>
             @endcan
         </div>
