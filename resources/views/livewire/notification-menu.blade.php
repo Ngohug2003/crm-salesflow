@@ -1,4 +1,4 @@
-<div class="relative" x-data="{ open: @entangle('open') }">
+<div class="relative" x-data="{ open: @entangle('open') }" wire:poll.5000ms>
     <!-- Bell Button with Unread Badge -->
     <button
         type="button"
@@ -82,6 +82,17 @@
                     Không có thông báo mới nào.
                 </div>
             @endforelse
+        </div>
+
+        <div class="pt-2 border-t border-slate-100 dark:border-slate-800 text-center">
+            <a
+                href="{{ route('notifications.index') }}"
+                wire:navigate
+                @click="open = false"
+                class="text-xs font-semibold text-indigo-600 hover:underline dark:text-indigo-400"
+            >
+                Xem tất cả thông báo →
+            </a>
         </div>
     </div>
 </div>

@@ -175,7 +175,7 @@ Tài liệu này là lộ trình và trạng thái checkpoint chính của dự 
 | P8-03 | Chunk queue và duplicate strategy | `feature/p8-03-import-queue-duplicates` | P8-02 | ✅ Hoàn thành |
 | P8-04 | Import progress và error file | `feature/p8-04-import-progress-errors` | P8-03 | ✅ Hoàn thành |
 | P8-05 | Queued export và signed download | `feature/p8-05-export-signed-download` | P7-06 | ✅ Hoàn thành |
-| P8-06 | Notification center | `feature/p8-06-notification-center` | P6-06, P8-04 | ⏳ Chưa bắt đầu |
+| P8-06 | Notification center | `feature/p8-06-notification-center` | P6-06, P8-04 | ✅ Hoàn thành |
 | P8-07 | Audit hardening và checkpoint | `feature/p8-07-audit-checkpoint` | P8-01..P8-06 | ⏳ Chưa bắt đầu |
 
 ---

@@ -9,7 +9,9 @@ use App\Enums\LeadStatus;
 use App\Models\ExportBatch;
 use App\Models\Lead;
 use App\Models\User;
+use App\Notifications\ExportCompletedNotification;
 use App\Services\Authorization\DataScopeService;
+use App\Services\Export\ExportExecutionService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Queue\Queueable;
@@ -164,6 +166,16 @@ final class ProcessQueuedExportJob implements ShouldQueue
                 'status' => 'completed',
                 'completed_at' => now(),
             ]);
+
+            $exportService = app(ExportExecutionService::class);
+            $signedUrl = $exportService->getSignedDownloadUrl($batch);
+
+            $user->notify(new ExportCompletedNotification(
+                $batch->id,
+                $signedUrl,
+                $rowCount,
+                $fileName,
+            ));
 
         } catch (\Throwable $e) {
             Log::error("Queued Export Error batch #{$batch->id}: ".$e->getMessage());

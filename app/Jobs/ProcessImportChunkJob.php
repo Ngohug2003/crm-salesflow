@@ -7,6 +7,7 @@ namespace App\Jobs;
 use App\Models\ImportBatch;
 use App\Models\Lead;
 use App\Models\User;
+use App\Notifications\ImportCompletedNotification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\SerializesModels;
@@ -161,6 +162,15 @@ final class ProcessImportChunkJob implements ShouldQueue
                 'status' => 'completed',
                 'completed_at' => now(),
             ]);
+
+            $user->notify(new ImportCompletedNotification(
+                $freshBatch->id,
+                'completed',
+                $freshBatch->total_rows,
+                $freshBatch->successful_rows,
+                $freshBatch->failed_rows,
+                $freshBatch->skipped_rows,
+            ));
         }
     }
 }
