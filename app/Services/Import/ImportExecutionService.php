@@ -9,6 +9,7 @@ use App\Models\ImportBatch;
 use App\Models\User;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 final class ImportExecutionService
 {
@@ -124,5 +125,35 @@ final class ImportExecutionService
         ]);
 
         return $batch;
+    }
+
+    /**
+     * Download streamed error CSV file for a given ImportBatch.
+     */
+    public function downloadErrorCsvFile(ImportBatch $batch): StreamedResponse
+    {
+        $errors = $batch->error_log ?? [];
+
+        return response()->streamDownload(function () use ($errors): void {
+            $output = fopen('php://output', 'w');
+            if ($output === false) {
+                return;
+            }
+
+            // UTF-8 BOM for Excel
+            fwrite($output, "\xEF\xBB\xBF");
+            fputcsv($output, ['STT_Dòng', 'Chi_Tiết_Lỗi']);
+
+            foreach ($errors as $errorItem) {
+                fputcsv($output, [
+                    $errorItem['row'] ?? 'N/A',
+                    $errorItem['error'] ?? 'Không rõ nguyên nhân',
+                ]);
+            }
+
+            fclose($output);
+        }, "import_errors_{$batch->id}.csv", [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
     }
 }

@@ -456,47 +456,137 @@
             </div>
         </div>
     @elseif ($step === 4)
-        {{-- STEP 4 PLACEHOLDER FOR P8-04 REALTIME PROGRESS --}}
-        <div class="crm-card space-y-6 text-center py-8">
-            <div class="mx-auto flex size-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400">
-                <svg class="size-7 animate-pulse" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
-                </svg>
-            </div>
-            <h2 class="text-xl font-bold text-slate-900 dark:text-white">Tiến trình Import đã khởi chạy thành công!</h2>
-            <p class="mx-auto max-w-lg text-xs text-slate-500 dark:text-slate-400">Tệp dữ liệu đã được chia thành từng Chunk nhỏ và đẩy vào hàng đợi Queue để xử lý bất đồng bộ. Đợt Import ID: <strong>#{{ $currentBatch->id ?? $batchId }}</strong>.</p>
+        @php
+            $isProcessing = $currentBatch !== null && in_array($currentBatch->status, ['pending', 'processing'], true);
+            $total = $currentBatch->total_rows ?? 0;
+            $processed = $currentBatch->processed_rows ?? 0;
+            $percentage = $total > 0 ? min(100, (int) round(($processed / $total) * 100)) : ($isProcessing ? 50 : 100);
+        @endphp
 
+        <div
+            @if ($isProcessing) wire:poll.1000ms @endif
+            class="crm-card space-y-6"
+        >
+            {{-- Header status banner --}}
+            <div class="flex flex-col items-center text-center space-y-3 py-4">
+                @if ($isProcessing)
+                    <div class="flex size-14 items-center justify-center rounded-full bg-indigo-100 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400">
+                        <svg class="size-7 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </div>
+                    <h2 class="text-xl font-bold text-slate-900 dark:text-white">Đang xử lý nhập dữ liệu vào hệ thống...</h2>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Tệp dữ liệu đang được hàng đợi Queue xử lý bất đồng bộ. Hệ thống sẽ tự động cập nhật tiến trình.</p>
+                @else
+                    <div class="flex size-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400">
+                        <svg class="size-7" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <h2 class="text-xl font-bold text-slate-900 dark:text-white">Tiến trình Import đã hoàn thành!</h2>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Toàn bộ các dòng dữ liệu trong tệp đã được xử lý xong. Mã đợt Import: <strong>#{{ $currentBatch->id ?? $batchId }}</strong>.</p>
+                @endif
+            </div>
+
+            {{-- Progress Bar --}}
+            <div class="space-y-2">
+                <div class="flex justify-between text-xs font-semibold">
+                    <span class="text-slate-700 dark:text-slate-300">Tiến độ thực thi Queue:</span>
+                    <span class="text-indigo-600 dark:text-indigo-400">{{ $percentage }}%</span>
+                </div>
+                <div class="h-3 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                    <div
+                        class="h-full transition-all duration-500 {{ $percentage === 100 ? 'bg-emerald-500' : 'bg-indigo-600' }}"
+                        style="width: {{ $percentage }}%"
+                    ></div>
+                </div>
+                <div class="flex justify-between text-[11px] text-slate-500">
+                    <span>Đã xử lý: <strong>{{ number_format($processed) }}</strong> / <strong>{{ number_format($total) }} dòng</strong></span>
+                    <span>Trạng thái Batch: <strong class="uppercase text-indigo-600">{{ $currentBatch->status ?? 'processing' }}</strong></span>
+                </div>
+            </div>
+
+            {{-- 4 Stat Cards --}}
             @if ($currentBatch !== null)
-                <div class="mx-auto max-w-md rounded-lg border border-slate-200 bg-slate-50/70 p-4 text-left text-xs dark:border-slate-800 dark:bg-slate-900/50 space-y-2">
-                    <div class="flex justify-between">
-                        <span class="text-slate-500">Trạng thái:</span>
-                        <span class="font-bold text-indigo-600 uppercase">{{ $currentBatch->status }}</span>
+                <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 text-center dark:border-slate-800 dark:bg-slate-900/50">
+                        <div class="text-xs font-medium text-slate-500">Tổng số dòng</div>
+                        <div class="mt-1 text-xl font-extrabold text-slate-900 dark:text-white">{{ number_format($currentBatch->total_rows) }}</div>
                     </div>
-                    <div class="flex justify-between">
-                        <span class="text-slate-500">Tổng dòng:</span>
-                        <span class="font-bold text-slate-900 dark:text-white">{{ number_format($currentBatch->total_rows) }}</span>
+
+                    <div class="rounded-xl border border-emerald-200 bg-emerald-50/50 p-4 text-center dark:border-emerald-950/60 dark:bg-emerald-950/20">
+                        <div class="text-xs font-medium text-emerald-700 dark:text-emerald-400">Thành công</div>
+                        <div class="mt-1 text-xl font-extrabold text-emerald-600 dark:text-emerald-400">{{ number_format($currentBatch->successful_rows) }}</div>
                     </div>
-                    <div class="flex justify-between">
-                        <span class="text-slate-500">Đã xử lý:</span>
-                        <span class="font-bold text-slate-900 dark:text-white">{{ number_format($currentBatch->processed_rows) }}</span>
+
+                    <div class="rounded-xl border border-amber-200 bg-amber-50/50 p-4 text-center dark:border-amber-950/60 dark:bg-amber-950/20">
+                        <div class="text-xs font-medium text-amber-700 dark:text-amber-400">Bỏ qua (Trùng)</div>
+                        <div class="mt-1 text-xl font-extrabold text-amber-600 dark:text-amber-400">{{ number_format($currentBatch->skipped_rows) }}</div>
+                    </div>
+
+                    <div class="rounded-xl border border-rose-200 bg-rose-50/50 p-4 text-center dark:border-rose-950/60 dark:bg-rose-950/20">
+                        <div class="text-xs font-medium text-rose-700 dark:text-rose-400">Thất bại (Lỗi)</div>
+                        <div class="mt-1 text-xl font-extrabold text-rose-600 dark:text-rose-400">{{ number_format($currentBatch->failed_rows) }}</div>
                     </div>
                 </div>
+
+                {{-- Download Error File & Error Details --}}
+                @if ($currentBatch->failed_rows > 0 || ($currentBatch->error_log !== null && $currentBatch->error_log !== []))
+                    <div class="rounded-xl border border-rose-200 bg-rose-50/50 p-5 dark:border-rose-900/50 dark:bg-rose-950/30 space-y-4">
+                        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                                <h3 class="text-sm font-bold text-rose-900 dark:text-rose-200">Phát hiện {{ $currentBatch->failed_rows }} dòng gặp lỗi khi xử lý</h3>
+                                <p class="mt-0.5 text-xs text-rose-700 dark:text-rose-300">Tải tệp báo cáo lỗi CSV để xem chi tiết lý do nguyên nhân từng dòng và thực hiện chỉnh sửa.</p>
+                            </div>
+
+                            <button
+                                type="button"
+                                wire:click="downloadErrorFile"
+                                class="inline-flex items-center gap-2 rounded-lg bg-rose-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-rose-500 focus:outline-hidden focus:ring-2 focus:ring-rose-500 focus:ring-offset-2 dark:bg-rose-500 dark:hover:bg-rose-400"
+                            >
+                                <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                                </svg>
+                                Tải tệp báo cáo lỗi (.CSV)
+                            </button>
+                        </div>
+
+                        @if ($currentBatch->error_log !== null && $currentBatch->error_log !== [])
+                            <div class="space-y-2 border-t border-rose-200 pt-3 dark:border-rose-900/50">
+                                <div class="text-xs font-semibold text-rose-900 dark:text-rose-300">Chi tiết lỗi mẫu (Tối đa 10 dòng đầu):</div>
+                                <div class="max-h-48 overflow-y-auto space-y-1.5 pr-1">
+                                    @foreach (array_slice($currentBatch->error_log, 0, 10) as $err)
+                                        <div class="rounded border border-rose-200 bg-white p-2 text-xs text-rose-900 dark:border-rose-900/40 dark:bg-slate-900 dark:text-rose-300">
+                                            <strong>Dòng {{ $err['row'] ?? 'N/A' }}:</strong> {{ $err['error'] ?? 'Lỗi không xác định' }}
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                @endif
             @endif
 
-            <div class="pt-4 flex justify-center gap-3">
+            {{-- Action buttons --}}
+            <div class="flex items-center justify-between border-t border-slate-200 pt-4 dark:border-slate-800">
                 <button
                     type="button"
                     wire:click="resetWizard"
-                    class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                    class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-slate-700 shadow-xs hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
                 >
                     Nhập tệp khác
                 </button>
+
                 <a
                     href="{{ route('leads.index') }}"
                     wire:navigate
-                    class="rounded-lg bg-indigo-600 px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-500"
+                    class="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-indigo-500 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:bg-indigo-500 dark:hover:bg-indigo-400"
                 >
-                    Về danh sách Lead
+                    <span>Về danh sách Lead</span>
+                    <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+                    </svg>
                 </a>
             </div>
         </div>

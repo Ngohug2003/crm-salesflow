@@ -185,6 +185,21 @@ final class LeadImportWizard extends Component
         $this->step = 4;
     }
 
+    public function downloadErrorFile(ImportExecutionService $executionService): StreamedResponse
+    {
+        if ($this->batchId === null) {
+            throw new AuthorizationException('Không tìm thấy đợt import.');
+        }
+
+        $batch = ImportBatch::query()->findOrFail($this->batchId);
+        $actor = auth()->user();
+        if ($actor === null || ($batch->user_id !== $actor->id && ! Gate::allows('leads.import'))) {
+            throw new AuthorizationException('Bạn không có quyền tải tệp báo cáo lỗi của đợt import này.');
+        }
+
+        return $executionService->downloadErrorCsvFile($batch);
+    }
+
     public function render(): View
     {
         $batch = $this->batchId !== null ? ImportBatch::query()->find($this->batchId) : null;
