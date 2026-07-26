@@ -8,6 +8,7 @@ use App\Enums\DataScope;
 use App\Models\Task;
 use App\Models\User;
 use App\Services\Authorization\DataScopeService;
+use Spatie\Permission\Exceptions\PermissionDoesNotExist;
 
 final readonly class TaskPolicy
 {
@@ -17,24 +18,24 @@ final readonly class TaskPolicy
 
     public function viewAny(User $user): bool
     {
-        return $user->hasPermissionTo('tasks.view');
+        return $this->hasPermission($user, 'tasks.view');
     }
 
     public function view(User $user, Task $task): bool
     {
-        return $user->hasPermissionTo('tasks.view')
+        return $this->hasPermission($user, 'tasks.view')
             && $this->isVisible($user, $task);
     }
 
     public function create(User $user): bool
     {
-        return $user->hasPermissionTo('tasks.create')
+        return $this->hasPermission($user, 'tasks.create')
             && $this->dataScope->canWrite($user);
     }
 
     public function update(User $user, Task $task): bool
     {
-        if (! $user->hasPermissionTo('tasks.update') || ! $this->dataScope->canWrite($user)) {
+        if (! $this->hasPermission($user, 'tasks.update') || ! $this->dataScope->canWrite($user)) {
             return false;
         }
 
@@ -43,11 +44,20 @@ final readonly class TaskPolicy
 
     public function delete(User $user, Task $task): bool
     {
-        if (! $user->hasPermissionTo('tasks.delete') || ! $this->dataScope->canWrite($user)) {
+        if (! $this->hasPermission($user, 'tasks.delete') || ! $this->dataScope->canWrite($user)) {
             return false;
         }
 
         return $this->isVisible($user, $task);
+    }
+
+    private function hasPermission(User $user, string $permission): bool
+    {
+        try {
+            return $user->hasPermissionTo($permission);
+        } catch (PermissionDoesNotExist) {
+            return false;
+        }
     }
 
     private function isVisible(User $user, Task $task): bool

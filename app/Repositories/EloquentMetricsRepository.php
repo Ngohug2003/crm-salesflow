@@ -15,14 +15,72 @@ use App\Models\User;
 use App\Repositories\Contracts\MetricsRepository;
 use App\Services\Authorization\DataScopeService;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Cache;
 
 final readonly class EloquentMetricsRepository implements MetricsRepository
 {
+    private const int CACHE_TTL_SECONDS = 600; // 10 phút
+
     public function __construct(
         private DataScopeService $dataScope,
     ) {}
 
+    public function clearMetricsCache(User $actor): void
+    {
+        Cache::flush();
+    }
+
     public function getLeadMetrics(User $actor, ReportFilterData $filters): array
+    {
+        $key = $this->buildCacheKey('leads', $actor, $filters);
+
+        /** @var array{total_leads: int, converted_leads: int, conversion_rate: float, by_status: array<string, int>, by_source: array<string, int>} $cached */
+        $cached = Cache::remember($key, self::CACHE_TTL_SECONDS, fn (): array => $this->fetchLeadMetrics($actor, $filters));
+
+        return $cached;
+    }
+
+    public function getOpportunityMetrics(User $actor, ReportFilterData $filters): array
+    {
+        $key = $this->buildCacheKey('opportunities', $actor, $filters);
+
+        /** @var array{total_opportunities: int, open_opportunities: int, won_opportunities: int, lost_opportunities: int, total_amount: float, open_amount: float, won_amount: float, weighted_forecast: float, win_rate: float, avg_sales_cycle_days: float, loss_reasons: array<string, int>} $cached */
+        $cached = Cache::remember($key, self::CACHE_TTL_SECONDS, fn (): array => $this->fetchOpportunityMetrics($actor, $filters));
+
+        return $cached;
+    }
+
+    public function getFunnelMetrics(User $actor, ReportFilterData $filters): array
+    {
+        $key = $this->buildCacheKey('funnel', $actor, $filters);
+
+        /** @var array<int, array{stage_id: int, stage_name: string, position: int, color: string, probability: int, opportunity_count: int, total_amount: float, conversion_from_previous: float, conversion_from_top: float}> $cached */
+        $cached = Cache::remember($key, self::CACHE_TTL_SECONDS, fn (): array => $this->fetchFunnelMetrics($actor, $filters));
+
+        return $cached;
+    }
+
+    public function getActivityAndTaskMetrics(User $actor, ReportFilterData $filters): array
+    {
+        $key = $this->buildCacheKey('activity_task', $actor, $filters);
+
+        /** @var array{total_activities: int, activities_by_type: array<string, int>, total_tasks: int, completed_tasks: int, overdue_tasks: int, tasks_by_status: array<string, int>, tasks_by_priority: array<string, int>} $cached */
+        $cached = Cache::remember($key, self::CACHE_TTL_SECONDS, fn (): array => $this->fetchActivityAndTaskMetrics($actor, $filters));
+
+        return $cached;
+    }
+
+    public function getSalesPerformanceMetrics(User $actor, ReportFilterData $filters): array
+    {
+        $key = $this->buildCacheKey('performance', $actor, $filters);
+
+        /** @var array<int, array{user_id: int, user_name: string, department_name: string, total_leads: int, total_opportunities: int, won_opportunities: int, won_amount: float, win_rate: float, activity_count: int, completed_tasks_count: int}> $cached */
+        $cached = Cache::remember($key, self::CACHE_TTL_SECONDS, fn (): array => $this->fetchSalesPerformanceMetrics($actor, $filters));
+
+        return $cached;
+    }
+
+    private function fetchLeadMetrics(User $actor, ReportFilterData $filters): array
     {
         [$start, $end] = $filters->resolveDateRange();
 
@@ -62,7 +120,7 @@ final readonly class EloquentMetricsRepository implements MetricsRepository
         ];
     }
 
-    public function getOpportunityMetrics(User $actor, ReportFilterData $filters): array
+    private function fetchOpportunityMetrics(User $actor, ReportFilterData $filters): array
     {
         [$start, $end] = $filters->resolveDateRange();
 
@@ -135,7 +193,7 @@ final readonly class EloquentMetricsRepository implements MetricsRepository
         ];
     }
 
-    public function getFunnelMetrics(User $actor, ReportFilterData $filters): array
+    private function fetchFunnelMetrics(User $actor, ReportFilterData $filters): array
     {
         [$start, $end] = $filters->resolveDateRange();
 
@@ -201,7 +259,7 @@ final readonly class EloquentMetricsRepository implements MetricsRepository
         return $result;
     }
 
-    public function getActivityAndTaskMetrics(User $actor, ReportFilterData $filters): array
+    private function fetchActivityAndTaskMetrics(User $actor, ReportFilterData $filters): array
     {
         [$start, $end] = $filters->resolveDateRange();
 
@@ -295,7 +353,7 @@ final readonly class EloquentMetricsRepository implements MetricsRepository
         ];
     }
 
-    public function getSalesPerformanceMetrics(User $actor, ReportFilterData $filters): array
+    private function fetchSalesPerformanceMetrics(User $actor, ReportFilterData $filters): array
     {
         [$start, $end] = $filters->resolveDateRange();
 
@@ -364,6 +422,21 @@ final readonly class EloquentMetricsRepository implements MetricsRepository
         usort($result, static fn (array $a, array $b): int => $b['won_amount'] <=> $a['won_amount']);
 
         return $result;
+    }
+
+    private function buildCacheKey(string $type, User $actor, ReportFilterData $filters): string
+    {
+        $scope = $this->dataScope->resolve($actor)->value;
+        $hash = md5((string) json_encode([
+            $filters->datePreset,
+            $filters->startDate,
+            $filters->endDate,
+            $filters->departmentId,
+            $filters->userId,
+            $filters->pipelineId,
+        ]));
+
+        return "crm_metrics:{$type}:u_{$actor->id}:s_{$scope}:{$hash}";
     }
 
     /**

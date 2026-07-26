@@ -7,6 +7,7 @@ namespace App\Policies;
 use App\Models\Opportunity;
 use App\Models\User;
 use App\Services\Authorization\DataScopeService;
+use Spatie\Permission\Exceptions\PermissionDoesNotExist;
 
 final readonly class OpportunityPolicy
 {
@@ -14,12 +15,12 @@ final readonly class OpportunityPolicy
 
     public function viewAny(User $user): bool
     {
-        return $user->hasAnyPermission(['opportunities.view', 'opportunities.view-all']);
+        return $this->hasPermission($user, 'opportunities.view') || $this->hasPermission($user, 'opportunities.view-all');
     }
 
     public function view(User $user, Opportunity $opportunity): bool
     {
-        if (! $user->hasAnyPermission(['opportunities.view', 'opportunities.view-all'])) {
+        if (! $this->hasPermission($user, 'opportunities.view') && ! $this->hasPermission($user, 'opportunities.view-all')) {
             return false;
         }
 
@@ -32,7 +33,7 @@ final readonly class OpportunityPolicy
             return false;
         }
 
-        return $user->hasPermissionTo('opportunities.create');
+        return $this->hasPermission($user, 'opportunities.create');
     }
 
     public function update(User $user, Opportunity $opportunity): bool
@@ -41,7 +42,7 @@ final readonly class OpportunityPolicy
             return false;
         }
 
-        if (! $user->hasPermissionTo('opportunities.update')) {
+        if (! $this->hasPermission($user, 'opportunities.update')) {
             return false;
         }
 
@@ -54,10 +55,19 @@ final readonly class OpportunityPolicy
             return false;
         }
 
-        if (! $user->hasPermissionTo('opportunities.delete')) {
+        if (! $this->hasPermission($user, 'opportunities.delete')) {
             return false;
         }
 
         return $this->dataScope->allows($user, $opportunity->owner_id, $opportunity->department_id);
+    }
+
+    private function hasPermission(User $user, string $permission): bool
+    {
+        try {
+            return $user->hasPermissionTo($permission);
+        } catch (PermissionDoesNotExist) {
+            return false;
+        }
     }
 }

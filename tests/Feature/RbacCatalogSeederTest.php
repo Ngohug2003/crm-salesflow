@@ -28,7 +28,7 @@ it('defines a valid CRM role and permission catalog', function (): void {
     $roles = config('crm.rbac.roles');
 
     expect($permissions)
-        ->toHaveCount(45)
+        ->toHaveCount(48)
         ->and(array_values(array_unique($permissions)))->toBe($permissions)
         ->and(array_keys($roles))->toBe(['super-admin', 'admin', 'sales-manager', 'sales', 'viewer'])
         ->and(array_column($roles, 'data_scope'))->toBe(['all', 'all', 'department', 'owned', 'read-only'])
@@ -48,10 +48,10 @@ it('seeds permissions and role assignments idempotently', function (): void {
 
     $this->seed(RolePermissionSeeder::class);
 
-    expect(Permission::query()->count())->toBe(45)
+    expect(Permission::query()->count())->toBe(48)
         ->and(Role::query()->count())->toBe(5)
         ->and(Role::findByName('super-admin')->permissions)->toHaveCount(0)
-        ->and(Role::findByName('admin')->permissions)->toHaveCount(45)
+        ->and(Role::findByName('admin')->permissions)->toHaveCount(48)
         ->and(Role::findByName('sales-manager')->permissions)->toHaveCount(39)
         ->and(Role::findByName('sales')->permissions)->toHaveCount(30)
         ->and(Role::findByName('viewer')->permissions)->toHaveCount(8)
@@ -84,5 +84,5 @@ it('assigns the super admin role to the seeded administrator idempotently', func
     expect($admin->hasRole('super-admin'))->toBeTrue()
         ->and($admin->roles)->toHaveCount(1)
         ->and(Role::query()->count())->toBe(5)
-        ->and(Permission::query()->count())->toBe(45);
+        ->and(Permission::query()->count())->toBe(48);
 });

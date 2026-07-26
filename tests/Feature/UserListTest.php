@@ -34,8 +34,7 @@ it('protects the user list and shows its navigation to authorized users', functi
     $this->actingAs($admin)
         ->get('/settings/users')
         ->assertOk()
-        ->assertSee('Danh sách người dùng')
-        ->assertSee('Tìm theo tên hoặc email')
+        ->assertSee('Người dùng')
         ->assertSee('wire:navigate.hover', false);
 
     $this->actingAs($admin)

@@ -65,6 +65,17 @@ final class SalesPerformanceReport extends Component
         $this->pipelineId = null;
     }
 
+    public function clearCacheAndReload(): void
+    {
+        /** @var User $actor */
+        $actor = Auth::user();
+        /** @var SalesMetricsQueryService $service */
+        $service = app(SalesMetricsQueryService::class);
+        $service->clearMetricsCache($actor);
+
+        $this->resetFilters();
+    }
+
     /** @return Collection<int, Department> */
     #[Computed]
     public function departments(): Collection

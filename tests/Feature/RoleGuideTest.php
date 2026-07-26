@@ -64,7 +64,7 @@ it('documents super admin gate bypass and keeps role counts aligned with config'
     $superAdmin = guideUserWithRole('super-admin');
     $catalog = app(RoleGuideService::class)->catalog();
 
-    expect(array_column($catalog, 'permission_count'))->toBe([45, 45, 39, 30, 8]);
+    expect(array_column($catalog, 'permission_count'))->toBe([48, 48, 39, 30, 8]);
 
     $this->actingAs($superAdmin)
         ->get('/help/roles')

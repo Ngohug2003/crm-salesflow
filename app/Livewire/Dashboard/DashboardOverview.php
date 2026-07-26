@@ -56,6 +56,17 @@ final class DashboardOverview extends Component
         $this->pipelineId = null;
     }
 
+    public function clearCacheAndReload(): void
+    {
+        /** @var User $actor */
+        $actor = Auth::user();
+        /** @var SalesMetricsQueryService $service */
+        $service = app(SalesMetricsQueryService::class);
+        $service->clearMetricsCache($actor);
+
+        $this->resetFilters();
+    }
+
     /**
      * Tải danh sách phòng ban cho dropdown bộ lọc
      *
