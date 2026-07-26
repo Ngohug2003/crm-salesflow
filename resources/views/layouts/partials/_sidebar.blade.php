@@ -76,6 +76,21 @@
             </div>
         </div>
 
+        {{-- Báo cáo & Thống kê --}}
+        <div>
+            <p x-show="sidebar" class="nav-group-label">Báo cáo & Thống kê</p>
+            <div class="mt-1 space-y-0.5">
+                @can('reports.view')
+                    <a href="{{ route('reports.funnel') }}" wire:navigate.hover
+                       class="nav-link"
+                       :class="path.startsWith('/reports/funnel') && 'nav-link-active'">
+                        <flux:icon.chart-bar class="nav-icon" />
+                        <span x-show="sidebar">Báo cáo Phễu (Funnel)</span>
+                    </a>
+                @endcan
+            </div>
+        </div>
+
         {{-- Quản trị --}}
         <div>
             <p x-show="sidebar" class="nav-group-label">Quản trị</p>

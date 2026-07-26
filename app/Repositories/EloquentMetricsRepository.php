@@ -165,16 +165,34 @@ final readonly class EloquentMetricsRepository implements MetricsRepository
             ->toArray();
 
         $result = [];
-        foreach ($stages as $stage) {
+        $firstCount = 0;
+        $prevCount = 0;
+
+        foreach ($stages as $index => $stage) {
             $data = $oppsByStage[$stage->id] ?? ['count' => 0, 'amount' => 0.0];
+            $count = $data['count'];
+
+            if ($index === 0) {
+                $firstCount = $count;
+                $conversionFromTop = 100.0;
+                $conversionFromPrev = 100.0;
+            } else {
+                $conversionFromTop = $firstCount > 0 ? round(($count / $firstCount) * 100, 1) : 0.0;
+                $conversionFromPrev = $prevCount > 0 ? round(($count / $prevCount) * 100, 1) : 0.0;
+            }
+
+            $prevCount = $count;
+
             $result[] = [
                 'stage_id' => $stage->id,
                 'stage_name' => $stage->name,
                 'position' => $stage->position,
                 'color' => $stage->color,
                 'probability' => $stage->probability,
-                'opportunity_count' => $data['count'],
+                'opportunity_count' => $count,
                 'total_amount' => round($data['amount'], 2),
+                'conversion_from_previous' => $conversionFromPrev,
+                'conversion_from_top' => $conversionFromTop,
             ];
         }
 

@@ -20,6 +20,7 @@ use App\Livewire\Pipelines\PipelineDetail;
 use App\Livewire\Pipelines\PipelineEditor;
 use App\Livewire\Pipelines\PipelineList;
 use App\Livewire\Platform\SystemConsole;
+use App\Livewire\Reports\FunnelReport;
 use App\Livewire\Settings\SessionManager;
 use App\Livewire\Tasks\TaskCalendar;
 use App\Livewire\Tasks\TaskCreate;
@@ -64,6 +65,8 @@ Route::middleware(['auth', 'request.context.authenticated', 'verified', 'account
     Route::get('/tasks/kanban', TaskKanban::class)->name('tasks.kanban');
     Route::get('/tasks/calendar', TaskCalendar::class)->name('tasks.calendar');
     Route::get('/tasks/{taskId}', TaskShow::class)->whereNumber('taskId')->name('tasks.show');
+
+    Route::get('/reports/funnel', FunnelReport::class)->name('reports.funnel');
 
     Route::get('/settings/users', [UserController::class, 'index'])->name('users.index');
     Route::get('/settings/departments', [DepartmentController::class, 'index'])->name('departments.index');
