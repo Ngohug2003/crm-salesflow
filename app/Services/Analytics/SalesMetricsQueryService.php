@@ -39,6 +39,7 @@ final readonly class SalesMetricsQueryService
      *     won_opportunities: int,
      *     lost_opportunities: int,
      *     total_amount: float,
+     *     open_amount: float,
      *     won_amount: float,
      *     weighted_forecast: float,
      *     win_rate: float,

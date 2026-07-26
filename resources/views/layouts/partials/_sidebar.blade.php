@@ -87,6 +87,12 @@
                         <flux:icon.chart-bar class="nav-icon" />
                         <span x-show="sidebar">Báo cáo Phễu (Funnel)</span>
                     </a>
+                    <a href="{{ route('reports.revenue') }}" wire:navigate.hover
+                       class="nav-link"
+                       :class="path.startsWith('/reports/revenue') && 'nav-link-active'">
+                        <flux:icon.banknotes class="nav-icon" />
+                        <span x-show="sidebar">Báo cáo Doanh thu</span>
+                    </a>
                 @endcan
             </div>
         </div>

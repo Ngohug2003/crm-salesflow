@@ -81,6 +81,7 @@ final readonly class EloquentMetricsRepository implements MetricsRepository
         $lostOpps = (int) (clone $query)->where('opportunities.is_lost', true)->count();
 
         $totalAmount = (float) (clone $query)->sum('opportunities.amount');
+        $openAmount = (float) (clone $query)->where('opportunities.is_won', false)->where('opportunities.is_lost', false)->sum('opportunities.amount');
         $wonAmount = (float) (clone $query)->where('opportunities.is_won', true)->sum('opportunities.amount');
 
         // Weighted forecast = SUM(amount * probability / 100)
@@ -125,6 +126,7 @@ final readonly class EloquentMetricsRepository implements MetricsRepository
             'won_opportunities' => $wonOpps,
             'lost_opportunities' => $lostOpps,
             'total_amount' => round($totalAmount, 2),
+            'open_amount' => round($openAmount, 2),
             'won_amount' => round($wonAmount, 2),
             'weighted_forecast' => round($weightedForecast, 2),
             'win_rate' => $winRate,
