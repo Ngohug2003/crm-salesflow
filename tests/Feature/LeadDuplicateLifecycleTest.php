@@ -281,7 +281,7 @@ it('searches and paginates only trashed leads in the actor scope', function (): 
         ->assertSee('Lead thùng rác 01')
         ->assertDontSee('Lead thùng rác 16')
         ->set('search', 'không tồn tại')
-        ->assertSee('Thùng rác đang trống')
+        ->assertSee('Không tìm thấy Lead đã xóa')
         ->assertDontSee('Lead ngoài phạm vi');
 });
 

@@ -7,6 +7,7 @@ namespace App\Policies;
 use App\Models\Opportunity;
 use App\Models\User;
 use App\Services\Authorization\DataScopeService;
+use Spatie\Permission\Exceptions\PermissionDoesNotExist;
 
 final readonly class OpportunityPolicy
 {
@@ -65,7 +66,7 @@ final readonly class OpportunityPolicy
     {
         try {
             return $user->hasPermissionTo($permission);
-        } catch (\Spatie\Permission\Exceptions\PermissionDoesNotExist) {
+        } catch (PermissionDoesNotExist) {
             return false;
         }
     }

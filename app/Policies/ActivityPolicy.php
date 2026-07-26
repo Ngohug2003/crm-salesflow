@@ -8,6 +8,7 @@ use App\Enums\DataScope;
 use App\Models\Activity;
 use App\Models\User;
 use App\Services\Authorization\DataScopeService;
+use Spatie\Permission\Exceptions\PermissionDoesNotExist;
 
 final readonly class ActivityPolicy
 {
@@ -17,12 +18,12 @@ final readonly class ActivityPolicy
 
     public function viewAny(User $user): bool
     {
-        return $user->hasPermissionTo('activities.view');
+        return $this->hasPermission($user, 'activities.view');
     }
 
     public function view(User $user, Activity $activity): bool
     {
-        if (! $user->hasPermissionTo('activities.view')) {
+        if (! $this->hasPermission($user, 'activities.view')) {
             return false;
         }
 
@@ -31,13 +32,13 @@ final readonly class ActivityPolicy
 
     public function create(User $user): bool
     {
-        return $user->hasPermissionTo('activities.create')
+        return $this->hasPermission($user, 'activities.create')
             && $this->dataScope->canWrite($user);
     }
 
     public function update(User $user, Activity $activity): bool
     {
-        if (! $user->hasPermissionTo('activities.update') || ! $this->dataScope->canWrite($user)) {
+        if (! $this->hasPermission($user, 'activities.update') || ! $this->dataScope->canWrite($user)) {
             return false;
         }
 
@@ -46,11 +47,20 @@ final readonly class ActivityPolicy
 
     public function delete(User $user, Activity $activity): bool
     {
-        if (! $user->hasPermissionTo('activities.delete') || ! $this->dataScope->canWrite($user)) {
+        if (! $this->hasPermission($user, 'activities.delete') || ! $this->dataScope->canWrite($user)) {
             return false;
         }
 
         return $this->isVisible($user, $activity);
+    }
+
+    private function hasPermission(User $user, string $permission): bool
+    {
+        try {
+            return $user->hasPermissionTo($permission);
+        } catch (PermissionDoesNotExist) {
+            return false;
+        }
     }
 
     private function isVisible(User $user, Activity $activity): bool

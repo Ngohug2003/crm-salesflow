@@ -95,6 +95,8 @@ final class OpportunityList extends Component
         try {
             $service->delete($actor, $opportunityId);
             session()->flash('message', 'Đã xóa Cơ hội bán hàng thành công.');
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            throw $e;
         } catch (\Throwable $e) {
             $this->addError('opportunity_error', $e->getMessage());
         }

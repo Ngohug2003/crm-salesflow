@@ -8,6 +8,7 @@ use App\Enums\DataScope;
 use App\Models\Task;
 use App\Models\User;
 use App\Services\Authorization\DataScopeService;
+use Spatie\Permission\Exceptions\PermissionDoesNotExist;
 
 final readonly class TaskPolicy
 {
@@ -54,7 +55,7 @@ final readonly class TaskPolicy
     {
         try {
             return $user->hasPermissionTo($permission);
-        } catch (\Spatie\Permission\Exceptions\PermissionDoesNotExist) {
+        } catch (PermissionDoesNotExist) {
             return false;
         }
     }

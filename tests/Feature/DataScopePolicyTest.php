@@ -133,7 +133,7 @@ it('denies department pages to roles without a viewing permission', function ():
     $this->actingAs($viewer)
         ->get('/dashboard')
         ->assertOk()
-        ->assertDontSee('Phòng ban');
+        ->assertDontSee('/settings/departments');
 
     Livewire::actingAs($viewer)
         ->test(DepartmentManagement::class)
