@@ -70,7 +70,7 @@ it('renders the dashboard for a verified active user', function (): void {
         ->get('/dashboard')
         ->assertOk()
         ->assertSee('SalesFlow CRM')
-        ->assertSee('Nền tảng SalesFlow đã sẵn sàng');
+        ->assertSee('Thống kê hiệu suất bán hàng thực tế');
 });
 
 it('requires email verification', function (): void {

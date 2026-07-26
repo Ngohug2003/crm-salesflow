@@ -80,4 +80,9 @@ interface MetricsRepository
      * }>
      */
     public function getSalesPerformanceMetrics(User $actor, ReportFilterData $filters): array;
+
+    /**
+     * Xóa cache các chỉ số thống kê & báo cáo
+     */
+    public function clearMetricsCache(User $actor): void;
 }

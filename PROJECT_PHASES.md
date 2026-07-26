@@ -23,7 +23,7 @@ Tài liệu này là lộ trình và trạng thái checkpoint chính của dự 
 | 4 | Companies và Contacts | Hoàn tất P4-01 đến P4-07 | Đã qua checkpoint nghiệm thu | [Chi tiết P4](docs/checkpoints/P4/PHASE_LOG.md) |
 | 5 | Pipelines và Opportunities | Hoàn tất triển khai P5-01 đến P5-09 | Chờ checkpoint nghiệm thu thủ công | [Chi tiết P5](docs/checkpoints/P5/PHASE_LOG.md) |
 | 6 | Activities và Tasks | Hoàn tất triển khai P6-01 đến P6-07 | Chờ chủ dự án kiểm thử P6-07 | [Chi tiết P6](docs/checkpoints/P6/PHASE_LOG.md) |
-| 7 | Dashboard và Reports | Chưa bắt đầu | — | — |
+| 7 | Dashboard và Reports | Hoàn tất P7-01 đến P7-06 | Chờ chủ dự án kiểm thử P7-06 | [Chi tiết P7](docs/checkpoints/P7/PHASE_LOG.md) / [Xác minh P7](docs/checkpoints/P7/VERIFICATION.md) |
 | 8 | Import, Export, Notifications và Audit | Chưa bắt đầu | — | — |
 | 9 | Hoàn thiện, CI/CD và deployment | Chưa bắt đầu | — | — |
 
@@ -160,7 +160,7 @@ Tài liệu này là lộ trình và trạng thái checkpoint chính của dự 
 | P7-03 | Funnel report | `feature/p7-03-funnel-report` | P7-01 | ✅ Hoàn thành |
 | P7-04 | Revenue và forecast report | `feature/p7-04-revenue-forecast` | P7-01 | ✅ Hoàn thành |
 | P7-05 | Sales performance report | `feature/p7-05-sales-performance` | P7-01, P6-07 | ✅ Hoàn thành |
-| P7-06 | Report cache và checkpoint | `feature/p7-06-report-checkpoint` | P7-02..P7-05 | ⏳ Chưa bắt đầu |
+| P7-06 | Report cache và checkpoint | `feature/p7-06-report-checkpoint` | P7-02..P7-05 | ✅ Hoàn thành |
 
 ---
 

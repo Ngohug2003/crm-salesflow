@@ -28,9 +28,14 @@
                 <h2 class="text-sm font-bold text-slate-900 dark:text-white">Bộ lọc phễu chuyển đổi</h2>
             </div>
 
-            <flux:button wire:click="resetFilters" variant="ghost" icon="arrow-path" size="sm">
-                Đặt lại bộ lọc
-            </flux:button>
+            <div class="flex items-center gap-2">
+                <flux:button wire:click="clearCacheAndReload" variant="subtle" icon="arrow-path" size="sm">
+                    Làm mới & Xóa Cache
+                </flux:button>
+                <flux:button wire:click="resetFilters" variant="ghost" size="sm">
+                    Đặt lại
+                </flux:button>
+            </div>
         </div>
 
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">

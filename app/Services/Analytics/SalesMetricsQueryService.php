@@ -112,6 +112,14 @@ final readonly class SalesMetricsQueryService
     }
 
     /**
+     * Xóa cache toàn bộ chỉ số thống kê & báo cáo
+     */
+    public function clearMetricsCache(User $actor): void
+    {
+        $this->metrics->clearMetricsCache($actor);
+    }
+
+    /**
      * Tổng hợp nhanh Dashboard Overview Summary
      *
      * @return array{
