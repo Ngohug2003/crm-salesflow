@@ -9,6 +9,7 @@ use App\Models\Opportunity;
 use App\Models\Pipeline;
 use App\Models\User;
 use App\Services\OpportunityManagementService;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
@@ -95,7 +96,7 @@ final class OpportunityList extends Component
         try {
             $service->delete($actor, $opportunityId);
             session()->flash('message', 'Đã xóa Cơ hội bán hàng thành công.');
-        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+        } catch (AuthorizationException $e) {
             throw $e;
         } catch (\Throwable $e) {
             $this->addError('opportunity_error', $e->getMessage());
