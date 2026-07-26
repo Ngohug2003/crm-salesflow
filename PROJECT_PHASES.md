@@ -156,7 +156,7 @@ Tài liệu này là lộ trình và trạng thái checkpoint chính của dự 
 | Mã | Feature | Branch đề xuất | Phụ thuộc | Trạng thái |
 |---|---|---|---|---|
 | P7-01 | Metrics query services | `feature/p7-01-metrics-services` | P5-09, P6-07 | ✅ Hoàn thành |
-| P7-02 | Dashboard filters và KPI | `feature/p7-02-dashboard-kpi` | P7-01 | ⏳ Chưa bắt đầu |
+| P7-02 | Dashboard filters và KPI | `feature/p7-02-dashboard-kpi` | P7-01 | ✅ Hoàn thành |
 | P7-03 | Funnel report | `feature/p7-03-funnel-report` | P7-01 | ⏳ Chưa bắt đầu |
 | P7-04 | Revenue và forecast report | `feature/p7-04-revenue-forecast` | P7-01 | ⏳ Chưa bắt đầu |
 | P7-05 | Sales performance report | `feature/p7-05-sales-performance` | P7-01, P6-07 | ⏳ Chưa bắt đầu |
