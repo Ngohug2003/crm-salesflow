@@ -9,7 +9,9 @@ use App\Models\Lead;
 use App\Models\LeadSource;
 use App\Models\Tag;
 use App\Models\User;
+use App\Services\Export\ExportExecutionService;
 use App\Services\LeadDirectoryService;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Collection;
@@ -296,6 +298,28 @@ final class LeadList extends Component
         return checkdate((int) $parts['month'], (int) $parts['day'], (int) $parts['year'])
             ? $value
             : '';
+    }
+
+    public ?int $exportBatchId = null;
+
+    public ?string $exportDownloadUrl = null;
+
+    public function exportCsv(ExportExecutionService $exportService): void
+    {
+        $actor = $this->currentUser();
+        if (! Gate::allows('leads.view')) {
+            throw new AuthorizationException('Bạn không có quyền xuất dữ liệu Lead.');
+        }
+
+        $filters = [
+            'search' => $this->search,
+            'status' => $this->status !== 'all' ? $this->status : null,
+            'priority' => $this->priority !== 'all' ? $this->priority : null,
+        ];
+
+        $batch = $exportService->requestExport($actor, 'leads', array_filter($filters));
+        $this->exportBatchId = $batch->id;
+        $this->exportDownloadUrl = $exportService->getSignedDownloadUrl($batch);
     }
 
     private function service(): LeadDirectoryService

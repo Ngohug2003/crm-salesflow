@@ -165,12 +165,6 @@
                                         Hạn chót: {{ $task->due_date->format('d/m/Y H:i') }}
                                     </span>
                                 @endif
-                                @if ($task->subject)
-                                    <span>•</span>
-                                    <span class="text-indigo-600 dark:text-indigo-400 font-medium">
-                                        Đối tượng: {{ class_basename($task->subject_type) }} #{{ $task->subject_id }}
-                                    </span>
-                                @endif
                             </div>
                         </div>
                     </div>

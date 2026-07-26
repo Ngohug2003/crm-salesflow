@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\DepartmentController;
+use App\Http\Controllers\ExportDownloadController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\RoleGuideController;
 use App\Http\Controllers\UserController;
@@ -43,6 +44,9 @@ Route::middleware(['auth', 'request.context.authenticated', 'verified', 'account
     Route::get('/leads/{leadId}/edit', [LeadController::class, 'edit'])->whereNumber('leadId')->name('leads.edit');
 
     Route::get('/imports/leads', LeadImportWizard::class)->name('imports.leads');
+    Route::get('/exports/download/{batch}', ExportDownloadController::class)
+        ->name('exports.download')
+        ->middleware('signed');
 
     Route::get('/companies', CompanyList::class)->name('companies.index');
     Route::get('/companies/create', CompanyEditor::class)->name('companies.create');
