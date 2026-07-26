@@ -19,8 +19,8 @@ use App\Models\PipelineStage;
 use App\Models\Task;
 use App\Models\User;
 use App\Services\Analytics\SalesMetricsQueryService;
+use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 final class MetricsQueryServiceTest extends TestCase
@@ -43,31 +43,28 @@ final class MetricsQueryServiceTest extends TestCase
     {
         parent::setUp();
 
+        $this->seed(RolePermissionSeeder::class);
+
         $this->service = app(SalesMetricsQueryService::class);
 
         // Tạo phòng ban
         $this->deptA = Department::factory()->create(['name' => 'Phòng Kinh doanh A']);
         $this->deptB = Department::factory()->create(['name' => 'Phòng Kinh doanh B']);
 
-        // Tạo roles chuẩn CRM
-        $roleAdmin = Role::create(['name' => 'admin', 'guard_name' => 'web']);
-        $roleManager = Role::create(['name' => 'sales-manager', 'guard_name' => 'web']);
-        $roleSales = Role::create(['name' => 'sales', 'guard_name' => 'web']);
-
         $this->admin = User::factory()->create([
             'department_id' => $this->deptA->id,
         ]);
-        $this->admin->assignRole($roleAdmin);
+        $this->admin->assignRole('admin');
 
         $this->userA = User::factory()->create([
             'department_id' => $this->deptA->id,
         ]);
-        $this->userA->assignRole($roleManager);
+        $this->userA->assignRole('sales-manager');
 
         $this->userB = User::factory()->create([
             'department_id' => $this->deptB->id,
         ]);
-        $this->userB->assignRole($roleSales);
+        $this->userB->assignRole('sales');
     }
 
     public function test_it_calculates_lead_metrics_correctly(): void

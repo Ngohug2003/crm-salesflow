@@ -48,7 +48,7 @@ final readonly class EloquentMetricsRepository implements MetricsRepository
         /** @var array<string, int> $bySource */
         $bySource = (clone $query)
             ->leftJoin('lead_sources', 'leads.lead_source_id', '=', 'lead_sources.id')
-            ->selectRaw('COALESCE(lead_sources.name, "Chưa xác định") as source_name, COUNT(leads.id) as aggregate')
+            ->selectRaw("COALESCE(lead_sources.name, 'Chưa xác định') as source_name, COUNT(leads.id) as aggregate")
             ->groupBy('source_name')
             ->pluck('aggregate', 'source_name')
             ->toArray();
