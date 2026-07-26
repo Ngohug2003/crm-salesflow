@@ -71,6 +71,7 @@ final class Phase7CheckpointTest extends TestCase
             'amount' => 100000000,
             'is_won' => true,
             'created_at' => now(),
+            'actual_close_date' => now(),
         ]);
 
         /** @var SalesMetricsQueryService $service */
@@ -90,11 +91,12 @@ final class Phase7CheckpointTest extends TestCase
             'amount' => 50000000,
             'is_won' => true,
             'created_at' => now(),
+            'actual_close_date' => now(),
         ]);
 
-        // Second fetch reads from cache (cached won_amount remains 100M)
+        // Model event tự tăng version cache báo cáo.
         $metricsCached = $service->getOpportunityMetrics($this->admin, $filters);
-        $this->assertEquals(100000000, $metricsCached['won_amount']);
+        $this->assertEquals(150000000, $metricsCached['won_amount']);
 
         // Flush cache via clearMetricsCache
         $service->clearMetricsCache($this->admin);

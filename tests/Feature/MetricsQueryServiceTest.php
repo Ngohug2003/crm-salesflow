@@ -144,6 +144,7 @@ final class MetricsQueryServiceTest extends TestCase
             'is_won' => false,
             'is_lost' => false,
             'created_at' => now()->subDays(10),
+            'expected_close_date' => now(),
         ]);
 
         // Deal Won: 200.000.000, actual close date = now() (cycle 10 ngày)
@@ -185,8 +186,8 @@ final class MetricsQueryServiceTest extends TestCase
         $this->assertEquals(1, $metrics['lost_opportunities']);
         $this->assertEquals(350000000, $metrics['total_amount']);
         $this->assertEquals(200000000, $metrics['won_amount']);
-        // Weighted = 100M*0.5 + 200M*1.0 + 50M*0 = 50M + 200M = 250M
-        $this->assertEquals(250000000, $metrics['weighted_forecast']);
+        // Forecast chỉ gồm deal đang mở, dự kiến chốt trong kỳ: 100M * 50% = 50M.
+        $this->assertEquals(50000000, $metrics['weighted_forecast']);
         // Win rate = 1 won / (1 won + 1 lost) = 50%
         $this->assertEquals(50.0, $metrics['win_rate']);
         $this->assertEquals(10.0, $metrics['avg_sales_cycle_days']);

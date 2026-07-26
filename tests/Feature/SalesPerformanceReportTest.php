@@ -97,6 +97,7 @@ final class SalesPerformanceReportTest extends TestCase
             'amount' => 500000000,
             'is_won' => true,
             'created_at' => now(),
+            'actual_close_date' => now(),
         ]);
 
         Activity::factory()->create([
@@ -124,6 +125,7 @@ final class SalesPerformanceReportTest extends TestCase
             'amount' => 200000000,
             'is_won' => true,
             'created_at' => now(),
+            'actual_close_date' => now(),
         ]);
 
         $this->actingAs($this->admin);

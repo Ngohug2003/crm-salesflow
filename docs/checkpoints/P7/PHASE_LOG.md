@@ -1,68 +1,83 @@
-# Nhật ký triển khai Giai đoạn 7 — Dashboard và Reports
+# Nhật ký triển khai Giai đoạn 7 — Dashboard và báo cáo
 
-> **Trạng thái**: Hoàn tất triển khai P7-01 đến P7-06 — Chờ chủ dự án kiểm thử nghiệm thu thủ công.
+> Trạng thái: P7-01 đến P7-06 đã hoàn thành. Feature hợp nhất **P7-FIX** đã triển khai và đang chờ chủ dự án kiểm thử giao diện thủ công.
 
----
+## Danh sách feature
 
-## 1. Danh sách các tính năng đã triển khai
+| Mã | Nội dung | Trạng thái |
+|---|---|---|
+| P7-01 | Metrics query services | Hoàn thành |
+| P7-02 | Dashboard filters và KPI | Hoàn thành |
+| P7-03 | Funnel report | Hoàn thành |
+| P7-04 | Revenue và forecast report | Hoàn thành |
+| P7-05 | Sales performance report | Hoàn thành |
+| P7-06 | Report cache và checkpoint | Hoàn thành |
+| P7-FIX | Chuẩn hóa số liệu, data scope, cache, UI và Chart.js | Chờ kiểm thử thủ công |
 
-| Mã | Feature | Mô tả | Trạng thái | Tệp mã nguồn chính |
-|---|---|---|---|---|
-| **P7-01** | Metrics query services | DTO `ReportFilterData` và `SalesMetricsQueryService` / `MetricsRepository` tính toán chỉ số Lead, Opportunity, Revenue, Funnel, Activities & Tasks có phân quyền Data Scope | ✅ Hoàn thành | [SalesMetricsQueryService.php](file:///home/hungnv/crm-salesflow/app/Services/Analytics/SalesMetricsQueryService.php)<br>[EloquentMetricsRepository.php](file:///home/hungnv/crm-salesflow/app/Repositories/EloquentMetricsRepository.php) |
-| **P7-02** | Dashboard filters và KPI | Trang `/dashboard` nâng cấp với Bộ lọc dùng chung (Thời gian, Phòng ban, Nhân viên, Pipeline) và 4 Thẻ KPI chính thực tế | ✅ Hoàn thành | [DashboardOverview.php](file:///home/hungnv/crm-salesflow/app/Livewire/Dashboard/DashboardOverview.php)<br>[dashboard-overview.blade.php](file:///home/hungnv/crm-salesflow/resources/views/livewire/dashboard/dashboard-overview.blade.php) |
-| **P7-03** | Funnel report | Báo cáo Phễu chuyển đổi bán hàng chuyên sâu (`/reports/funnel`), biểu đồ thanh phễu quy đổi giảm dần % và bảng dữ liệu chi tiết theo Stage | ✅ Hoàn thành | [FunnelReport.php](file:///home/hungnv/crm-salesflow/app/Livewire/Reports/FunnelReport.php)<br>[funnel-report.blade.php](file:///home/hungnv/crm-salesflow/resources/views/livewire/reports/funnel-report.blade.php) |
-| **P7-04** | Revenue và forecast report | Trang Báo cáo Doanh thu & Dự báo bán hàng trọng số (`/reports/revenue`), phân tích lý do thất bại Loss Reasons Breakdown | ✅ Hoàn thành | [RevenueReport.php](file:///home/hungnv/crm-salesflow/app/Livewire/Reports/RevenueReport.php)<br>[revenue-report.blade.php](file:///home/hungnv/crm-salesflow/resources/views/livewire/reports/revenue-report.blade.php) |
-| **P7-05** | Sales performance report | Báo cáo Hiệu suất Sales & Bảng xếp hạng Leaderboard vinh danh Top 3 Sales Reps (`/reports/performance`) | ✅ Hoàn thành | [SalesPerformanceReport.php](file:///home/hungnv/crm-salesflow/app/Livewire/Reports/SalesPerformanceReport.php)<br>[sales-performance-report.blade.php](file:///home/hungnv/crm-salesflow/resources/views/livewire/reports/sales-performance-report.blade.php) |
-| **P7-06** | Report cache và checkpoint | Tối ưu Caching layer (`Cache::remember`), TTL 10 phút, action xóa cache tức thì `clearCacheAndReload()`, test E2E và hoàn thiện Checkpoint P7 | ✅ Hoàn thành | [Phase7CheckpointTest.php](file:///home/hungnv/crm-salesflow/tests/Feature/Phase7CheckpointTest.php)<br>[VERIFICATION.md](file:///home/hungnv/crm-salesflow/docs/checkpoints/P7/VERIFICATION.md) |
+## Thay đổi của P7-FIX
 
----
+### Số liệu và quyền dữ liệu
 
-## 2. Kiến trúc kỹ thuật và Quyết định thiết kế
+- Bộ lọc ngày không hợp lệ được đưa về tháng hiện tại; khoảng ngày đảo ngược được tự chuẩn hóa.
+- Tùy chọn phòng ban, người dùng và quy trình chỉ hiển thị trong data scope của tài khoản.
+- Dashboard và toàn bộ trang báo cáo cùng kiểm tra permission `reports.view`.
+- Doanh thu thắng dùng `actual_close_date`.
+- Dự báo chỉ dùng cơ hội đang mở có `expected_close_date` trong kỳ.
+- Phễu dùng `opportunity_stage_histories`, mỗi cơ hội chỉ được tính một lần tại mỗi giai đoạn đã đi qua.
+- Công việc hoàn thành được tính theo `completed_at` và bảng `task_assignees`.
 
-1. **Tuân thủ Layer Architecture Tree**:
-   - Presentation: `App\Livewire\Dashboard\*`, `App\Livewire\Reports\*`
-   - Business Logic / Coordination: `App\Services\Analytics\SalesMetricsQueryService`
-   - Repository Contract & Implementation: `App\Repositories\Contracts\MetricsRepository` ➔ `App\Repositories\EloquentMetricsRepository`
-   - Data Transfer Object: `App\Data\ReportFilterData`
+### Kiến trúc và hiệu năng
 
-2. **Data Scope Isolation & Security**:
-   - Mọi truy vấn thống kê dữ liệu đều chạy qua `DataScopeService` của repository.
-   - Tài khoản `Owned` chỉ thấy số liệu cá nhân.
-   - Tài khoản `Department` chỉ thấy số liệu thuộc phòng ban.
-   - Tài khoản `All` / `admin` thấy toàn bộ công ty.
-   - Kiểm tra authorization qua `$actor->can('reports.view')`, đảm bảo Super Admin bypass mượt mà qua Gate.
+- `EloquentMetricsRepository` chỉ điều phối cache và các metrics query.
+- Query được tách theo nhóm tại `app/Repositories/Metrics`.
+- Hiệu suất nhân viên được tổng hợp theo nhóm, không chạy lại nhiều query cho từng user.
+- Cache report dùng version riêng, TTL 5 phút; không còn `Cache::flush()`.
+- Lead, Opportunity, Activity, Task và lịch sử chuyển stage tự tăng version cache khi thay đổi.
+- Bổ sung index phục vụ ngày chốt, ngày dự kiến chốt, owner và công việc hoàn thành.
 
-3. **Performance & Caching Strategy**:
-   - Caching layer hoạt động tự động trên repository với TTL 600 giây (10 phút).
-   - Key cache tính toán động: `crm_metrics:{type}:u_{actorId}:s_{scope}:{filterHash}`.
-   - Nút "Làm mới & Xóa Cache" giúp làm mới dữ liệu tức thì.
+### Giao diện
 
----
+- Dùng chung header, điều hướng, filter bar và loading state.
+- Bộ lọc độc lập theo từng màn; chuyển màn bắt đầu với bộ lọc mặc định của màn đích.
+- Chuẩn hóa bảng bằng Flux table.
+- Bỏ emoji, nhãn tiếng Anh không cần thiết, màu và font quá nặng.
+- Trạng thái Lead trên biểu đồ dùng label tiếng Việt từ `LeadStatus`.
+- Thêm loading, empty state, responsive và dark mode.
+- Cài `chart.js` trực tiếp qua Vite, không dùng wrapper package.
+- Biểu đồ có nội dung thay thế cho screen reader và giảm animation khi người dùng bật reduced motion.
+- Chart dùng animation ngắn 320ms; animation luôn được dừng trước khi Livewire thay canvas và Alpine quản lý đúng một instance.
 
-## 3. Kết quả Quality Gates & Test Coverage
+### Dữ liệu demo báo cáo
 
-- **Pest / PHPUnit Feature Tests**: PASS ✅ (24 test cases cho Phase 7, 80 assertions).
-- **Pint Code Formatting**: PASS ✅ (339 files clean, 0 style issues).
-- **PHPStan Static Analysis**: PASS ✅ (`[OK] No errors`).
-- **PostgreSQL Key Strategy**: Khóa chính `BIGINT` tự tăng áp dụng đồng bộ.
+- `ReportAnalyticsDemoSeeder` tạo 100 kịch bản gồm Lead, Opportunity, Activity và Task.
+- Dữ liệu được phân bố ổn định trên 24 tháng, từ năm 2024 đến 2026, để kiểm tra bộ lọc tháng, quý và năm.
+- Seeder có thể chạy lại an toàn mà không nhân bản dữ liệu:
 
----
+```bash
+docker compose exec -T app php artisan db:seed --class=ReportAnalyticsDemoSeeder --force
+```
 
-## 4. Checklist nghiệm thu thủ công cho Chủ dự án
+## Tệp chính
 
-1. **Dashboard Overview (`/dashboard`)**:
-   - Kiểm tra 4 thẻ KPI chính: Doanh thu Won, Dự báo trọng số, Win Rate %, Chu kỳ bán hàng.
-   - Thử thay đổi các tùy chọn khoảng thời gian, phòng ban, nhân viên.
-   - Thử bấm nút **Làm mới & Xóa Cache**.
+- `app/Repositories/EloquentMetricsRepository.php`
+- `app/Repositories/Metrics/*`
+- `app/Services/Analytics/ReportFilterOptionsService.php`
+- `app/Livewire/Concerns/InteractsWithReportFilters.php`
+- `resources/views/components/reports/chart.blade.php`
+- `resources/views/livewire/reports/partials/*`
+- `resources/js/app.js`
+- `database/seeders/ReportAnalyticsDemoSeeder.php`
+- `tests/Feature/Phase7ReportConsistencyTest.php`
+- `tests/Feature/ReportAnalyticsDemoSeederTest.php`
 
-2. **Báo cáo Phễu chuyển đổi (`/reports/funnel`)**:
-   - Kiểm tra thanh phễu chuyển đổi % giảm dần theo từng Stage.
-   - Kiểm tra bảng thống kê số lượng deal, tổng tiền và % quy đổi nấc kế.
+## Kiểm thử thủ công
 
-3. **Báo cáo Doanh thu & Dự báo (`/reports/revenue`)**:
-   - Kiểm tra 4 thẻ KPI tài chính và card Phân tích lý do thua deal (Loss Reasons).
-   - Kiểm tra bảng chi tiết Doanh thu dự báo theo Stage.
-
-4. **Báo cáo Hiệu suất Sales & Bảng xếp hạng (`/reports/performance`)**:
-   - Kiểm tra Bảng xếp hạng Top 3 Sales Reps (Quán quân 🥇, Á quân 🥈, Hạng 3 🥉).
-   - Kiểm tra bảng chi tiết năng suất nhân viên.
+1. Mở `/dashboard`, đổi từng bộ lọc và kiểm tra biểu đồ cập nhật không cần tải lại toàn trang.
+2. Đăng nhập user scope `owned` và `department`; kiểm tra không thấy tùy chọn ngoài phạm vi.
+3. Mở `/reports/funnel`; chọn pipeline và đối chiếu lịch sử chuyển stage của một cơ hội.
+4. Mở `/reports/revenue`; đối chiếu ngày chốt thực tế, ngày dự kiến chốt và tổng forecast.
+5. Mở `/reports/performance`; kiểm tra công việc có nhiều người phụ trách.
+6. Chuyển light/dark mode, kiểm tra biểu đồ, bảng và chữ.
+7. Thu nhỏ màn hình xuống mobile; kiểm tra filter, chart và table.
+8. Bấm **Làm mới dữ liệu** và xác nhận bộ lọc hiện tại không bị đặt lại.
+9. Chạy seeder demo rồi kiểm tra lần lượt preset hôm nay, tuần này, tháng này, quý này và năm nay trên từng màn báo cáo.

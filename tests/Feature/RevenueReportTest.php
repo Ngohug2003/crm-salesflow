@@ -103,6 +103,7 @@ final class RevenueReportTest extends TestCase
             'is_won' => true,
             'is_lost' => false,
             'created_at' => now(),
+            'actual_close_date' => now(),
         ]);
 
         // Deal Open: 100M (prob 50% => weighted 50M)
@@ -115,6 +116,7 @@ final class RevenueReportTest extends TestCase
             'is_won' => false,
             'is_lost' => false,
             'created_at' => now(),
+            'expected_close_date' => now(),
         ]);
 
         // Deal Lost: 50M (Lý do: Không đủ ngân sách)
@@ -128,6 +130,7 @@ final class RevenueReportTest extends TestCase
             'is_lost' => true,
             'lost_reason' => 'Không đủ ngân sách',
             'created_at' => now(),
+            'actual_close_date' => now(),
         ]);
 
         $this->actingAs($this->admin);
@@ -136,7 +139,7 @@ final class RevenueReportTest extends TestCase
             ->assertOk()
             ->assertSee('300,000,000')
             ->assertSee('100,000,000')
-            ->assertSee('350,000,000') // weighted forecast (300M*1 + 100M*0.5 = 350M)
+            ->assertSee('50,000,000')
             ->assertSee('Không đủ ngân sách');
     }
 }

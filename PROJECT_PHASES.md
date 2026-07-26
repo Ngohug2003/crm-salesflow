@@ -161,6 +161,7 @@ Tài liệu này là lộ trình và trạng thái checkpoint chính của dự 
 | P7-04 | Revenue và forecast report | `feature/p7-04-revenue-forecast` | P7-01 | ✅ Hoàn thành |
 | P7-05 | Sales performance report | `feature/p7-05-sales-performance` | P7-01, P6-07 | ✅ Hoàn thành |
 | P7-06 | Report cache và checkpoint | `feature/p7-06-report-checkpoint` | P7-02..P7-05 | ✅ Hoàn thành |
+| P7-FIX | Chuẩn hóa số liệu, data scope, cache, UI và Chart.js | `feature/p7-fix-report-consistency` | P7-01..P7-06 | 🧪 Chờ kiểm thử thủ công |
 
 ---
 

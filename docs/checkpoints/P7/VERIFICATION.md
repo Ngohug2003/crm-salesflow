@@ -1,56 +1,48 @@
-# Báo cáo xác minh P7-01..P7-06 — Metrics Services, Dashboard KPI, Funnel, Revenue, Performance Reports & Caching
+# Xác minh P7-FIX — Dashboard và báo cáo
 
-> Trạng thái: kiểm thử tự động đạt 100%, đang chờ chủ dự án kiểm thử thủ công và xác nhận checkpoint.
+> Feature hợp nhất: `feature/p7-fix-report-consistency`
 
-## 1. Kết quả kiểm thử tự động (Automated Test Suites)
+## Quality gates
 
-Hệ thống đã trải qua 24 test cases kiểm thử tự động cho Giai đoạn 7 (80 assertions):
+| Hạng mục | Kết quả |
+|---|---|
+| Test mới `Phase7ReportConsistencyTest` | 8 test — đạt |
+| Test mới `ReportAnalyticsDemoSeederTest` | 1 test, 8 assertion — đạt |
+| PHPStan trên mã P7-FIX | Không có lỗi |
+| Pint trên mã P7-FIX | Đạt |
+| Vite production build | Đạt, không có dependency vulnerability |
+| Blade view cache | Biên dịch thành công |
+| Trình duyệt Dashboard → Phễu → `this_week` → Doanh thu | Canvas hiển thị đúng, 0 JavaScript exception |
 
-| Test Suite | Test Cases | Kết quả | Chi tiết |
-|---|---|---|---|
-| `MetricsQueryServiceTest` | 5 | PASS ✅ | Tính toán chỉ số Lead, Opportunity, Revenue, Weighted Forecast, Win Rate, Funnel, Activities, Tasks và kiểm tra Data Scope Isolation (`All`, `Department`, `Owned`) |
-| `DashboardKpiTest` | 3 | PASS ✅ | Kiểm thử rendering trang Dashboard (`/dashboard`), cập nhật bộ lọc thời gian & hiển thị các thẻ chỉ số KPI thực tế |
-| `FunnelReportTest` | 5 | PASS ✅ | Kiểm thử báo cáo Phễu bán hàng (`/reports/funnel`), kiểm tra quyền `reports.view`, Super Admin Gate bypass, tính toán số lượng deal & tỷ lệ chuyển tiếp % |
-| `RevenueReportTest` | 4 | PASS ✅ | Kiểm thử báo cáo Doanh thu & Dự báo (`/reports/revenue`), kiểm tra doanh thu Won, Open Pipeline Amount, Weighted Forecast Amount và Loss Reasons Breakdown |
-| `SalesPerformanceReportTest` | 4 | PASS ✅ | Kiểm thử báo cáo Hiệu suất Sales & Bảng xếp hạng (`/reports/performance`), kiểm tra vinh danh Top 3 Sales Reps, số Lead, Deal Won, Won Amount, Win Rate %, Hoạt động & Task hoàn thành |
-| `Phase7CheckpointTest` | 3 | PASS ✅ | Kiểm thử E2E Caching layer: Cache hit, Cache miss, Flush cache và tích hợp action `clearCacheAndReload` trên các Livewire components |
-| **Tổng cộng** | **24** | **100% PASS** | **80 assertions** |
+Theo yêu cầu của chủ dự án, lượt này chỉ chạy file test mới của feature; không chạy lặp lại các test suite P7 cũ.
 
-## 2. Kết quả Quality Gates
+## Trường hợp đã được kiểm tra
 
-- **Pint Code Formatting**: PASS ✅ (339 files clean, 0 style issues).
-- **PHPStan Static Analysis**: PASS ✅ (`[OK] No errors`).
-- **Kiến trúc kĩ thuật (Layer Architecture)**: Tuân thủ nghiêm ngặt mô hình `Livewire → Service → Repository → Model`:
-  - Interface Contract: `App\Repositories\Contracts\MetricsRepository`
-  - Eloquent Implementation: `App\Repositories\EloquentMetricsRepository`
-  - Domain Service: `App\Services\Analytics\SalesMetricsQueryService`
-  - Livewire Components: `App\Livewire\Dashboard\DashboardOverview`, `App\Livewire\Reports\FunnelReport`, `App\Livewire\Reports\RevenueReport`, `App\Livewire\Reports\SalesPerformanceReport`
-  - DTO Filtering: `App\Data\ReportFilterData`
-- **PostgreSQL Key Strategy**: Khóa chính `BIGINT` tự tăng áp dụng đồng bộ trên toàn hệ thống.
+- Khoảng ngày custom sai hoặc đảo ngược.
+- Revenue theo ngày đóng thực tế.
+- Forecast theo ngày dự kiến đóng và chỉ gồm cơ hội mở.
+- Funnel dựa trên lịch sử stage.
+- Filter option theo owned scope.
+- Làm mới metrics không xóa cache phân hệ khác.
+- Task được tính cho người phụ trách qua pivot.
+- Bốn màn Dashboard/Report render thành công với giao diện chuẩn hóa.
+- Bộ lọc không truyền sang màn khác; trạng thái Lead hiển thị bằng tiếng Việt.
+- Chart không còn animation race khi Livewire thay canvas.
+- Chart chuyển dữ liệu bằng animation `easeOutQuart` trong 320ms và tôn trọng reduced motion.
+- Seeder tạo đủ 100 kịch bản báo cáo trên 24 tháng.
 
-## 3. Danh sách tính năng hoàn thành
+## Phân bố dữ liệu demo đã xác minh
 
-- **P7-01**: Metrics query services & DTO bộ lọc báo cáo CRM dùng chung có phân quyền Data Scope.
-- **P7-02**: Dashboard overview UI, Bộ lọc dùng chung (Thời gian, Phòng ban, Nhân viên, Pipeline) và Hệ thống thẻ chỉ số KPI thực tế.
-- **P7-03**: Funnel report trang báo cáo phễu chuyển đổi bán hàng chuyên sâu (`/reports/funnel`).
-- **P7-04**: Revenue và forecast report trang báo cáo Doanh thu & Dự báo bán hàng trọng số (`/reports/revenue`).
-- **P7-05**: Sales performance report & Leaderboard trang báo cáo Hiệu suất Sales & Bảng xếp hạng vinh danh Top Sales Reps (`/reports/performance`).
-- **P7-06**: Report cache layer (`Cache::remember` 10 phút, key theo Actor ID/Data Scope/Filter Hash, nút làm mới & xóa cache) và hoàn thiện Checkpoint P7.
+- Năm 2024: 17 bản ghi.
+- Năm 2025: 48 bản ghi.
+- Năm 2026: 35 bản ghi.
+- Có dữ liệu từ quý 3/2024 đến quý 3/2026.
+- Mốc cũ nhất: `03/08/2024 09:30`.
+- Mốc mới nhất: `26/07/2026 10:15`.
 
-## 4. Các điểm kiến trúc & giao diện
+## Điểm cần chủ dự án kiểm tra
 
-- Tự động Caching 600 giây (10 phút) cho các truy vấn thống kê báo cáo trên `EloquentMetricsRepository`.
-- Thêm nút **Làm mới & Xóa Cache** trên thanh bộ lọc của tất cả các trang Báo cáo và Dashboard.
-- Phân quyền bảo mật: Kiểm tra permission `reports.view` qua `$actor->can('reports.view')` hỗ trợ Gate bypass toàn quyền cho Super Admin.
-
-## 5. Checklist kiểm thử thủ công
-
-1. **Dashboard Overview (`/dashboard`)**:
-   - Thử xem các thẻ KPI và đổi các tiêu chí lọc.
-   - Thử bấm nút **Làm mới & Xóa Cache** ➔ Trang tự động tải lại dữ liệu mới nhất.
-2. **Báo cáo Phễu (`/reports/funnel`)**:
-   - Chọn Pipeline khác nhau và kiểm tra biểu đồ phễu tỷ lệ %.
-3. **Báo cáo Doanh thu (`/reports/revenue`)**:
-   - Kiểm tra 4 thẻ tài chính và bảng lý do thua deal.
-4. **Hiệu suất Sales (`/reports/performance`)**:
-   - Kiểm tra Bảng xếp hạng Top 3 Sales Reps 🥇 🥈 🥉.
+- Cảm nhận tốc độ cập nhật chart khi đổi filter.
+- Mức độ phù hợp của màu biểu đồ với dữ liệu thật.
+- Bảng trên màn hình nhỏ và dark mode.
+- Đối chiếu số liệu thật với các cơ hội có ngày đóng/dự kiến đóng cụ thể.

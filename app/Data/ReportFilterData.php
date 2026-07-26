@@ -5,9 +5,20 @@ declare(strict_types=1);
 namespace App\Data;
 
 use Illuminate\Support\Carbon;
+use Throwable;
 
 final readonly class ReportFilterData
 {
+    /** @var list<string> */
+    private const array DATE_PRESETS = [
+        'today',
+        'this_week',
+        'this_month',
+        'this_quarter',
+        'this_year',
+        'custom',
+    ];
+
     public function __construct(
         public ?string $datePreset = 'this_month',
         public ?string $startDate = null,
@@ -24,36 +35,72 @@ final readonly class ReportFilterData
      */
     public function resolveDateRange(): array
     {
-        if ($this->datePreset === 'today') {
-            return [now()->startOfDay(), now()->endOfDay()];
-        }
+        $preset = in_array($this->datePreset, self::DATE_PRESETS, true)
+            ? $this->datePreset
+            : 'this_month';
 
-        if ($this->datePreset === 'this_week') {
-            return [now()->startOfWeek(), now()->endOfWeek()];
-        }
+        return match ($preset) {
+            'today' => [now()->startOfDay(), now()->endOfDay()],
+            'this_week' => [now()->startOfWeek(), now()->endOfWeek()],
+            'this_quarter' => [now()->startOfQuarter(), now()->endOfQuarter()],
+            'this_year' => [now()->startOfYear(), now()->endOfYear()],
+            'custom' => $this->resolveCustomDateRange(),
+            default => [now()->startOfMonth(), now()->endOfMonth()],
+        };
+    }
 
-        if ($this->datePreset === 'this_month') {
+    /**
+     * Canonical payload for report cache keys.
+     *
+     * @return array<string, int|string|null>
+     */
+    public function cachePayload(): array
+    {
+        [$start, $end] = $this->resolveDateRange();
+
+        return [
+            'start' => $start->toIso8601String(),
+            'end' => $end->toIso8601String(),
+            'department_id' => $this->departmentId,
+            'user_id' => $this->userId,
+            'pipeline_id' => $this->pipelineId,
+        ];
+    }
+
+    /** @return array{0: Carbon, 1: Carbon} */
+    private function resolveCustomDateRange(): array
+    {
+        try {
+            $start = $this->parseDate($this->startDate)?->startOfDay();
+            $end = $this->parseDate($this->endDate)?->endOfDay();
+        } catch (Throwable) {
             return [now()->startOfMonth(), now()->endOfMonth()];
         }
 
-        if ($this->datePreset === 'this_quarter') {
-            return [now()->startOfQuarter(), now()->endOfQuarter()];
+        if ($start === null && $end === null) {
+            return [now()->startOfMonth(), now()->endOfMonth()];
         }
 
-        if ($this->datePreset === 'this_year') {
-            return [now()->startOfYear(), now()->endOfYear()];
+        if ($start === null) {
+            $start = $end->copy()->startOfDay();
+        }
+        if ($end === null) {
+            $end = now()->endOfDay();
         }
 
-        if ($this->startDate !== null && $this->startDate !== '') {
-            $start = Carbon::parse($this->startDate)->startOfDay();
-            $end = ($this->endDate !== null && $this->endDate !== '')
-                ? Carbon::parse($this->endDate)->endOfDay()
-                : now()->endOfDay();
-
-            return [$start, $end];
+        if ($start->greaterThan($end)) {
+            return [$end->copy()->startOfDay(), $start->copy()->endOfDay()];
         }
 
-        // Mặc định tháng hiện tại nếu không chọn preset hoặc range
-        return [now()->startOfMonth(), now()->endOfMonth()];
+        return [$start, $end];
+    }
+
+    private function parseDate(?string $date): ?Carbon
+    {
+        if ($date === null || trim($date) === '') {
+            return null;
+        }
+
+        return Carbon::createFromFormat('!Y-m-d', trim($date));
     }
 }

@@ -1,6 +1,34 @@
 import './echo';
 import Quill from 'quill';
 import 'quill/dist/quill.snow.css';
+import {
+    ArcElement,
+    BarController,
+    BarElement,
+    CategoryScale,
+    Chart,
+    DoughnutController,
+    Legend,
+    LineController,
+    LineElement,
+    LinearScale,
+    PointElement,
+    Tooltip,
+} from 'chart.js';
+
+Chart.register(
+    ArcElement,
+    BarController,
+    BarElement,
+    CategoryScale,
+    DoughnutController,
+    Legend,
+    LineController,
+    LineElement,
+    LinearScale,
+    PointElement,
+    Tooltip,
+);
 
 window.salesflow = {
     toggleTheme() {
@@ -74,7 +102,109 @@ window.salesflowRichTextEditor = (wire, model, placeholder) => ({
     },
 });
 
+window.salesflowChart = (configuration) => ({
+    chart: null,
+    themeObserver: null,
+    stopHandler: null,
+    darkMode: false,
+
+    init() {
+        this.darkMode = document.documentElement.classList.contains('dark');
+        this.stopHandler = () => this.stopChart();
+        window.addEventListener('salesflow:charts-stop', this.stopHandler);
+        this.render();
+        this.themeObserver = new MutationObserver(() => {
+            const nextDarkMode = document.documentElement.classList.contains('dark');
+
+            if (nextDarkMode !== this.darkMode) {
+                this.darkMode = nextDarkMode;
+                this.render();
+            }
+        });
+        this.themeObserver.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['class'],
+        });
+    },
+
+    render() {
+        this.destroyChart();
+
+        const textColor = this.darkMode ? '#cbd5e1' : '#475569';
+        const gridColor = this.darkMode ? 'rgba(148, 163, 184, 0.15)' : 'rgba(148, 163, 184, 0.2)';
+        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const suppliedOptions = configuration.options ?? {};
+
+        this.chart = new Chart(this.$refs.canvas, {
+            ...configuration,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: reducedMotion ? false : {
+                    duration: 320,
+                    easing: 'easeOutQuart',
+                },
+                interaction: {
+                    mode: 'nearest',
+                    intersect: false,
+                },
+                ...suppliedOptions,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: textColor,
+                            boxWidth: 12,
+                            usePointStyle: true,
+                        },
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => {
+                                const value = context.parsed?.y ?? context.parsed?.x ?? context.parsed ?? 0;
+                                const formatted = configuration.currency
+                                    ? `${new Intl.NumberFormat('vi-VN').format(value)} đ`
+                                    : new Intl.NumberFormat('vi-VN').format(value);
+
+                                return `${context.dataset.label ?? context.label}: ${formatted}`;
+                            },
+                        },
+                    },
+                    ...(suppliedOptions.plugins ?? {}),
+                },
+                scales: suppliedOptions.scales === undefined ? undefined : Object.fromEntries(
+                    Object.entries(suppliedOptions.scales).map(([axis, options]) => [
+                        axis,
+                        {
+                            ...options,
+                            ticks: { color: textColor, ...(options.ticks ?? {}) },
+                            grid: { color: gridColor, ...(options.grid ?? {}) },
+                        },
+                    ]),
+                ),
+            },
+        });
+    },
+
+    stopChart() {
+        this.chart?.stop();
+    },
+
+    destroyChart() {
+        this.stopChart();
+        this.chart?.destroy();
+        this.chart = null;
+    },
+
+    destroy() {
+        window.removeEventListener('salesflow:charts-stop', this.stopHandler);
+        this.themeObserver?.disconnect();
+        this.destroyChart();
+    },
+});
+
 document.addEventListener('livewire:navigating', () => {
+    window.dispatchEvent(new CustomEvent('salesflow:charts-stop'));
     document.documentElement.classList.add('is-navigating');
 });
 

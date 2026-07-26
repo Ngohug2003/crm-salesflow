@@ -44,7 +44,9 @@ final readonly class SalesMetricsQueryService
      *     weighted_forecast: float,
      *     win_rate: float,
      *     avg_sales_cycle_days: float,
-     *     loss_reasons: array<string, int>
+     *     loss_reasons: array<string, int>,
+     *     forecast_by_stage: array<int, array<string, int|float|string>>,
+     *     revenue_series: array{labels: list<string>, won: list<float>, forecast: list<float>}
      * }
      */
     public function getOpportunityMetrics(User $actor, ReportFilterData $filters): array
@@ -111,9 +113,7 @@ final readonly class SalesMetricsQueryService
         return $this->metrics->getSalesPerformanceMetrics($actor, $filters);
     }
 
-    /**
-     * Xóa cache toàn bộ chỉ số thống kê & báo cáo
-     */
+    /** Chuyển phiên bản cache báo cáo mà không ảnh hưởng cache phân hệ khác. */
     public function clearMetricsCache(User $actor): void
     {
         $this->metrics->clearMetricsCache($actor);
