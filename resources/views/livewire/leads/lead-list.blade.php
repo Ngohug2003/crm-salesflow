@@ -10,12 +10,42 @@
             @can('viewTrash', \App\Models\Lead::class)
                 <flux:button :href="route('leads.trash')" wire:navigate variant="ghost" icon="trash">Thùng rác</flux:button>
             @endcan
+            <flux:button wire:click="exportCsv" variant="outline" icon="arrow-down-tray">Xuất CSV</flux:button>
             @can('create', \App\Models\Lead::class)
                 <flux:button :href="route('imports.leads')" wire:navigate variant="outline" icon="arrow-up-tray">Nhập Lead</flux:button>
                 <flux:button :href="route('leads.create')" wire:navigate variant="primary" icon="plus">Tạo Lead</flux:button>
             @endcan
         </div>
     </div>
+
+    @if ($exportDownloadUrl !== null)
+        <div class="mb-4 rounded-xl border border-indigo-200 bg-indigo-50 p-4 dark:border-indigo-900/50 dark:bg-indigo-950/40">
+            <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="flex size-9 items-center justify-center rounded-lg bg-indigo-600 text-white">
+                        <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-bold text-slate-900 dark:text-white">Yêu cầu xuất dữ liệu Queued Export #{{ $exportBatchId }} đã được gửi thành công!</h4>
+                        <p class="text-[11px] text-slate-500">Tệp CSV đang được khởi tạo. Đường dẫn Signed Download bảo mật có hiệu lực trong 24 giờ.</p>
+                    </div>
+                </div>
+
+                <a
+                    href="{{ $exportDownloadUrl }}"
+                    target="_blank"
+                    class="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-indigo-500 shadow-xs"
+                >
+                    <span>Tải file về máy (.CSV)</span>
+                    <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+                    </svg>
+                </a>
+            </div>
+        </div>
+    @endif
 
     <section class="crm-card relative" aria-labelledby="lead-list-title">
         <div class="mb-5">

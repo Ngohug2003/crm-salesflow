@@ -112,6 +112,21 @@ Hệ thống đã triển khai hoàn thiện và tích hợp chặt chẽ các p
    ```
    *Yêu cầu tất cả container đều hiển thị trạng thái `healthy` hoặc `running`.*
 
+### 3.3 Các lệnh quản lý Cơ sở Dữ liệu hữu ích
+
+- **Reset & nạp lại sạch toàn bộ dữ liệu mẫu (Force Fresh Seed)**:
+  ```bash
+  docker compose exec app php artisan migrate:fresh --seed
+  ```
+- **Chỉ nạp thêm dữ liệu Seed (không xóa các bảng hiện tại)**:
+  ```bash
+  docker compose exec app php artisan db:seed --force
+  ```
+- **Chạy các Migration mới bổ sung (không làm mất dữ liệu hiện có)**:
+  ```bash
+  docker compose exec app php artisan migrate --force
+  ```
+
 ---
 
 ## 4. Địa chỉ các dịch vụ cục bộ (Endpoints)
