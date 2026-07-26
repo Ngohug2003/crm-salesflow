@@ -93,6 +93,12 @@
                         <flux:icon.banknotes class="nav-icon" />
                         <span x-show="sidebar">Báo cáo Doanh thu</span>
                     </a>
+                    <a href="{{ route('reports.performance') }}" wire:navigate.hover
+                       class="nav-link"
+                       :class="path.startsWith('/reports/performance') && 'nav-link-active'">
+                        <flux:icon.trophy class="nav-icon" />
+                        <span x-show="sidebar">Hiệu suất Sales</span>
+                    </a>
                 @endcan
             </div>
         </div>
