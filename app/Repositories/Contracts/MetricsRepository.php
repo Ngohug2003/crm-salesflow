@@ -64,4 +64,20 @@ interface MetricsRepository
      * }
      */
     public function getActivityAndTaskMetrics(User $actor, ReportFilterData $filters): array;
+
+    /**
+     * @return array<int, array{
+     *     user_id: int,
+     *     user_name: string,
+     *     department_name: string,
+     *     total_leads: int,
+     *     total_opportunities: int,
+     *     won_opportunities: int,
+     *     won_amount: float,
+     *     win_rate: float,
+     *     activity_count: int,
+     *     completed_tasks_count: int
+     * }>
+     */
+    public function getSalesPerformanceMetrics(User $actor, ReportFilterData $filters): array;
 }

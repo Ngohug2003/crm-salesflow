@@ -295,6 +295,77 @@ final readonly class EloquentMetricsRepository implements MetricsRepository
         ];
     }
 
+    public function getSalesPerformanceMetrics(User $actor, ReportFilterData $filters): array
+    {
+        [$start, $end] = $filters->resolveDateRange();
+
+        $userQuery = User::query()->with('department:id,name');
+
+        if ($filters->userId !== null) {
+            $userQuery->where('users.id', $filters->userId);
+        }
+
+        if ($filters->departmentId !== null) {
+            $userQuery->where('users.department_id', $filters->departmentId);
+        }
+
+        $this->dataScope->apply($userQuery, $actor, ownerColumn: 'id', departmentColumn: 'department_id');
+
+        $users = $userQuery->get();
+
+        $result = [];
+        foreach ($users as $user) {
+            $totalLeads = Lead::query()
+                ->where('owner_id', $user->id)
+                ->whereBetween('created_at', [$start, $end])
+                ->count();
+
+            $oppQuery = Opportunity::query()
+                ->where('owner_id', $user->id)
+                ->whereBetween('created_at', [$start, $end]);
+
+            if ($filters->pipelineId !== null) {
+                $oppQuery->where('pipeline_id', $filters->pipelineId);
+            }
+
+            $totalOpps = (int) (clone $oppQuery)->count();
+            $wonOpps = (int) (clone $oppQuery)->where('is_won', true)->count();
+            $lostOpps = (int) (clone $oppQuery)->where('is_lost', true)->count();
+            $wonAmount = (float) (clone $oppQuery)->where('is_won', true)->sum('amount');
+
+            $closedCount = $wonOpps + $lostOpps;
+            $winRate = $closedCount > 0 ? round(($wonOpps / $closedCount) * 100, 1) : 0.0;
+
+            $activityCount = Activity::query()
+                ->where('user_id', $user->id)
+                ->whereBetween('created_at', [$start, $end])
+                ->count();
+
+            $completedTasksCount = Task::query()
+                ->where('assigned_to', $user->id)
+                ->where('status', 'completed')
+                ->whereBetween('created_at', [$start, $end])
+                ->count();
+
+            $result[] = [
+                'user_id' => $user->id,
+                'user_name' => $user->name,
+                'department_name' => $user->department !== null ? $user->department->name : 'N/A',
+                'total_leads' => $totalLeads,
+                'total_opportunities' => $totalOpps,
+                'won_opportunities' => $wonOpps,
+                'won_amount' => round($wonAmount, 2),
+                'win_rate' => $winRate,
+                'activity_count' => $activityCount,
+                'completed_tasks_count' => $completedTasksCount,
+            ];
+        }
+
+        usort($result, static fn (array $a, array $b): int => $b['won_amount'] <=> $a['won_amount']);
+
+        return $result;
+    }
+
     /**
      * @template TModel of \Illuminate\Database\Eloquent\Model
      *
