@@ -172,7 +172,7 @@ Tài liệu này là lộ trình và trạng thái checkpoint chính của dự 
 |---|---|---|---|---|
 | P8-01 | Import upload và preview | `feature/p8-01-import-upload-preview` | P3-10, P4-07 | ✅ Hoàn thành |
 | P8-02 | Column mapping và validation | `feature/p8-02-import-mapping-validation` | P8-01 | ✅ Hoàn thành |
-| P8-03 | Chunk queue và duplicate strategy | `feature/p8-03-import-queue-duplicates` | P8-02 | ⏳ Chưa bắt đầu |
+| P8-03 | Chunk queue và duplicate strategy | `feature/p8-03-import-queue-duplicates` | P8-02 | ✅ Hoàn thành |
 | P8-04 | Import progress và error file | `feature/p8-04-import-progress-errors` | P8-03 | ⏳ Chưa bắt đầu |
 | P8-05 | Queued export và signed download | `feature/p8-05-export-signed-download` | P7-06 | ⏳ Chưa bắt đầu |
 | P8-06 | Notification center | `feature/p8-06-notification-center` | P6-06, P8-04 | ⏳ Chưa bắt đầu |

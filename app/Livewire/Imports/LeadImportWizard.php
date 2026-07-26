@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Livewire\Imports;
 
 use App\Data\ImportMappingSchema;
+use App\Models\ImportBatch;
+use App\Services\Import\ImportExecutionService;
 use App\Services\Import\ImportPreviewService;
 use App\Services\Import\ImportValidationService;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -35,6 +37,10 @@ final class LeadImportWizard extends Component
 
     /** @var array<string, mixed>|null */
     public ?array $validationResult = null;
+
+    public string $duplicateStrategy = 'skip';
+
+    public ?int $batchId = null;
 
     public function mount(): void
     {
@@ -111,7 +117,7 @@ final class LeadImportWizard extends Component
 
     public function resetWizard(): void
     {
-        $this->reset(['importFile', 'tempFileKey', 'preview', 'mapping', 'validationResult']);
+        $this->reset(['importFile', 'tempFileKey', 'preview', 'mapping', 'validationResult', 'duplicateStrategy', 'batchId']);
         $this->step = 1;
     }
 
@@ -147,10 +153,45 @@ final class LeadImportWizard extends Component
         $this->step = 3;
     }
 
+    public function backToMapping(): void
+    {
+        $this->step = 2;
+    }
+
+    public function startImport(ImportExecutionService $executionService): void
+    {
+        if ($this->tempFileKey === null || $this->preview === null) {
+            return;
+        }
+
+        $actor = auth()->user();
+        if ($actor === null) {
+            return;
+        }
+
+        $originalFilename = (string) ($this->preview['original_filename'] ?? 'import_leads.csv');
+        $delimiter = (string) ($this->preview['delimiter'] ?? ',');
+
+        $batch = $executionService->execute(
+            $actor,
+            $this->tempFileKey,
+            $originalFilename,
+            $this->mapping,
+            $this->duplicateStrategy,
+            $delimiter,
+        );
+
+        $this->batchId = $batch->id;
+        $this->step = 4;
+    }
+
     public function render(): View
     {
+        $batch = $this->batchId !== null ? ImportBatch::query()->find($this->batchId) : null;
+
         return view('livewire.imports.lead-import-wizard', [
             'schema' => ImportMappingSchema::leadFields(),
+            'currentBatch' => $batch,
         ])->layout('layouts.app', ['title' => 'Nhập Khách hàng tiềm năng']);
     }
 }
