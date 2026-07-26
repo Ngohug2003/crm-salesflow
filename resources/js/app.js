@@ -134,6 +134,8 @@ window.salesflowChart = (configuration) => ({
         const gridColor = this.darkMode ? 'rgba(148, 163, 184, 0.15)' : 'rgba(148, 163, 184, 0.2)';
         const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         const suppliedOptions = configuration.options ?? {};
+        const suppliedPlugins = suppliedOptions.plugins ?? {};
+        const suppliedTooltip = suppliedPlugins.tooltip ?? {};
 
         this.chart = new Chart(this.$refs.canvas, {
             ...configuration,
@@ -157,27 +159,49 @@ window.salesflowChart = (configuration) => ({
                             boxWidth: 12,
                             usePointStyle: true,
                         },
+                        ...(suppliedPlugins.legend ?? {}),
                     },
+                    ...suppliedPlugins,
                     tooltip: {
                         callbacks: {
                             label: (context) => {
-                                const value = context.parsed?.y ?? context.parsed?.x ?? context.parsed ?? 0;
+                                const isHorizontal = context.chart.options.indexAxis === 'y';
+                                const value = (isHorizontal ? context.parsed?.x : context.parsed?.y) ?? context.parsed?.y ?? context.parsed?.x ?? context.raw ?? 0;
                                 const formatted = configuration.currency
                                     ? `${new Intl.NumberFormat('vi-VN').format(value)} đ`
                                     : new Intl.NumberFormat('vi-VN').format(value);
 
                                 return `${context.dataset.label ?? context.label}: ${formatted}`;
                             },
+                            ...(suppliedTooltip.callbacks ?? {}),
                         },
+                        ...suppliedTooltip,
                     },
-                    ...(suppliedOptions.plugins ?? {}),
                 },
                 scales: suppliedOptions.scales === undefined ? undefined : Object.fromEntries(
                     Object.entries(suppliedOptions.scales).map(([axis, options]) => [
                         axis,
                         {
                             ...options,
-                            ticks: { color: textColor, ...(options.ticks ?? {}) },
+                            ticks: {
+                                color: textColor,
+                                callback: (value, index, ticks) => {
+                                    if (options.ticks?.callback) {
+                                        return options.ticks.callback(value, index, ticks);
+                                    }
+                                    if (configuration.currency && typeof value === 'number' && value >= 1000) {
+                                        if (value >= 1_000_000_000) {
+                                            return `${(value / 1_000_000_000).toLocaleString('vi-VN', { maximumFractionDigits: 1 })} Tỷ`;
+                                        }
+                                        if (value >= 1_000_000) {
+                                            return `${(value / 1_000_000).toLocaleString('vi-VN', { maximumFractionDigits: 1 })} Tr`;
+                                        }
+                                        return `${new Intl.NumberFormat('vi-VN').format(value)} đ`;
+                                    }
+                                    return value;
+                                },
+                                ...(options.ticks ?? {}),
+                            },
                             grid: { color: gridColor, ...(options.grid ?? {}) },
                         },
                     ]),
