@@ -12,7 +12,7 @@ Mục tiêu: Timeline tương tác, công việc, lịch và nhắc hạn cho c�
 | P6-04 | ✅ Checklist và comments | `feature/p6-04-task-collaboration` | P6-03 | Tải file đính kèm, checklist công việc và thảo luận comment |
 | P6-05 | ✅ Task list và Kanban | `feature/p6-05-task-views` | P6-03, P6-04 | Chế độ xem Công việc dạng Danh sách và Bảng Kanban |
 | P6-06 | ✅ Calendar và reminders | `feature/p6-06-calendar-reminders` | P6-03 | Lịch công việc, nhắc hạn tự động và scheduler |
-| P6-07 | Activity/Task checkpoint | `feature/p6-07-activity-task-checkpoint` | P6-01..P6-06 | Checkpoint nghiệm thu toàn bộ Giai đoạn 6 |
+| P6-07 | ✅ Activity/Task checkpoint | `feature/p6-07-activity-task-checkpoint` | P6-01..P6-06 | Checkpoint nghiệm thu toàn bộ Giai đoạn 6 |
 
 ---
 
@@ -168,6 +168,41 @@ File chính:
 - `routes/web.php`
 - `tests/Feature/TaskCalendarReminderTest.php`
 
+**Cơ chế vận hành Thông báo Nhắc hạn tự động (Notification & Scheduler Engine):**
+1. **Thông báo đích danh tài khoản (`assigned_to`)**: Khi đến mốc thời gian `reminder_at`, lệnh `php artisan tasks:send-reminders` phát một Laravel Notification `TaskReminderNotification` lưu trực tiếp vào cơ sở dữ liệu `notifications` cho đúng tài khoản người được giao công việc.
+2. **Hộp thư thông báo (Icon 🔔 trên Topbar)**: Giao diện Topbar tích hợp `<livewire:notification-menu />` giúp người dùng theo dõi danh sách thông báo chưa đọc (`unreadNotifications`), hiển thị badge số đỏ, nút đánh dấu đã đọc và chuyển nhanh đến trang xử lý công việc.
+3. **Cơ chế tự động hóa trên Máy chủ (Automation)**:
+   - **Môi trường Production (Máy chủ thật)**: Linux Cron Job chạy định kỳ `* * * * * cd /path-to-project && php artisan schedule:run` sẽ tự động kích hoạt `tasks:send-reminders` mỗi 5 phút mà không cần gõ lệnh thủ công.
+   - **Môi trường Local (Dev/Docker)**: Chạy lệnh `docker compose exec app php artisan schedule:work` 1 lần duy nhất để Daemon Scheduler tự động quét ngầm và phát thông báo liên tục.
 
+---
 
+### Nhật ký feature P6-07 — Activity/Task checkpoint
 
+Trạng thái: **hoàn tất triển khai, chờ chủ dự án kiểm thử thủ công**.
+
+Đã triển khai:
+
+- Tạo End-to-End integration test `Phase6CheckpointTest.php` kiểm thử toàn bộ luồng hoạt động từ Activity -> Timeline -> Task -> Checklist & Comments -> Kanban -> Calendar -> Scheduled Reminders.
+- Khôi phục data scope `all/department/owned/read-only` cho Task và Activity ở repository/policy; `@mention` chỉ gửi thông báo, không mở rộng quyền xem/sửa.
+- Cưỡng chế người được phân công và subject polymorphic phải đang hoạt động, nằm trong data scope và được authorize ở backend.
+- Khóa list/download/delete/upload attachment theo quyền trên đối tượng cha, tránh đổi ID để truy cập file ngoài scope.
+- Làm reminder idempotent bằng transaction và `lockForUpdate`; chạy lặp không tạo notification trùng.
+- Thay editor CDN/asset trộn lẫn bằng Quill `2.0.2` cài qua npm và bundle nội bộ bằng Vite; HTML mô tả được allowlist/sanitize ở model trước khi lưu và trước khi đọc.
+- Thực thi 25 test cases của Giai đoạn 6 với kết quả 100% PASS (107 assertions).
+- Chạy Quality Gates thành công: Pint clean (325 files PASS), PHPStan `[OK] No errors`, Vite production build thành công và `npm audit --omit=dev` không có lỗ hổng.
+- Tạo báo cáo nghiệm thu `docs/checkpoints/P6/VERIFICATION.md`.
+- Cập nhật `PROJECT_PHASES.md` về trạng thái chờ chủ dự án kiểm thử thủ công; chưa bắt đầu P7.
+
+File chính:
+
+- `tests/Feature/Phase6CheckpointTest.php`
+- `tests/Feature/TaskMentionAndDetailTest.php`
+- `tests/Feature/TaskCalendarReminderTest.php`
+- `tests/Unit/TaskDescriptionSanitizerTest.php`
+- `app/Services/TaskDescriptionSanitizer.php`
+- `resources/views/components/rich-text-editor.blade.php`
+- `package.json` / `package-lock.json`
+- `docs/checkpoints/P6/VERIFICATION.md`
+- `docs/checkpoints/P6/PHASE_LOG.md`
+- `PROJECT_PHASES.md`

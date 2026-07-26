@@ -44,6 +44,12 @@ final class DepartmentManagement extends Component
         Gate::authorize('viewAny', Department::class);
     }
 
+    public function clearFilters(): void
+    {
+        $this->search = '';
+        $this->status = 'all';
+    }
+
     /** @return Collection<int, Department> */
     #[Computed]
     public function departments(): Collection

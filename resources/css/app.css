@@ -38,6 +38,38 @@
         @apply rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900;
     }
 
+    .data-list-heading {
+        @apply mb-5 flex flex-col justify-between gap-3 sm:flex-row sm:items-end;
+    }
+
+    .data-list-filters {
+        @apply grid gap-3 md:grid-cols-2 xl:grid-cols-4;
+    }
+
+    .data-list-content {
+        @apply relative;
+    }
+
+    .data-list-loading {
+        @apply absolute inset-0 z-20 grid place-items-center rounded-xl bg-white/70 backdrop-blur-[1px] dark:bg-slate-900/70;
+    }
+
+    .data-list-empty {
+        @apply grid min-h-56 place-items-center rounded-xl border border-dashed border-slate-300 text-center dark:border-slate-700;
+    }
+
+    .data-list-pagination {
+        @apply mt-5 border-t border-slate-200 pt-5 dark:border-slate-800;
+    }
+
+    .data-list-feed {
+        @apply divide-y divide-slate-200 dark:divide-slate-800;
+    }
+
+    .data-list-feed-item {
+        @apply flex flex-col justify-between gap-4 py-4 first:pt-0 last:pb-0 sm:flex-row sm:items-center;
+    }
+
     .status-chip {
         @apply rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300;
     }
@@ -55,4 +87,48 @@ main {
     main {
         transition: none;
     }
+}
+
+.task-rich-text .ql-toolbar.ql-snow,
+.task-rich-text .ql-container.ql-snow {
+    border: 0;
+}
+
+.task-rich-text .ql-toolbar.ql-snow {
+    border-bottom: 1px solid var(--color-slate-200);
+    background: var(--color-slate-50);
+}
+
+.task-rich-text .ql-editor {
+    min-height: 10rem;
+    max-height: 24rem;
+    overflow-y: auto;
+    font-family: inherit;
+    font-size: 0.875rem;
+}
+
+.dark .task-rich-text .ql-toolbar.ql-snow {
+    border-bottom-color: var(--color-slate-700);
+    background: var(--color-slate-950);
+}
+
+.dark .task-rich-text .ql-editor {
+    color: var(--color-slate-100);
+}
+
+.dark .task-rich-text .ql-toolbar .ql-stroke {
+    stroke: var(--color-slate-400);
+}
+
+.dark .task-rich-text .ql-toolbar .ql-fill {
+    fill: var(--color-slate-400);
+}
+
+.dark .task-rich-text .ql-toolbar .ql-picker {
+    color: var(--color-slate-300);
+}
+
+.task-rich-text-output .ql-editor {
+    min-height: auto;
+    padding: 0;
 }

@@ -23,13 +23,14 @@ final readonly class EloquentTaskRepository implements TaskRepository
     public function findById(int $id): ?Task
     {
         return Task::query()
-            ->with(['assignee', 'creator', 'subject'])
+            ->with(['assignee', 'assignees', 'creator', 'subject'])
             ->find($id);
     }
 
     public function findVisibleForUserOrFail(User $user, int $id): Task
     {
-        $query = Task::query()->with(['assignee', 'creator', 'subject']);
+        $query = Task::query()
+            ->with(['assignee', 'assignees', 'creator', 'subject']);
         $this->applyDataScope($query, $user);
 
         /** @var Task */
@@ -38,7 +39,7 @@ final readonly class EloquentTaskRepository implements TaskRepository
 
     public function paginateForUser(User $user, TaskFilterData $filters, int $perPage = 15): LengthAwarePaginator
     {
-        $query = Task::query()->with(['assignee', 'creator', 'subject']);
+        $query = Task::query()->with(['assignee', 'assignees', 'creator', 'subject']);
 
         $this->applyDataScope($query, $user);
         $this->applyFilters($query, $filters);
@@ -50,7 +51,7 @@ final readonly class EloquentTaskRepository implements TaskRepository
     public function getForSubject(User $user, string $subjectType, int $subjectId): Collection
     {
         $query = Task::query()
-            ->with(['assignee', 'creator'])
+            ->with(['assignee', 'assignees', 'creator'])
             ->where('subject_type', $subjectType)
             ->where('subject_id', $subjectId);
 
@@ -69,7 +70,7 @@ final readonly class EloquentTaskRepository implements TaskRepository
     {
         $task->update($data);
 
-        return $task->fresh(['assignee', 'creator', 'subject']) ?? $task;
+        return $task->fresh(['assignee', 'assignees', 'creator', 'subject']) ?? $task;
     }
 
     public function delete(Task $task): bool
@@ -87,24 +88,29 @@ final readonly class EloquentTaskRepository implements TaskRepository
         }
 
         if ($scope === DataScope::Department) {
-            $departmentUserIds = User::query()
-                ->where('department_id', $user->department_id)
-                ->pluck('id');
+            if ($user->department_id === null) {
+                $query->whereRaw('1 = 0');
 
-            $query->where(function (Builder $q) use ($departmentUserIds, $user): void {
-                $q->whereIn('assigned_to', $departmentUserIds)
-                    ->orWhereIn('created_by', $departmentUserIds)
-                    ->orWhere('assigned_to', $user->id)
-                    ->orWhere('created_by', $user->id);
+                return;
+            }
+
+            $departmentId = $user->department_id;
+            $query->where(function (Builder $query) use ($departmentId): void {
+                $query
+                    ->whereHas('assignee', fn (Builder $users): Builder => $users->where('department_id', $departmentId))
+                    ->orWhereHas('assignees', fn (Builder $users): Builder => $users->where('department_id', $departmentId))
+                    ->orWhereHas('creator', fn (Builder $users): Builder => $users->where('department_id', $departmentId));
             });
 
             return;
         }
 
-        // Default to Owned (assigned or created by user)
-        $query->where(function (Builder $q) use ($user): void {
-            $q->where('assigned_to', $user->id)
-                ->orWhere('created_by', $user->id);
+        $userId = $user->getKey();
+        $query->where(function (Builder $query) use ($userId): void {
+            $query
+                ->where('assigned_to', $userId)
+                ->orWhere('created_by', $userId)
+                ->orWhereHas('assignees', fn (Builder $users): Builder => $users->whereKey($userId));
         });
     }
 
@@ -128,7 +134,12 @@ final readonly class EloquentTaskRepository implements TaskRepository
         }
 
         if ($filters->assignedTo !== null) {
-            $query->where('assigned_to', $filters->assignedTo);
+            $assignedTo = $filters->assignedTo;
+            $query->where(function (Builder $query) use ($assignedTo): void {
+                $query
+                    ->where('assigned_to', $assignedTo)
+                    ->orWhereHas('assignees', fn (Builder $users): Builder => $users->whereKey($assignedTo));
+            });
         }
 
         if ($filters->subjectType !== null && $filters->subjectType !== '') {

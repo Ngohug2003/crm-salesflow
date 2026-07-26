@@ -7,6 +7,7 @@ namespace App\Repositories\Contracts;
 use App\Data\ActivityFilterData;
 use App\Models\Activity;
 use App\Models\User;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 
@@ -18,6 +19,9 @@ interface ActivityRepository
 
     /** @return Collection<int, Activity> */
     public function getForSubject(User $actor, Model $subject, ?ActivityFilterData $filter = null): Collection;
+
+    /** @return Collection<int, Activity> */
+    public function getVisibleBetween(User $actor, CarbonInterface $from, CarbonInterface $to): Collection;
 
     /** @param array<string, mixed> $data */
     public function create(array $data): Activity;

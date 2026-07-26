@@ -17,18 +17,8 @@
     </div>
 
     <section class="crm-card relative" aria-labelledby="lead-list-title">
-        <div
-            wire:loading.flex
-            wire:target="search,status,priority,source,tag,owner,department,dateFrom,dateTo,sort,direction,perPage,clearFilters,gotoPage,nextPage,previousPage"
-            class="absolute inset-x-5 top-3 z-10 hidden items-center justify-end gap-2 text-xs font-medium text-emerald-700 dark:text-emerald-300"
-            role="status"
-        >
-            <span class="size-2 animate-pulse rounded-full bg-emerald-500"></span>
-            Đang cập nhật danh sách…
-        </div>
-
         <div class="mb-5">
-            <div class="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+            <div class="data-list-heading">
                 <div>
                     <h2 id="lead-list-title" class="font-semibold">Danh sách Lead</h2>
                     <p class="mt-1 text-sm text-slate-500">Tìm thấy {{ $this->leads->total() }} Lead phù hợp.</p>
@@ -38,7 +28,7 @@
                 @endif
             </div>
 
-            <div class="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <div class="data-list-filters">
                 <flux:input
                     wire:model.live.debounce.300ms="search"
                     icon="magnifying-glass"
@@ -129,27 +119,26 @@
         @endif
 
         @if ($this->leads->isEmpty())
-            <div class="grid min-h-64 place-items-center rounded-xl border border-dashed border-slate-300 text-center dark:border-slate-700">
-                <div class="max-w-md px-6">
-                    <span class="mx-auto grid size-12 place-items-center rounded-full bg-slate-100 text-xl dark:bg-slate-800">◎</span>
-                    @if ($this->visibleTotal === 0)
-                        <p class="mt-4 font-medium">Chưa có Lead trong phạm vi của bạn</p>
-                        <p class="mt-1 text-sm text-slate-500">Lead mới sẽ xuất hiện tại đây sau khi được tạo hoặc phân công.</p>
-                    @else
-                        <p class="mt-4 font-medium">Không có Lead phù hợp bộ lọc</p>
-                        <p class="mt-1 text-sm text-slate-500">Thử thay đổi từ khóa, trạng thái hoặc xóa các bộ lọc hiện tại.</p>
+            @if ($this->visibleTotal === 0)
+                <x-data-list.empty
+                    title="Chưa có Lead trong phạm vi của bạn"
+                    description="Lead mới sẽ xuất hiện tại đây sau khi được tạo hoặc phân công."
+                    icon="user-plus"
+                />
+            @else
+                <x-data-list.empty
+                    title="Không có Lead phù hợp bộ lọc"
+                    description="Thử thay đổi từ khóa, trạng thái hoặc xóa các bộ lọc hiện tại."
+                    icon="magnifying-glass"
+                >
+                    <x-slot:action>
                         <flux:button class="mt-4" size="sm" variant="ghost" wire:click="clearFilters">Đặt lại bộ lọc</flux:button>
-                    @endif
-                </div>
-            </div>
+                    </x-slot:action>
+                </x-data-list.empty>
+            @endif
         @else
-            <div class="relative">
-                <div wire:loading.delay.longest class="absolute inset-0 bg-white/50 dark:bg-slate-900/50 backdrop-blur-[1px] z-10 flex items-center justify-center rounded-xl">
-                    <svg class="animate-spin h-8 w-8 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                </div>
+            <div class="data-list-content">
+                <x-data-list.loading target="search,status,priority,source,tag,owner,department,dateFrom,dateTo,sort,direction,perPage,clearFilters,gotoPage,nextPage,previousPage" />
                 <div wire:loading.class="opacity-60" class="transition-opacity">
                 <div class="hidden overflow-x-auto lg:block">
                     <flux:table>
@@ -288,9 +277,7 @@
                     @endforeach
                 </div>
 
-                <div class="mt-5">
-                    {{ $this->leads->onEachSide(1)->links() }}
-                </div>
+                <x-data-list.pagination :paginator="$this->leads" />
                 </div>
             </div>
         @endif

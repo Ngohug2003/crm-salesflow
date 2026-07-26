@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Livewire\Tasks;
 
 use App\Data\TaskFilterData;
-use App\Models\Activity;
 use App\Models\Task;
 use App\Models\User;
+use App\Repositories\Contracts\ActivityRepository;
 use App\Services\TaskManagementService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Carbon;
@@ -89,9 +89,11 @@ final class TaskCalendar extends Component
         }
 
         // Fetch Activities in the month
-        $activities = Activity::query()
-            ->whereBetween('performed_at', [$startOfMonth->startOfDay(), $endOfMonth->endOfDay()])
-            ->get();
+        $activities = app(ActivityRepository::class)->getVisibleBetween(
+            $actor,
+            $startOfMonth->startOfDay(),
+            $endOfMonth->endOfDay(),
+        );
 
         foreach ($activities as $act) {
             if ($act->performed_at) {

@@ -8,6 +8,7 @@ use App\Enums\TaskStatus;
 use App\Livewire\Tasks\TaskKanban;
 use App\Models\Task;
 use App\Models\User;
+use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Spatie\Permission\Models\Permission;
@@ -25,13 +26,14 @@ final class TaskViewsTest extends TestCase
         Permission::findOrCreate('tasks.create');
         Permission::findOrCreate('tasks.update');
         Permission::findOrCreate('tasks.delete');
+        $this->seed(RolePermissionSeeder::class);
     }
 
     public function test_it_renders_task_kanban_component_and_moves_tasks_between_columns(): void
     {
         /** @var User $user */
         $user = User::factory()->create();
-        $user->givePermissionTo(['tasks.view', 'tasks.update']);
+        $user->assignRole('sales');
 
         /** @var Task $task */
         $task = Task::query()->create([

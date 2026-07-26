@@ -147,6 +147,7 @@ final class OpportunityDetail extends Component
         /** @var OpportunityManagementService $service */
         $service = app(OpportunityManagementService::class);
         $this->opportunity = $service->get($actor, $this->opportunityId);
+        $this->opportunity->load(['tasks.assignee', 'tasks.assignees', 'tasks.creator']);
 
         Gate::forUser($actor)->authorize('view', $this->opportunity);
     }

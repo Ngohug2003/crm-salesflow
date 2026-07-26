@@ -6,12 +6,17 @@
         </div>
 
         <div class="flex items-center gap-2">
-            <flux:button href="{{ route('tasks.index') }}" variant="subtle" icon="list-bullet" size="sm">
+            <flux:button href="{{ route('tasks.index') }}" wire:navigate variant="subtle" icon="list-bullet" size="sm">
                 Xem dạng Danh sách
             </flux:button>
-            <flux:button href="{{ route('tasks.calendar') }}" variant="subtle" icon="calendar" size="sm">
+            <flux:button href="{{ route('tasks.calendar') }}" wire:navigate variant="subtle" icon="calendar" size="sm">
                 Xem Lịch
             </flux:button>
+            @can('create', App\Models\Task::class)
+                <flux:button href="{{ route('tasks.create') }}" wire:navigate variant="primary" icon="plus" size="sm">
+                    Tạo Công việc mới
+                </flux:button>
+            @endcan
         </div>
     </div>
 
@@ -106,7 +111,7 @@
 
                             @if ($task->description)
                                 <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">
-                                    {{ $task->description }}
+                                    {{ str($task->description)->stripTags()->squish()->limit(120) }}
                                 </p>
                             @endif
 
@@ -122,7 +127,7 @@
 
                             <!-- Move Column Dropdown & Details Action -->
                             <div class="flex items-center justify-between pt-2">
-                                <flux:button wire:click="$dispatch('open-task-detail', { taskId: {{ $task->id }} })" variant="ghost" size="sm" icon="eye">
+                                <flux:button href="{{ route('tasks.show', $task->id) }}" wire:navigate variant="ghost" size="sm" icon="eye">
                                     Chi tiết
                                 </flux:button>
 

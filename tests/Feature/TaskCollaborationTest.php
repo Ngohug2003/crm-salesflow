@@ -9,6 +9,7 @@ use App\Models\Task;
 use App\Models\TaskChecklist;
 use App\Models\TaskComment;
 use App\Models\User;
+use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Spatie\Permission\Models\Permission;
@@ -26,13 +27,14 @@ final class TaskCollaborationTest extends TestCase
         Permission::findOrCreate('tasks.create');
         Permission::findOrCreate('tasks.update');
         Permission::findOrCreate('tasks.delete');
+        $this->seed(RolePermissionSeeder::class);
     }
 
     public function test_it_creates_toggles_and_deletes_task_checklist_items(): void
     {
         /** @var User $user */
         $user = User::factory()->create();
-        $user->givePermissionTo(['tasks.view', 'tasks.update']);
+        $user->assignRole('sales');
 
         /** @var Task $task */
         $task = Task::query()->create([
@@ -76,7 +78,7 @@ final class TaskCollaborationTest extends TestCase
     {
         /** @var User $user */
         $user = User::factory()->create();
-        $user->givePermissionTo(['tasks.view', 'tasks.update']);
+        $user->assignRole('sales');
 
         /** @var Task $task */
         $task = Task::query()->create([

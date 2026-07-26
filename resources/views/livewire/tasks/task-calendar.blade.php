@@ -6,12 +6,17 @@
         </div>
 
         <div class="flex items-center gap-2">
-            <flux:button href="{{ route('tasks.index') }}" variant="subtle" icon="list-bullet" size="sm">
+            <flux:button href="{{ route('tasks.index') }}" wire:navigate variant="subtle" icon="list-bullet" size="sm">
                 Danh sách
             </flux:button>
-            <flux:button href="{{ route('tasks.kanban') }}" variant="subtle" icon="view-columns" size="sm">
+            <flux:button href="{{ route('tasks.kanban') }}" wire:navigate variant="subtle" icon="view-columns" size="sm">
                 Kanban
             </flux:button>
+            @can('create', App\Models\Task::class)
+                <flux:button href="{{ route('tasks.create') }}" wire:navigate variant="primary" icon="plus" size="sm">
+                    Tạo Công việc mới
+                </flux:button>
+            @endcan
         </div>
     </div>
 
@@ -65,13 +70,14 @@
                     <div class="space-y-1 overflow-y-auto max-h-[80px]">
                         @foreach ($dayEvents as $evt)
                             @if ($evt['type'] === 'task')
-                                <div
-                                    wire:click="$dispatch('open-task-detail', { taskId: {{ $evt['id'] }} })"
+                                <a
+                                    href="{{ route('tasks.show', $evt['id']) }}"
+                                    wire:navigate
                                     class="cursor-pointer rounded px-1.5 py-1 text-[11px] font-medium bg-slate-100 text-slate-800 hover:bg-indigo-100 hover:text-indigo-900 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-indigo-950/80 truncate flex items-center justify-between gap-1"
                                 >
                                     <span class="truncate">✓ {{ $evt['title'] }}</span>
                                     <span class="text-[9px] text-slate-400">{{ $evt['time'] }}</span>
-                                </div>
+                                </a>
                             @else
                                 <div class="rounded px-1.5 py-1 text-[11px] font-medium bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 truncate flex items-center justify-between gap-1">
                                     <span class="truncate">📅 {{ $evt['title'] }}</span>

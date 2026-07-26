@@ -10,15 +10,19 @@ use App\Enums\TaskStatus;
 use App\Models\Task;
 use App\Models\User;
 use App\Repositories\Contracts\TaskRepository;
+use App\Repositories\Contracts\UserRepository;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\ValidationException;
 
 final readonly class TaskManagementService
 {
     public function __construct(
         private TaskRepository $tasks,
+        private UserRepository $users,
+        private TaskSubjectService $subjects,
         private SystemAuditService $audit,
     ) {}
 
@@ -51,18 +55,38 @@ final readonly class TaskManagementService
     {
         Gate::forUser($actor)->authorize('create', Task::class);
 
-        return DB::transaction(function () use ($actor, $data): Task {
+        $status = (string) ($data['status'] ?? TaskStatus::Todo->value);
+        $priority = (string) ($data['priority'] ?? TaskPriority::Medium->value);
+        $this->ensureValidStatus($status);
+        $this->ensureValidPriority($priority);
+
+        $assignedTo = isset($data['assigned_to']) && $data['assigned_to'] !== ''
+            ? (int) $data['assigned_to']
+            : (int) $actor->getKey();
+        $assigneeIds = $this->visibleAssigneeIds(
+            $actor,
+            array_merge((array) ($data['assignee_ids'] ?? []), [$assignedTo]),
+        );
+        $subjectType = isset($data['subject_type']) && $data['subject_type'] !== ''
+            ? (string) $data['subject_type']
+            : null;
+        $subjectId = isset($data['subject_id']) && (int) $data['subject_id'] > 0
+            ? (int) $data['subject_id']
+            : null;
+        $this->subjects->validateVisibleSubject($actor, $subjectType, $subjectId);
+
+        return DB::transaction(function () use ($actor, $data, $status, $priority, $assignedTo, $assigneeIds, $subjectType, $subjectId): Task {
             $taskData = [
                 'title' => $data['title'],
                 'description' => $data['description'] ?? null,
-                'status' => $data['status'] ?? TaskStatus::Todo->value,
-                'priority' => $data['priority'] ?? TaskPriority::Medium->value,
+                'status' => $status,
+                'priority' => $priority,
                 'due_date' => $data['due_date'] ?? null,
                 'reminder_at' => $data['reminder_at'] ?? null,
-                'assigned_to' => $data['assigned_to'] ?? $actor->id,
+                'assigned_to' => $assignedTo,
                 'created_by' => $actor->id,
-                'subject_type' => $data['subject_type'] ?? null,
-                'subject_id' => $data['subject_id'] ?? null,
+                'subject_type' => $subjectType,
+                'subject_id' => $subjectId,
             ];
 
             if ($taskData['status'] === TaskStatus::Completed->value) {
@@ -70,6 +94,8 @@ final readonly class TaskManagementService
             }
 
             $task = $this->tasks->create($taskData);
+
+            $task->assignees()->sync($assigneeIds);
 
             $this->audit->record(
                 actor: $actor,
@@ -90,7 +116,23 @@ final readonly class TaskManagementService
         $task = $this->tasks->findVisibleForUserOrFail($actor, $id);
         Gate::forUser($actor)->authorize('update', $task);
 
-        return DB::transaction(function () use ($actor, $task, $data): Task {
+        if (array_key_exists('status', $data)) {
+            $this->ensureValidStatus((string) $data['status']);
+        }
+        if (array_key_exists('priority', $data)) {
+            $this->ensureValidPriority((string) $data['priority']);
+        }
+
+        $assigneeIds = null;
+        if (array_key_exists('assignee_ids', $data) || array_key_exists('assigned_to', $data)) {
+            $requestedIds = (array) ($data['assignee_ids'] ?? []);
+            if (! empty($data['assigned_to'])) {
+                $requestedIds[] = (int) $data['assigned_to'];
+            }
+            $assigneeIds = $this->visibleAssigneeIds($actor, $requestedIds);
+        }
+
+        return DB::transaction(function () use ($actor, $task, $data, $assigneeIds): Task {
             $before = $task->toArray();
 
             $updateData = [];
@@ -123,6 +165,10 @@ final readonly class TaskManagementService
             }
 
             $updatedTask = $this->tasks->update($task, $updateData);
+
+            if ($assigneeIds !== null) {
+                $updatedTask->assignees()->sync($assigneeIds);
+            }
 
             $this->audit->record(
                 actor: $actor,
@@ -175,5 +221,47 @@ final readonly class TaskManagementService
 
             return $result;
         });
+    }
+
+    private function ensureValidStatus(string $status): void
+    {
+        if (TaskStatus::tryFrom($status) === null) {
+            throw ValidationException::withMessages([
+                'taskStatus' => 'Trạng thái công việc không hợp lệ.',
+            ]);
+        }
+    }
+
+    private function ensureValidPriority(string $priority): void
+    {
+        if (TaskPriority::tryFrom($priority) === null) {
+            throw ValidationException::withMessages([
+                'taskPriority' => 'Độ ưu tiên công việc không hợp lệ.',
+            ]);
+        }
+    }
+
+    /**
+     * @param  array<int, int|string|null>  $requestedIds
+     * @return list<int>
+     */
+    private function visibleAssigneeIds(User $actor, array $requestedIds): array
+    {
+        $ids = collect($requestedIds)
+            ->filter(fn (mixed $id): bool => is_numeric($id) && (int) $id > 0)
+            ->map(fn (mixed $id): int => (int) $id)
+            ->unique()
+            ->values();
+
+        foreach ($ids as $id) {
+            if ($this->users->findVisibleActiveUser($actor, $id) === null) {
+                throw ValidationException::withMessages([
+                    'assigneeIds' => 'Người được phân công không hoạt động hoặc nằm ngoài phạm vi dữ liệu của bạn.',
+                ]);
+            }
+        }
+
+        /** @var list<int> */
+        return $ids->all();
     }
 }

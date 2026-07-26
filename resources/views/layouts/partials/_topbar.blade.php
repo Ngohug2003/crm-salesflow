@@ -19,10 +19,8 @@
         </flux:button>
     @endcan
 
-    {{-- Notification bell (disabled — notification center chưa xây) --}}
-    <flux:button variant="ghost" square disabled title="Thông báo — sắp có" aria-label="Thông báo">
-        <flux:icon.bell class="size-5" />
-    </flux:button>
+    {{-- Notification bell --}}
+    <livewire:notification-menu />
 
     {{-- Dark mode toggle --}}
     <flux:button variant="ghost" square x-on:click="window.salesflow.toggleTheme()" aria-label="Đổi giao diện">

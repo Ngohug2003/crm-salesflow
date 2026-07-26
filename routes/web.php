@@ -22,8 +22,10 @@ use App\Livewire\Pipelines\PipelineList;
 use App\Livewire\Platform\SystemConsole;
 use App\Livewire\Settings\SessionManager;
 use App\Livewire\Tasks\TaskCalendar;
+use App\Livewire\Tasks\TaskCreate;
 use App\Livewire\Tasks\TaskKanban;
 use App\Livewire\Tasks\TaskList;
+use App\Livewire\Tasks\TaskShow;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/dashboard');
@@ -58,8 +60,10 @@ Route::middleware(['auth', 'request.context.authenticated', 'verified', 'account
     Route::get('/pipelines/{pipelineId}/edit', PipelineEditor::class)->whereNumber('pipelineId')->name('pipelines.edit');
 
     Route::get('/tasks', TaskList::class)->name('tasks.index');
+    Route::get('/tasks/create', TaskCreate::class)->name('tasks.create');
     Route::get('/tasks/kanban', TaskKanban::class)->name('tasks.kanban');
     Route::get('/tasks/calendar', TaskCalendar::class)->name('tasks.calendar');
+    Route::get('/tasks/{taskId}', TaskShow::class)->whereNumber('taskId')->name('tasks.show');
 
     Route::get('/settings/users', [UserController::class, 'index'])->name('users.index');
     Route::get('/settings/departments', [DepartmentController::class, 'index'])->name('departments.index');

@@ -7,12 +7,14 @@ namespace App\Livewire\Tasks;
 use App\Data\TaskFilterData;
 use App\Models\Task;
 use App\Models\User;
+use App\Repositories\Contracts\UserRepository;
 use App\Services\TaskManagementService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
@@ -63,6 +65,9 @@ final class TaskList extends Component
 
     public ?int $assigneeId = null;
 
+    /** @var array<int, int> */
+    public array $assigneeIds = [];
+
     public ?int $confirmingDeleteTaskId = null;
 
     public function mount(): void
@@ -74,6 +79,14 @@ final class TaskList extends Component
 
     public function updatingSearch(): void
     {
+        $this->resetPage();
+    }
+
+    public function clearFilters(): void
+    {
+        $this->reset('search', 'status', 'priority', 'assignedTo');
+        $this->sortBy = 'due_date';
+        $this->sortDirection = 'asc';
         $this->resetPage();
     }
 
@@ -103,6 +116,8 @@ final class TaskList extends Component
         $this->dueDate = $task->due_date?->format('Y-m-d\TH:i') ?? null;
         $this->reminderDate = $task->reminder_at?->format('Y-m-d\TH:i') ?? null;
         $this->assigneeId = $task->assigned_to;
+        $task->load('assignees');
+        $this->assigneeIds = $task->assignees->pluck('id')->toArray();
 
         $this->showModal = true;
     }
@@ -111,12 +126,14 @@ final class TaskList extends Component
     {
         $this->validate([
             'title' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'taskStatus' => ['required', 'string'],
-            'taskPriority' => ['required', 'string'],
+            'description' => ['nullable', 'string', 'max:50000'],
+            'taskStatus' => ['required', Rule::in(['todo', 'in_progress', 'completed', 'cancelled'])],
+            'taskPriority' => ['required', Rule::in(['low', 'medium', 'high', 'urgent'])],
             'dueDate' => ['nullable', 'date'],
             'reminderDate' => ['nullable', 'date'],
             'assigneeId' => ['nullable', 'integer', 'exists:users,id'],
+            'assigneeIds' => ['array'],
+            'assigneeIds.*' => ['integer', 'distinct', 'exists:users,id'],
         ]);
 
         /** @var User $actor */
@@ -132,6 +149,7 @@ final class TaskList extends Component
             'due_date' => $this->dueDate !== '' ? $this->dueDate : null,
             'reminder_at' => $this->reminderDate !== '' ? $this->reminderDate : null,
             'assigned_to' => $this->assigneeId,
+            'assignee_ids' => $this->assigneeIds,
         ];
 
         try {
@@ -213,7 +231,10 @@ final class TaskList extends Component
     #[Computed]
     public function users(): Collection
     {
-        return User::query()->orderBy('name')->get();
+        /** @var User $actor */
+        $actor = Auth::user();
+
+        return app(UserRepository::class)->visibleActiveUsers($actor);
     }
 
     private function resetForm(): void
@@ -226,6 +247,7 @@ final class TaskList extends Component
         $this->dueDate = null;
         $this->reminderDate = null;
         $this->assigneeId = null;
+        $this->assigneeIds = [];
         $this->resetErrorBag();
     }
 

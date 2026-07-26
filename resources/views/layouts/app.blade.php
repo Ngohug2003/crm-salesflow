@@ -8,6 +8,7 @@
     <title>{{ $title ?? 'SalesFlow CRM' }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @fluxAppearance
+    @stack('head')
 </head>
 <body class="min-h-screen bg-slate-50 text-slate-950 antialiased dark:bg-slate-950 dark:text-slate-100"
       x-data="{ sidebar: localStorage.getItem('salesflow-sidebar') !== 'closed', mobileNav: false }">

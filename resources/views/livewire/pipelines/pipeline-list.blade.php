@@ -1,50 +1,72 @@
 <div class="space-y-6">
-    <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+    <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Quy trình bán hàng (Pipelines)</h1>
-            <p class="mt-1 text-sm text-slate-500">Quản lý các quy trình bán hàng đa bước và cấu hình các giai đoạn (Stages).</p>
+            <p class="text-sm text-slate-500">CRM / Bán hàng</p>
+            <h1 class="mt-1 text-3xl font-semibold tracking-tight">Quy trình bán hàng</h1>
+            <p class="mt-2 max-w-3xl text-slate-500">Quản lý các quy trình bán hàng đa bước và cấu hình các giai đoạn.</p>
         </div>
 
         @can('create', App\Models\Pipeline::class)
-            <flux:button href="{{ route('pipelines.create') }}" variant="primary" icon="plus" size="sm">
-                Tạo Quy trình mới
+            <flux:button :href="route('pipelines.create')" wire:navigate variant="primary" icon="plus">
+                Tạo quy trình
             </flux:button>
         @endcan
     </div>
 
     @if (session()->has('message'))
-        <div class="rounded-lg bg-emerald-50 p-4 text-sm font-semibold text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300">
+        <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200" role="status">
             {{ session('message') }}
         </div>
     @endif
 
-    <div class="crm-card">
-        <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div class="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
-                <div class="w-full sm:w-72">
-                    <flux:input
-                        wire:model.live.debounce.300ms="search"
-                        placeholder="Tìm theo tên, mã quy trình..."
-                        icon="magnifying-glass"
-                    />
-                </div>
-
-                <div class="w-full sm:w-48">
-                    <flux:select wire:model.live="isActive" placeholder="Trạng thái">
-                        <option value="">Tất cả trạng thái</option>
-                        <option value="true">Đang hoạt động</option>
-                        <option value="false">Tạm ngừng</option>
-                    </flux:select>
-                </div>
+    <div class="crm-card relative">
+        <div class="data-list-heading">
+            <div>
+                <h2 class="font-semibold">Danh sách quy trình bán hàng</h2>
+                <p class="mt-1 text-sm text-slate-500">Có {{ $this->pipelines->total() }} quy trình phù hợp.</p>
             </div>
+            @if ($search !== '' || $isActive !== '')
+                <flux:button size="sm" variant="ghost" icon="x-mark" wire:click="clearFilters">Xóa bộ lọc</flux:button>
+            @endif
         </div>
 
-        <div class="divide-y divide-slate-200 dark:divide-slate-800">
-            @forelse ($this->pipelines as $pipe)
-                <div class="flex flex-col justify-between gap-4 py-4 sm:flex-row sm:items-center">
+        <div class="mb-5 grid gap-3 md:grid-cols-2 xl:max-w-2xl">
+            <flux:input
+                wire:model.live.debounce.300ms="search"
+                label="Tìm kiếm"
+                placeholder="Tên hoặc mã quy trình..."
+                icon="magnifying-glass"
+            />
+
+            <flux:select wire:model.live="isActive" label="Trạng thái">
+                <option value="">Tất cả trạng thái</option>
+                <option value="true">Đang hoạt động</option>
+                <option value="false">Tạm ngừng</option>
+            </flux:select>
+        </div>
+
+        <div class="data-list-content">
+            <x-data-list.loading target="search,isActive,clearFilters,gotoPage,nextPage,previousPage" />
+
+            @if ($this->pipelines->isEmpty())
+                <x-data-list.empty
+                    title="Không tìm thấy quy trình bán hàng"
+                    description="Thử thay đổi từ khóa hoặc bộ lọc trạng thái."
+                    icon="queue-list"
+                >
+                    @if ($search !== '' || $isActive !== '')
+                        <x-slot:action>
+                            <flux:button size="sm" variant="ghost" icon="x-mark" wire:click="clearFilters">Đặt lại bộ lọc</flux:button>
+                        </x-slot:action>
+                    @endif
+                </x-data-list.empty>
+            @else
+                <div class="data-list-feed">
+                    @foreach ($this->pipelines as $pipe)
+                        <div class="data-list-feed-item">
                     <div class="space-y-2">
                         <div class="flex items-center gap-3">
-                            <a href="{{ route('pipelines.show', $pipe->id) }}" class="text-base font-semibold text-slate-900 hover:text-indigo-600 dark:text-white dark:hover:text-indigo-400">
+                            <a href="{{ route('pipelines.show', $pipe->id) }}" wire:navigate class="text-base font-semibold text-slate-900 hover:text-emerald-600 dark:text-white dark:hover:text-emerald-400">
                                 {{ $pipe->name }}
                             </a>
 
@@ -93,7 +115,7 @@
                         </flux:button>
 
                         @can('update', $pipe)
-                            <flux:button href="{{ route('pipelines.edit', $pipe->id) }}" size="sm" variant="ghost" icon="pencil">
+                            <flux:button :href="route('pipelines.edit', $pipe->id)" wire:navigate size="sm" variant="ghost" icon="pencil">
                                 Sửa
                             </flux:button>
                         @endcan
@@ -104,16 +126,12 @@
                             </flux:button>
                         @endcan
                     </div>
+                        </div>
+                    @endforeach
                 </div>
-            @empty
-                <div class="py-12 text-center text-sm text-slate-500">
-                    Không tìm thấy quy trình bán hàng nào phù hợp.
-                </div>
-            @endforelse
-        </div>
 
-        <div class="mt-4">
-            {{ $this->pipelines->links() }}
+                <x-data-list.pagination :paginator="$this->pipelines" />
+            @endif
         </div>
     </div>
 
