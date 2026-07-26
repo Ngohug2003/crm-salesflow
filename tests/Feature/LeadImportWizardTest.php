@@ -6,6 +6,7 @@ namespace Tests\Feature;
 
 use App\Jobs\ProcessImportChunkJob;
 use App\Livewire\Imports\LeadImportWizard;
+use App\Models\ImportBatch;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -129,9 +130,38 @@ final class LeadImportWizardTest extends TestCase
             ->set('duplicateStrategy', 'update')
             ->call('startImport')
             ->assertSet('step', 4)
-            ->assertSee('Tiến trình Import đã khởi chạy thành công');
+            ->assertSee('Tiến độ thực thi Queue');
 
         Queue::assertPushed(ProcessImportChunkJob::class, 1);
+    }
+
+    public function test_it_downloads_error_file_for_completed_batch_with_errors(): void
+    {
+        $admin = User::query()->where('email', 'admin@salesflow.test')->sole();
+
+        $batch = ImportBatch::query()->create([
+            'user_id' => $admin->id,
+            'type' => 'leads',
+            'temp_file_key' => 'key.csv',
+            'original_filename' => 'file.csv',
+            'duplicate_strategy' => 'skip',
+            'status' => 'completed',
+            'total_rows' => 2,
+            'processed_rows' => 2,
+            'successful_rows' => 1,
+            'failed_rows' => 1,
+            'column_mapping' => [],
+            'error_log' => [
+                ['row' => 2, 'error' => 'Email không đúng định dạng'],
+            ],
+        ]);
+
+        Livewire::actingAs($admin)
+            ->test(LeadImportWizard::class)
+            ->set('batchId', $batch->id)
+            ->set('step', 4)
+            ->call('downloadErrorFile')
+            ->assertFileDownloaded("import_errors_{$batch->id}.csv");
     }
 
     public function test_it_rejects_invalid_file_extension(): void
