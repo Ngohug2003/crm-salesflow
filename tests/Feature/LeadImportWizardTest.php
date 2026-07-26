@@ -77,6 +77,54 @@ final class LeadImportWizardTest extends TestCase
             ->assertSee('nva@example.com');
     }
 
+    public function test_it_automaps_headers_and_runs_dryrun_validation_in_step_2(): void
+    {
+        $admin = User::query()->where('email', 'admin@salesflow.test')->sole();
+
+        $csvContent = implode("\n", [
+            'Họ,Tên,Email,Số điện thoại,Công ty',
+            'Nguyễn,Văn A,nva@example.com,0912345678,Công ty A',
+            'Trần,Thị B,invalid-email,0987654321,Công ty B',
+        ]);
+
+        $file = UploadedFile::fake()->createWithContent('leads_step2.csv', $csvContent);
+
+        Livewire::actingAs($admin)
+            ->test(LeadImportWizard::class)
+            ->set('importFile', $file)
+            ->call('proceedToMapping')
+            ->assertSet('step', 2)
+            ->assertSet('mapping.last_name', 'Họ')
+            ->assertSet('mapping.first_name', 'Tên')
+            ->assertSet('mapping.email', 'Email')
+            ->assertSet('mapping.phone', 'Số điện thoại')
+            ->assertSet('mapping.company_name', 'Công ty')
+            ->assertSet('validationResult.total_checked', 2)
+            ->assertSet('validationResult.valid_count', 1)
+            ->assertSet('validationResult.warning_count', 1)
+            ->assertSee('Báo cáo Kiểm tra dữ liệu');
+    }
+
+    public function test_it_proceeds_to_step_3_when_mapping_is_valid(): void
+    {
+        $admin = User::query()->where('email', 'admin@salesflow.test')->sole();
+
+        $csvContent = implode("\n", [
+            'Họ,Tên,Email,Số điện thoại,Công ty',
+            'Nguyễn,Văn A,nva@example.com,0912345678,Công ty A',
+        ]);
+
+        $file = UploadedFile::fake()->createWithContent('leads_step3.csv', $csvContent);
+
+        Livewire::actingAs($admin)
+            ->test(LeadImportWizard::class)
+            ->set('importFile', $file)
+            ->call('proceedToMapping')
+            ->call('proceedToDuplicates')
+            ->assertSet('step', 3)
+            ->assertSee('Cấu hình ghép nối cột hoàn tất!');
+    }
+
     public function test_it_rejects_invalid_file_extension(): void
     {
         $admin = User::query()->where('email', 'admin@salesflow.test')->sole();
