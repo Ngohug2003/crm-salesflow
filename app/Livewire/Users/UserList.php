@@ -9,7 +9,9 @@ use App\Exceptions\UserOperationException;
 use App\Livewire\Forms\UserForm;
 use App\Models\Department;
 use App\Models\User;
+use App\Models\UserInvitation;
 use App\Repositories\Contracts\UserRepository;
+use App\Services\Auth\UserInvitationService;
 use App\Services\UserDirectoryService;
 use App\Services\UserManagementService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -40,6 +42,16 @@ final class UserList extends Component
     public string $status = 'all';
 
     public bool $showForm = false;
+
+    public bool $showInviteModal = false;
+
+    public string $inviteName = '';
+
+    public string $inviteEmail = '';
+
+    public ?int $inviteDepartmentId = null;
+
+    public string $inviteRole = 'sales';
 
     public ?string $notice = null;
 
@@ -89,6 +101,85 @@ final class UserList extends Component
     public function roleAssignmentOptions(): array
     {
         return $this->service()->roleAssignmentOptions($this->currentUser());
+    }
+
+    /** @return Collection<int, UserInvitation> */
+    #[Computed]
+    public function pendingInvitations(): Collection
+    {
+        return UserInvitation::query()
+            ->with(['department', 'inviter'])
+            ->whereNull('accepted_at')
+            ->latest('created_at')
+            ->get();
+    }
+
+    public function openInviteModal(): void
+    {
+        Gate::authorize('create', User::class);
+
+        $this->resetValidation();
+        $this->notice = null;
+        $this->inviteName = '';
+        $this->inviteEmail = '';
+        $this->inviteDepartmentId = null;
+        $this->inviteRole = 'sales';
+        $this->showInviteModal = true;
+        $this->dispatch('modal-show', name: 'user-invite-modal');
+    }
+
+    public function closeInviteModal(): void
+    {
+        $this->showInviteModal = false;
+        $this->dispatch('modal-close', name: 'user-invite-modal');
+    }
+
+    public function sendInvitation(): void
+    {
+        Gate::authorize('create', User::class);
+
+        $this->validate([
+            'inviteName' => ['required', 'string', 'max:255'],
+            'inviteEmail' => ['required', 'email', 'max:255'],
+            'inviteRole' => ['required', 'string'],
+        ], [
+            'inviteName.required' => 'Vui lòng nhập họ tên người được mời.',
+            'inviteEmail.required' => 'Vui lòng nhập email.',
+            'inviteEmail.email' => 'Định dạng email không hợp lệ.',
+        ]);
+
+        try {
+            app(UserInvitationService::class)->createInvitation($this->currentUser(), [
+                'name' => $this->inviteName,
+                'email' => $this->inviteEmail,
+                'department_id' => $this->inviteDepartmentId,
+                'role' => $this->inviteRole,
+            ]);
+
+            $this->notice = "Đã gửi email lời mời đến {$this->inviteEmail}.";
+            $this->closeInviteModal();
+            unset($this->pendingInvitations);
+        } catch (UserOperationException $e) {
+            $this->addError('inviteEmail', $e->getMessage());
+        }
+    }
+
+    public function resendInvitation(int $invitationId): void
+    {
+        $invitation = UserInvitation::query()->findOrFail($invitationId);
+        app(UserInvitationService::class)->resendInvitation($this->currentUser(), $invitation);
+
+        $this->notice = "Đã gửi lại email lời mời đến {$invitation->email}.";
+        unset($this->pendingInvitations);
+    }
+
+    public function revokeInvitation(int $invitationId): void
+    {
+        $invitation = UserInvitation::query()->findOrFail($invitationId);
+        app(UserInvitationService::class)->revokeInvitation($this->currentUser(), $invitation);
+
+        $this->notice = "Đã hủy lời mời dành cho {$invitation->email}.";
+        unset($this->pendingInvitations);
     }
 
     public function openCreate(): void

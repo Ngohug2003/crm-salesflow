@@ -6,7 +6,10 @@
             <p class="mt-2 max-w-2xl text-slate-500">Tra cứu tài khoản theo phạm vi dữ liệu, phòng ban, vai trò và trạng thái hoạt động.</p>
         </div>
         @can('create', \App\Models\User::class)
-            <flux:button variant="primary" icon="plus" wire:click="openCreate">Tạo người dùng</flux:button>
+            <div class="flex items-center gap-2">
+                <flux:button variant="filled" icon="envelope" wire:click="openInviteModal">Mời thành viên</flux:button>
+                <flux:button variant="primary" icon="plus" wire:click="openCreate">Tạo người dùng</flux:button>
+            </div>
         @endcan
     </div>
 
@@ -15,6 +18,42 @@
             {{ $notice }}
         </div>
     @endif
+
+    <flux:modal name="user-invite-modal" class="w-full" style="width: 36rem; max-width: 95vw;" wire:close="closeInviteModal">
+        @if ($showInviteModal)
+            <div class="space-y-6">
+                <div>
+                    <flux:heading size="lg">Mời thành viên mới tham gia CRM</flux:heading>
+                    <flux:subheading class="mt-1">
+                        Hệ thống sẽ gửi email chứa liên kết bảo mật để thành viên tự tạo mật khẩu.
+                    </flux:subheading>
+                </div>
+
+                <form wire:submit="sendInvitation" class="space-y-4">
+                    <flux:input wire:model.blur="inviteName" label="Họ và tên" placeholder="Ví dụ: Trần Văn Nam" required />
+                    <flux:input wire:model.blur="inviteEmail" type="email" label="Email nhận lời mời" placeholder="nam@salesflow.test" required />
+
+                    <flux:select wire:model="inviteDepartmentId" label="Phòng ban" placeholder="Chưa gán phòng ban">
+                        <option value="">Chưa gán phòng ban</option>
+                        @foreach ($this->departmentOptions as $dept)
+                            <option value="{{ $dept->id }}">{{ $dept->name }} ({{ $dept->code }})</option>
+                        @endforeach
+                    </flux:select>
+
+                    <flux:select wire:model="inviteRole" label="Vai trò">
+                        @foreach ($this->roleOptions as $roleKey => $roleLabel)
+                            <option value="{{ $roleKey }}">{{ $roleLabel }}</option>
+                        @endforeach
+                    </flux:select>
+
+                    <div class="flex justify-end gap-3 pt-4">
+                        <flux:button variant="ghost" wire:click="closeInviteModal">Hủy</flux:button>
+                        <flux:button type="submit" variant="primary" icon="paper-airplane">Gửi email lời mời</flux:button>
+                    </div>
+                </form>
+            </div>
+        @endif
+    </flux:modal>
 
     <flux:modal name="user-form" class="w-full" style="width: 56rem; max-width: 95vw;" wire:close="cancelForm">
         @if ($showForm)
@@ -100,6 +139,62 @@
             </div>
         @endif
     </flux:modal>
+
+    @if ($this->pendingInvitations->isNotEmpty())
+        <div class="mb-8 rounded-xl border border-slate-200 bg-white p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900">
+            <div class="mb-4">
+                <h3 class="text-base font-semibold text-slate-900 dark:text-white">Lời mời đang chờ kích hoạt ({{ $this->pendingInvitations->count() }})</h3>
+                <p class="text-xs text-slate-500">Thành viên chưa nhấp link đặt mật khẩu trong email.</p>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                    <thead class="border-b border-slate-200 text-xs font-semibold uppercase text-slate-500 dark:border-slate-800">
+                        <tr>
+                            <th class="py-2.5 px-3">Người được mời</th>
+                            <th class="py-2.5 px-3">Phòng ban & Vai trò</th>
+                            <th class="py-2.5 px-3">Người mời</th>
+                            <th class="py-2.5 px-3">Hạn sử dụng</th>
+                            <th class="py-2.5 px-3 text-right">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                        @foreach ($this->pendingInvitations as $invitation)
+                            <tr>
+                                <td class="py-3 px-3">
+                                    <p class="font-medium text-slate-900 dark:text-white">{{ $invitation->name }}</p>
+                                    <p class="text-xs text-slate-500">{{ $invitation->email }}</p>
+                                </td>
+                                <td class="py-3 px-3 text-slate-600 dark:text-slate-400">
+                                    {{ $invitation->department?->name ?: 'Chưa gán' }}
+                                    <span class="inline-block rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                                        {{ $this->roleOptions[$invitation->role] ?? $invitation->role }}
+                                    </span>
+                                </td>
+                                <td class="py-3 px-3 text-slate-600 dark:text-slate-400">
+                                    {{ $invitation->inviter->name }}
+                                </td>
+                                <td class="py-3 px-3 text-slate-600 dark:text-slate-400">
+                                    <span @class(['text-red-500 font-medium' => $invitation->isExpired()])>
+                                        {{ $invitation->expires_at->format('H:i d/m/Y') }}
+                                        @if ($invitation->isExpired())
+                                            (Hết hạn)
+                                        @endif
+                                    </span>
+                                </td>
+                                <td class="py-3 px-3 text-right">
+                                    <div class="flex justify-end gap-2">
+                                        <flux:button size="sm" variant="ghost" wire:click="resendInvitation({{ $invitation->id }})">Gửi lại</flux:button>
+                                        <flux:button size="sm" variant="subtle" color="red" wire:click="revokeInvitation({{ $invitation->id }})">Hủy</flux:button>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    @endif
 
     <section class="crm-card">
         <div class="mb-5">
