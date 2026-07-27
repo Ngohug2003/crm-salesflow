@@ -13,6 +13,7 @@ use App\Models\LeadNote;
 use App\Models\User;
 use App\Repositories\Contracts\LeadRepository;
 use App\Repositories\Contracts\LeadWorkflowRepository;
+use App\Services\Lead\LeadConversionPreviewService;
 use App\Services\Lead\LeadTimelineService;
 use App\Services\LeadAssignmentService;
 use App\Services\LeadConversionService;
@@ -240,15 +241,28 @@ final class LeadWorkflow extends Component
 
     public bool $showConvertModal = false;
 
-    public bool $convertCreateCompany = true;
+    public string $convertCompanyMode = 'create';
 
-    public bool $convertCreateContact = true;
+    public string $convertCompanyId = '';
+
+    public string $convertCompanyName = '';
+
+    public string $convertContactMode = 'create';
+
+    public string $convertContactId = '';
 
     public bool $convertCreateOpportunity = true;
 
     public string $convertOpportunityName = '';
 
+    public string $convertPipelineId = '';
+
+    public string $convertStageId = '';
+
     public ?float $convertEstimatedValue = null;
+
+    /** @var array<string, mixed> */
+    public array $conversionPreview = [];
 
     #[Computed]
     public function canConvert(): bool
@@ -264,8 +278,34 @@ final class LeadWorkflow extends Component
     {
         $this->resetValidation();
         $lead = $this->lead();
+
+        /** @var LeadConversionPreviewService $previewService */
+        $previewService = app(LeadConversionPreviewService::class);
+        $this->conversionPreview = $previewService->preview($this->currentUser(), $lead);
+
+        if (! empty($this->conversionPreview['suggestedCompanyId'])) {
+            $this->convertCompanyMode = 'existing';
+            $this->convertCompanyId = (string) $this->conversionPreview['suggestedCompanyId'];
+        } else {
+            $this->convertCompanyMode = 'create';
+            $this->convertCompanyId = '';
+        }
+        $this->convertCompanyName = $lead->company_name ?: "Công ty từ Lead {$lead->full_name}";
+
+        if (! empty($this->conversionPreview['suggestedContactId'])) {
+            $this->convertContactMode = 'existing';
+            $this->convertContactId = (string) $this->conversionPreview['suggestedContactId'];
+        } else {
+            $this->convertContactMode = 'create';
+            $this->convertContactId = '';
+        }
+
+        $this->convertCreateOpportunity = true;
         $this->convertOpportunityName = "Cơ hội từ Lead {$lead->full_name}";
         $this->convertEstimatedValue = $lead->estimated_value !== null ? (float) $lead->estimated_value : null;
+        $this->convertPipelineId = ! empty($this->conversionPreview['defaultPipelineId']) ? (string) $this->conversionPreview['defaultPipelineId'] : '';
+        $this->convertStageId = ! empty($this->conversionPreview['defaultStageId']) ? (string) $this->conversionPreview['defaultStageId'] : '';
+
         $this->showConvertModal = true;
         $this->dispatch('modal-show', name: 'convert-lead-modal');
     }
@@ -284,10 +324,15 @@ final class LeadWorkflow extends Component
 
         try {
             $data = new LeadConversionData(
-                createCompany: $this->convertCreateCompany,
-                createContact: $this->convertCreateContact,
+                createCompany: $this->convertCompanyMode === 'create',
+                companyId: $this->convertCompanyMode === 'existing' && $this->convertCompanyId !== '' ? (int) $this->convertCompanyId : null,
+                companyName: $this->convertCompanyName,
+                createContact: $this->convertContactMode === 'create',
+                contactId: $this->convertContactMode === 'existing' && $this->convertContactId !== '' ? (int) $this->convertContactId : null,
                 createOpportunity: $this->convertCreateOpportunity,
                 opportunityName: $this->convertOpportunityName,
+                pipelineId: $this->convertPipelineId !== '' ? (int) $this->convertPipelineId : null,
+                stageId: $this->convertStageId !== '' ? (int) $this->convertStageId : null,
                 estimatedValue: $this->convertEstimatedValue,
             );
 
