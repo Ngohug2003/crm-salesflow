@@ -27,18 +27,30 @@ final readonly class CompanyPolicy
         return $this->dataScope->canWrite($actor) && $actor->can('companies.create');
     }
 
-    public function update(User $actor, Company $company): bool
+    public function update(User $actor, ?Company $company = null): bool
     {
+        if ($company === null) {
+            return $this->dataScope->canWrite($actor) && $actor->can('companies.update');
+        }
+
         return $this->canMutate($actor, $company, 'companies.update');
     }
 
-    public function delete(User $actor, Company $company): bool
+    public function delete(User $actor, ?Company $company = null): bool
     {
+        if ($company === null) {
+            return $this->dataScope->canWrite($actor) && $actor->can('companies.delete');
+        }
+
         return $this->canMutate($actor, $company, 'companies.delete');
     }
 
-    public function restore(User $actor, Company $company): bool
+    public function restore(User $actor, ?Company $company = null): bool
     {
+        if ($company === null) {
+            return $this->dataScope->canWrite($actor) && $actor->can('companies.delete');
+        }
+
         return $this->canMutate($actor, $company, 'companies.delete');
     }
 

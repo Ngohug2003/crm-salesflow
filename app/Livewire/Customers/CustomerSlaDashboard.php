@@ -8,6 +8,7 @@ use App\Models\Company;
 use App\Models\Lead;
 use App\Models\Opportunity;
 use App\Models\User;
+use App\Services\Authorization\DataScopeService;
 use App\Services\CustomerSlaService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
@@ -58,15 +59,20 @@ final class CustomerSlaDashboard extends Component
     {
         /** @var CustomerSlaService $slaService */
         $slaService = app(CustomerSlaService::class);
+        /** @var DataScopeService $dataScope */
+        $dataScope = app(DataScopeService::class);
+        /** @var User $actor */
+        $actor = Auth::user();
 
         $records = [];
 
         // 1. Leads
         if ($this->subjectType === 'all' || $this->subjectType === 'lead') {
-            $leads = Lead::query()
+            $leadQuery = Lead::query()
                 ->whereNull('converted_at')
-                ->when($this->search !== '', fn ($q) => $q->where('full_name', 'like', "%{$this->search}%"))
-                ->get();
+                ->when($this->search !== '', fn ($q) => $q->where('full_name', 'like', "%{$this->search}%"));
+            $dataScope->apply($leadQuery, $actor, 'owner_id', 'department_id');
+            $leads = $leadQuery->get();
 
             foreach ($leads as $lead) {
                 $info = $slaService->getSlaInfo($lead);
@@ -90,10 +96,11 @@ final class CustomerSlaDashboard extends Component
 
         // 2. Opportunities
         if ($this->subjectType === 'all' || $this->subjectType === 'opportunity') {
-            $opps = Opportunity::query()
+            $oppQuery = Opportunity::query()
                 ->open()
-                ->when($this->search !== '', fn ($q) => $q->where('title', 'like', "%{$this->search}%"))
-                ->get();
+                ->when($this->search !== '', fn ($q) => $q->where('title', 'like', "%{$this->search}%"));
+            $dataScope->apply($oppQuery, $actor, 'owner_id', 'department_id');
+            $opps = $oppQuery->get();
 
             foreach ($opps as $opp) {
                 $info = $slaService->getSlaInfo($opp);
@@ -117,9 +124,10 @@ final class CustomerSlaDashboard extends Component
 
         // 3. Companies
         if ($this->subjectType === 'all' || $this->subjectType === 'company') {
-            $companies = Company::query()
-                ->when($this->search !== '', fn ($q) => $q->where('name', 'like', "%{$this->search}%"))
-                ->get();
+            $companyQuery = Company::query()
+                ->when($this->search !== '', fn ($q) => $q->where('name', 'like', "%{$this->search}%"));
+            $dataScope->apply($companyQuery, $actor, 'owner_id', 'department_id');
+            $companies = $companyQuery->get();
 
             foreach ($companies as $c) {
                 $info = $slaService->getSlaInfo($c);

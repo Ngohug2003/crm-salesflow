@@ -5,8 +5,13 @@ declare(strict_types=1);
 namespace App\Livewire\Concerns;
 
 use App\Data\ReportFilterData;
+use App\Livewire\Dashboard\DashboardOverview;
+use App\Livewire\Reports\FunnelReport;
+use App\Livewire\Reports\RevenueReport;
+use App\Livewire\Reports\SalesPerformanceReport;
 use App\Models\Department;
 use App\Models\Pipeline;
+use App\Models\SavedReportFilter;
 use App\Models\User;
 use App\Services\Analytics\ReportFilterOptionsService;
 use App\Services\Analytics\SalesMetricsQueryService;
@@ -35,6 +40,51 @@ trait InteractsWithReportFilters
     #[Url(as: 'pipeline')]
     public ?int $pipelineId = null;
 
+    public bool $showSavePresetModal = false;
+
+    public string $presetName = '';
+
+    public bool $presetIsDefault = false;
+
+    public ?int $selectedPresetId = null;
+
+    public function mountInteractsWithReportFilters(): void
+    {
+        if (! request()->has('preset') && ! request()->has('start') && ! request()->has('end') && ! request()->has('dept') && ! request()->has('user') && ! request()->has('pipeline')) {
+            /** @var SavedReportFilter|null $defaultPreset */
+            $defaultPreset = SavedReportFilter::query()
+                ->where('user_id', $this->reportActor()->id)
+                ->where('report_type', $this->currentReportType())
+                ->where('is_default', true)
+                ->first();
+
+            if ($defaultPreset !== null) {
+                $this->applyFilterPreset($defaultPreset->id);
+            }
+        }
+    }
+
+    protected function currentReportType(): string
+    {
+        if ($this instanceof DashboardOverview) {
+            return 'overview';
+        }
+
+        if ($this instanceof RevenueReport) {
+            return 'revenue';
+        }
+
+        if ($this instanceof FunnelReport) {
+            return 'funnel';
+        }
+
+        if ($this instanceof SalesPerformanceReport) {
+            return 'performance';
+        }
+
+        return 'all';
+    }
+
     public function updatedDatePreset(string $value): void
     {
         if ($value !== 'custom') {
@@ -55,7 +105,109 @@ trait InteractsWithReportFilters
         $this->endDate = null;
         $this->departmentId = null;
         $this->userId = null;
-        $this->pipelineId = null;
+        $this->selectedPresetId = null;
+
+        if ($this instanceof FunnelReport) {
+            $this->pipelineId = $this->pipelines()->first()?->id;
+        } else {
+            $this->pipelineId = null;
+        }
+
+        $this->refreshMetrics();
+    }
+
+    public function openSavePresetModal(): void
+    {
+        $this->presetName = '';
+        $this->presetIsDefault = false;
+        $this->showSavePresetModal = true;
+    }
+
+    public function saveFilterPreset(): void
+    {
+        if (trim($this->presetName) === '') {
+            $this->addError('presetName', 'Vui lòng nhập tên bộ lọc đã lưu.');
+
+            return;
+        }
+
+        $actor = $this->reportActor();
+
+        if ($this->presetIsDefault) {
+            SavedReportFilter::query()
+                ->where('user_id', $actor->id)
+                ->where('report_type', $this->currentReportType())
+                ->update(['is_default' => false]);
+        }
+
+        /** @var SavedReportFilter $filter */
+        $filter = SavedReportFilter::query()->create([
+            'user_id' => $actor->id,
+            'name' => trim($this->presetName),
+            'report_type' => $this->currentReportType(),
+            'filter_data' => [
+                'datePreset' => $this->datePreset,
+                'startDate' => $this->startDate,
+                'endDate' => $this->endDate,
+                'departmentId' => $this->departmentId,
+                'userId' => $this->userId,
+                'pipelineId' => $this->pipelineId,
+            ],
+            'is_default' => $this->presetIsDefault,
+        ]);
+
+        $this->selectedPresetId = $filter->id;
+        $this->showSavePresetModal = false;
+        $this->presetName = '';
+        $this->presetIsDefault = false;
+    }
+
+    public function applyFilterPreset(int $presetId): void
+    {
+        $actor = $this->reportActor();
+        /** @var SavedReportFilter|null $preset */
+        $preset = SavedReportFilter::query()
+            ->where('user_id', $actor->id)
+            ->find($presetId);
+
+        if ($preset === null) {
+            return;
+        }
+
+        $data = $preset->filter_data;
+
+        $this->selectedPresetId = $preset->id;
+        $this->datePreset = isset($data['datePreset']) && is_string($data['datePreset']) ? $data['datePreset'] : 'this_month';
+        $this->startDate = isset($data['startDate']) && is_string($data['startDate']) ? $data['startDate'] : null;
+        $this->endDate = isset($data['endDate']) && is_string($data['endDate']) ? $data['endDate'] : null;
+        $this->departmentId = isset($data['departmentId']) && is_numeric($data['departmentId']) ? (int) $data['departmentId'] : null;
+        $this->userId = isset($data['userId']) && is_numeric($data['userId']) ? (int) $data['userId'] : null;
+
+        $presetPipelineId = isset($data['pipelineId']) && is_numeric($data['pipelineId']) ? (int) $data['pipelineId'] : null;
+        if ($presetPipelineId !== null) {
+            $this->pipelineId = $presetPipelineId;
+        } elseif ($this instanceof FunnelReport) {
+            if ($this->pipelineId === null) {
+                $this->pipelineId = $this->pipelines()->first()?->id;
+            }
+        } else {
+            $this->pipelineId = null;
+        }
+
+        $this->refreshMetrics();
+    }
+
+    public function deleteFilterPreset(int $presetId): void
+    {
+        $actor = $this->reportActor();
+        SavedReportFilter::query()
+            ->where('user_id', $actor->id)
+            ->where('id', $presetId)
+            ->delete();
+
+        if ($this->selectedPresetId === $presetId) {
+            $this->selectedPresetId = null;
+        }
     }
 
     public function refreshMetrics(): void
@@ -67,6 +219,18 @@ trait InteractsWithReportFilters
     public function clearCacheAndReload(): void
     {
         $this->refreshMetrics();
+    }
+
+    /** @return Collection<int, SavedReportFilter> */
+    #[Computed]
+    public function savedPresets(): Collection
+    {
+        return SavedReportFilter::query()
+            ->where('user_id', $this->reportActor()->id)
+            ->whereIn('report_type', [$this->currentReportType(), 'all'])
+            ->orderByDesc('is_default')
+            ->orderBy('name')
+            ->get();
     }
 
     /** @return Collection<int, Department> */
