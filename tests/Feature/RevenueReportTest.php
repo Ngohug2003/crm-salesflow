@@ -140,6 +140,6 @@ final class RevenueReportTest extends TestCase
             ->assertSee('300,000,000')
             ->assertSee('100,000,000')
             ->assertSee('50,000,000')
-            ->assertSee('Không đủ ngân sách');
+            ->assertSee('Lý do thất bại');
     }
 }
