@@ -53,6 +53,16 @@ final class ImportExecutionService
             'column_mapping' => $mapping,
         ]);
 
+        activity('import')
+            ->performedOn($batch)
+            ->causedBy($actor)
+            ->withProperties([
+                'type' => 'leads',
+                'original_filename' => $originalFilename,
+                'duplicate_strategy' => $duplicateStrategy,
+            ])
+            ->log('Khởi tạo đợt import lead hàng loạt');
+
         $absolutePath = Storage::disk('local')->path($relativePath);
         $handle = fopen($absolutePath, 'r');
         if ($handle === false) {

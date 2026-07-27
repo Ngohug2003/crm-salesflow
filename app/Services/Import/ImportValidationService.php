@@ -127,10 +127,11 @@ final class ImportValidationService
                 continue;
             }
 
-            $totalChecked++;
-            if ($totalChecked > self::SAMPLE_ROWS_TO_CHECK) {
+            if ($totalChecked >= self::SAMPLE_ROWS_TO_CHECK) {
                 break;
             }
+
+            $totalChecked++;
 
             $rowHasError = false;
             $getValue = function (string $crmField) use ($mapping, $headerIndexMap, $row): ?string {

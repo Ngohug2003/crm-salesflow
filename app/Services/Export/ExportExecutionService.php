@@ -27,6 +27,15 @@ final class ExportExecutionService
             'total_rows' => 0,
         ]);
 
+        activity('export')
+            ->performedOn($batch)
+            ->causedBy($actor)
+            ->withProperties([
+                'type' => $type,
+                'filters' => $filters,
+            ])
+            ->log('Yêu cầu xuất dữ liệu CSV');
+
         ProcessQueuedExportJob::dispatch($batch->id);
 
         return $batch;
