@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Livewire\Platform;
 
 use App\Data\SystemLogFilters;
+use App\Services\Platform\EnvironmentReadinessCheckService;
 use App\Services\Platform\SystemHealthCheckService;
 use App\Services\SystemLogService;
 use Illuminate\Contracts\View\View;
@@ -45,18 +46,27 @@ final class SystemConsole extends Component
 
     public ?array $healthReport = null;
 
+    public ?array $envChecklist = null;
+
     public function mount(): void
     {
         Gate::authorize('system-console.view');
         $this->normalizeFilters();
         $this->refreshLogs();
         $this->refreshHealthCheck();
+        $this->refreshEnvChecklist();
     }
 
     public function refreshHealthCheck(): void
     {
         Gate::authorize('system-console.view');
         $this->healthReport = app(SystemHealthCheckService::class)->checkAll();
+    }
+
+    public function refreshEnvChecklist(): void
+    {
+        Gate::authorize('system-console.view');
+        $this->envChecklist = app(EnvironmentReadinessCheckService::class)->checkAll();
     }
 
     public function updated(string $property): void

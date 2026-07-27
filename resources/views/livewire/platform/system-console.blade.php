@@ -122,6 +122,62 @@
         </section>
     @endif
 
+    @if ($envChecklist)
+        <section class="crm-card mb-8" aria-labelledby="env-checklist-title">
+            <div class="flex items-center justify-between border-b border-slate-200 pb-4 dark:border-slate-800">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h2 id="env-checklist-title" class="text-base font-semibold text-slate-950 dark:text-white">Environment Readiness Checklist</h2>
+                        @php
+                            $envBadgeColor = match ($envChecklist['overall_status']) {
+                                'passed' => 'emerald',
+                                'warning' => 'amber',
+                                default => 'red',
+                            };
+                            $envBadgeText = match ($envChecklist['overall_status']) {
+                                'passed' => 'Sẵn sàng Deployment',
+                                'warning' => 'Cần lưu ý trước deploy',
+                                default => 'Chưa đủ điều kiện deploy',
+                            };
+                        @endphp
+                        <flux:badge :color="$envBadgeColor" size="sm">{{ $envBadgeText }}</flux:badge>
+                    </div>
+                    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Kiểm tra nhanh biến môi trường, bảo mật cookie, symlink và cấu hình dịch vụ trước khi đưa ứng dụng lên Staging/Production.</p>
+                </div>
+                <flux:button wire:click="refreshEnvChecklist" icon="arrow-path" variant="ghost" size="sm">Kiểm tra lại</flux:button>
+            </div>
+
+            <div class="mt-4 overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                    <thead class="border-b border-slate-200 bg-slate-50 text-slate-500 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-400">
+                        <tr>
+                            <th class="py-2.5 pl-3 pr-2 font-medium">Phân loại</th>
+                            <th class="px-2 py-2.5 font-medium">Mục kiểm tra</th>
+                            <th class="px-2 py-2.5 font-medium">Trạng thái</th>
+                            <th class="px-2 py-2.5 font-medium">Tóm tắt cấu hình</th>
+                            <th class="py-2.5 pl-2 pr-3 font-medium">Khuyến nghị</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+                        @foreach ($envChecklist['items'] as $item)
+                            <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-900/50">
+                                <td class="py-2.5 pl-3 pr-2 font-medium text-slate-500 dark:text-slate-400 whitespace-nowrap">{{ $item['category'] }}</td>
+                                <td class="px-2 py-2.5 font-semibold text-slate-900 dark:text-white whitespace-nowrap">{{ $item['title'] }}</td>
+                                <td class="px-2 py-2.5 whitespace-nowrap">
+                                    <flux:badge :color="$item['status'] === 'passed' ? 'emerald' : ($item['status'] === 'warning' ? 'amber' : 'red')" size="sm">
+                                        {{ $item['status'] === 'passed' ? '✓ ĐẠT' : ($item['status'] === 'warning' ? '⚠ CẢNH BÁO' : '✗ CHƯA ĐẠT') }}
+                                    </flux:badge>
+                                </td>
+                                <td class="px-2 py-2.5 text-slate-700 dark:text-slate-300">{{ $item['summary'] }}</td>
+                                <td class="py-2.5 pl-2 pr-3 text-slate-500 dark:text-slate-400">{{ $item['recommendation'] ?? '—' }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    @endif
+
     <section class="crm-card">
         <div class="mb-5 grid gap-4 md:grid-cols-2 xl:grid-cols-12">
             <div class="md:col-span-2 xl:col-span-5">
