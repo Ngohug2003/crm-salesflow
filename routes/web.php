@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\SystemHealthCheckApiController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\ExportDownloadController;
@@ -86,6 +87,7 @@ Route::middleware(['auth', 'request.context.authenticated', 'verified', 'account
     Route::get('/settings/departments', [DepartmentController::class, 'index'])->name('departments.index');
     Route::get('/settings/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
     Route::get('/settings/system-console', SystemConsole::class)->name('system-console.index');
+    Route::get('/settings/system-console/health-api', SystemHealthCheckApiController::class)->name('system-console.health-api');
     Route::get('/settings/sessions', SessionManager::class)->name('sessions.index');
     Route::get('/help/guide', UserGuideController::class)->name('help.guide');
     Route::get('/help/roles', RoleGuideController::class)->name('help.roles');
