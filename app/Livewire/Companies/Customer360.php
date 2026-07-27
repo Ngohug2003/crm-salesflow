@@ -27,7 +27,7 @@ final class Customer360 extends Component
 
     public function setTab(string $tab): void
     {
-        if (in_array($tab, ['overview', 'opportunities', 'contacts', 'tasks', 'timeline'], true)) {
+        if (in_array($tab, ['overview', 'relationship_map', 'opportunities', 'contacts', 'tasks', 'timeline'], true)) {
             $this->activeTab = $tab;
         }
     }

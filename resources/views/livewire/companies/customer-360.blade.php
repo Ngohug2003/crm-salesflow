@@ -79,6 +79,17 @@
             </button>
             <button
                 type="button"
+                wire:click="setTab('relationship_map')"
+                @class([
+                    'whitespace-nowrap pb-3 border-b-2 transition',
+                    'border-emerald-600 text-emerald-600 dark:border-emerald-400 dark:text-emerald-400 font-semibold' => $activeTab === 'relationship_map',
+                    'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200' => $activeTab !== 'relationship_map',
+                ])
+            >
+                Sơ đồ mối quan hệ
+            </button>
+            <button
+                type="button"
                 wire:click="setTab('opportunities')"
                 @class([
                     'whitespace-nowrap pb-3 border-b-2 transition',
@@ -221,6 +232,8 @@
                 </section>
             </div>
         </div>
+    @elseif ($activeTab === 'relationship_map')
+        <livewire:companies.customer-relationship-map :company-id="$companyId" />
     @elseif ($activeTab === 'opportunities')
         <div class="crm-card">
             <h3 class="text-base font-semibold text-slate-900 dark:text-white mb-4">Danh sách Cơ hội bán hàng (Opportunities)</h3>
