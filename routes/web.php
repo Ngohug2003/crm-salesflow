@@ -28,6 +28,7 @@ use App\Livewire\Platform\SystemConsole;
 use App\Livewire\Reports\FunnelReport;
 use App\Livewire\Reports\RevenueReport;
 use App\Livewire\Reports\SalesPerformanceReport;
+use App\Livewire\Roles\PermissionMatrixView;
 use App\Livewire\Settings\SessionManager;
 use App\Livewire\Tasks\TaskCalendar;
 use App\Livewire\Tasks\TaskCreate;
@@ -85,6 +86,7 @@ Route::middleware(['auth', 'request.context.authenticated', 'verified', 'account
 
     Route::get('/settings/users', [UserController::class, 'index'])->name('users.index');
     Route::get('/settings/departments', [DepartmentController::class, 'index'])->name('departments.index');
+    Route::get('/settings/permission-matrix', PermissionMatrixView::class)->name('roles.permission-matrix');
     Route::get('/settings/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
     Route::get('/settings/system-console', SystemConsole::class)->name('system-console.index');
     Route::get('/settings/system-console/health-api', SystemHealthCheckApiController::class)->name('system-console.health-api');
