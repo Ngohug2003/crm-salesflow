@@ -13,6 +13,9 @@
             <flux:button :href="route('companies.index')" wire:navigate variant="ghost" icon="arrow-left">
                 Về danh sách
             </flux:button>
+            <flux:button :href="route('companies.360', $company)" wire:navigate variant="filled" icon="arrow-path">
+                Góc nhìn 360°
+            </flux:button>
             @can('update', $company)
                 <flux:button :href="route('companies.edit', $company)" wire:navigate variant="primary" icon="pencil-square">
                     Chỉnh sửa
