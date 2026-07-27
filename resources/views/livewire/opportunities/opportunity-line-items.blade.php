@@ -18,7 +18,7 @@
                 <flux:table.column>SKU</flux:table.column>
                 <flux:table.column align="end">Đơn giá</flux:table.column>
                 <flux:table.column align="end">SL</flux:table.column>
-                <flux:table.column align="end">Chiết khấu</flux:table.column>
+                <flux:table.column align="end">Khuyến mãi</flux:table.column>
                 <flux:table.column align="end">Thành tiền</flux:table.column>
                 @can('update', $opportunity)
                     <flux:table.column align="end">Thao tác</flux:table.column>
@@ -108,7 +108,7 @@
                         <flux:input wire:model="quantity" type="number" min="1" label="Số lượng *" required />
                     </div>
 
-                    <flux:input wire:model="discountPercent" type="number" step="0.1" min="0" max="100" label="Chiết khấu (%)" placeholder="0" />
+                    <flux:input wire:model="discountPercent" type="number" step="0.1" min="0" max="100" label="Khuyến mãi (%)" placeholder="0" />
                     <flux:textarea wire:model="notes" label="Ghi chú thêm" placeholder="Nội dung ghi chú hoặc diễn giải..." rows="2" />
                 </div>
 

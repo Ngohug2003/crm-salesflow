@@ -284,6 +284,10 @@
                     <p class="whitespace-pre-line text-sm leading-relaxed text-slate-700 dark:text-slate-300">{{ $opportunity->notes }}</p>
                 </section>
             @endif
+
+            <section class="crm-card">
+                <livewire:opportunities.quote-manager :opportunity-id="$opportunity->id" />
+            </section>
         </div>
     </div>
 
