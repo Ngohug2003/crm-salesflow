@@ -41,18 +41,18 @@ Khi bắt đầu một feature:
 | 16 | P6-X04 | SLA chăm sóc khách hàng | `feature/p6-x04-customer-sla` | P6-07, P4-X01 | REQ-WORK, REQ-NOTIFY | ✅ Hoàn thành | Giúp CRM có cảnh báo chăm sóc đúng hạn, không chỉ lưu task. |
 | 17 | P7-X01 | Report drill-down | `feature/p7-x01-report-drill-down` | P7-FIX, P9-01 | REQ-REPORT | ✅ Hoàn thành | Từ chart/KPI mở ra danh sách dữ liệu gốc theo scope để kiểm chứng số liệu. |
 | 18 | P7-X02 | Saved report filters | `feature/p7-x02-saved-report-filters` | P7-FIX | REQ-REPORT | ✅ Hoàn thành | Người quản lý lưu bộ lọc thường dùng, giảm thao tác lặp. |
-| 19 | P7-X03 | Manager dashboard | `feature/p7-x03-manager-dashboard` | P7-X01 | REQ-REPORT, REQ-RBAC | Màn riêng cho sales-manager theo phòng ban, khác dashboard tổng quan. | Bỏ ko làm
+| 19 | P7-X03 | Manager dashboard | `feature/p7-x03-manager-dashboard` | P7-X01 | REQ-REPORT, REQ-RBAC | Màn riêng cho sales-manager theo phòng ban, khác dashboard tổng quan. |  ❌ Bỏ ko làm
 | 20 | P7-X04 | Data quality dashboard | `feature/p7-x04-data-quality-dashboard` | P3-X03, P4-X02 | REQ-REPORT, REQ-LEAD | ✅ Hoàn thành | Theo dõi dữ liệu thiếu, trùng, chưa chăm sóc, stale records. |
 | 21 | P2-X03 | Invitation flow | `feature/p2-x03-user-invitations` | P2-X01, P8-06 | MOD-AUTH, REQ-NOTIFY | ✅ Hoàn thành | Mời user qua email, phù hợp sau khi notification đã ổn. |
 | 22 | P3-X02 | Lead scoring | `feature/p3-x02-lead-scoring` | P3-X01, P7-X04 | REQ-LEAD, REQ-REPORT | ✅ Hoàn thành | Cần timeline/data quality trước để scoring không cảm tính. |
 | 23 | P4-X03 | Customer relationship map | `feature/p4-x03-customer-relationship-map` | P4-X01, P4-X02 | REQ-CUSTOMER | ✅ Hoàn thành | Hữu ích nhưng nên làm sau khi dữ liệu customer sạch. |
 | 24 | P5-X02 | Quote/proposal basic | `feature/p5-x02-quote-proposal-basic` | P5-X01 | REQ-PIPELINE, REQ-IO | ✅ Hoàn thành | Tạo báo giá cơ bản từ opportunity, có thể export/download. |
 | 25 | P5-X04 | Forecast category | `feature/p5-x04-forecast-category` | P5-X03, P7-X01 | REQ-PIPELINE, REQ-REPORT | ✅ Hoàn thành | Tăng độ chính xác forecast sau khi stage rule ổn. |
-| 26 | P6-X01 | Calendar export | `feature/p6-x01-calendar-export` | P6-06 | REQ-WORK | Export lịch `.ics`, chưa cần tích hợp calendar bên thứ ba. |
-| 27 | P6-X02 | Task recurring/reminder nâng cao | `feature/p6-x02-recurring-reminders` | P6-X04 | REQ-WORK, REQ-NOTIFY | Làm sau SLA để tránh nhắc hạn trùng logic. |
-| 28 | P6-X03 | Comment attachments/mentions | `feature/p6-x03-comments-mentions-attachments` | P6-04, P8-06 | REQ-WORK, REQ-NOTIFY, REQ-PLATFORM | Collaboration sâu hơn, phụ thuộc notification và file private. |
-| 29 | P8-X03 | Notification preferences | `feature/p8-x03-notification-preferences` | P8-06, P2-X03 | REQ-NOTIFY | User tự bật/tắt email/broadcast/database theo loại sự kiện. |
-| 30 | P8-X05 | Audit retention policy | `feature/p8-x05-audit-retention-policy` | P8-X04 | REQ-AUDIT, REQ-OPS | Chính sách lưu giữ audit cho production; không xóa tùy tiện trên UI. |
+| 26 | P6-X01 | Calendar export | `feature/p6-x01-calendar-export` | P6-06 | REQ-WORK | Export lịch `.ics`, chưa cần tích hợp calendar bên thứ ba. | ❌ Bỏ ko làm
+| 27 | P6-X02 | Task recurring/reminder nâng cao | `feature/p6-x02-recurring-reminders` | P6-X04 | REQ-WORK, REQ-NOTIFY | Làm sau SLA để tránh nhắc hạn trùng logic. | ❌ Bỏ ko làm
+| 28 | P6-X03 | Comment attachments/mentions | `feature/p6-x03-comments-mentions-attachments` | P6-04, P8-06 | REQ-WORK, REQ-NOTIFY, REQ-PLATFORM | Collaboration sâu hơn, phụ thuộc notification và file private. | ❌ Bỏ ko làm
+| 29 | P8-X03 | Notification preferences | `feature/p8-x03-notification-preferences` | P8-06, P2-X03 | REQ-NOTIFY | ✅ Hoàn thành | User tự bật/tắt email/broadcast/database theo loại sự kiện. |
+| 30 | P8-X05 | Audit retention policy | `feature/p8-x05-audit-retention-policy` | P8-X04 | REQ-AUDIT, REQ-OPS | Chính sách lưu giữ audit cho production; không xóa tùy tiện trên UI. | ❌ Bỏ ko làm
 
 ## 4. Chi tiết theo giai đoạn
 

@@ -9,7 +9,10 @@ use Monolog\Logger as MonologLogger;
 
 final readonly class ConfigureStructuredLogging
 {
-    public function __construct(private RedactSensitiveData $redactor) {}
+    public function __construct(
+        private RedactSensitiveData $redactor,
+        private SystemLogBroadcastHandler $broadcastHandler,
+    ) {}
 
     public function __invoke(Logger $logger): void
     {
@@ -17,6 +20,7 @@ final readonly class ConfigureStructuredLogging
 
         if ($monolog instanceof MonologLogger) {
             $monolog->pushProcessor($this->redactor);
+            $monolog->pushHandler($this->broadcastHandler);
         }
     }
 }

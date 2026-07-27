@@ -36,6 +36,8 @@
                 </svg>
                 Xóa tin đã đọc
             </button>
+
+            <flux:button :href="route('notifications.settings')" wire:navigate variant="outline" size="sm" icon="cog-6-tooth">Cài đặt thông báo</flux:button>
         </div>
     </div>
 

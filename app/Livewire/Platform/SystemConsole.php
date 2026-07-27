@@ -30,8 +30,6 @@ final class SystemConsole extends Component
     #[Url(except: 100)]
     public int $limit = 100;
 
-    public bool $paused = false;
-
     /** @var list<array{id: string, timestamp: string, level: string, module: string, action: string, status_code: int|null, user_id: int|null, duration_ms: float|null, request_id: string, event: string, line: string}> */
     public array $entries = [];
 
@@ -103,16 +101,6 @@ final class SystemConsole extends Component
             $this->modules = [];
             $this->source = null;
             $this->errorMessage = 'Không thể đọc nhật ký lúc này. Vui lòng thử lại.';
-        }
-    }
-
-    public function togglePolling(): void
-    {
-        Gate::authorize('system-console.view');
-        $this->paused = ! $this->paused;
-
-        if (! $this->paused) {
-            $this->refreshLogs();
         }
     }
 

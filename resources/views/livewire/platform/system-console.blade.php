@@ -1,9 +1,59 @@
 <div
-    x-data="{ fullscreen: false }"
+    x-data="{
+        fullscreen: false,
+        realtimeStatus: 'connecting',
+        newCount: 0,
+        echoChannel: null,
+        filterLevel: @js(strtoupper($level)),
+        filterModule: @js($module),
+        filterSearch: @js($search),
+        filterLimit: @js($limit),
+
+        matchesFilters(entry) {
+            if (this.filterLevel !== 'ALL' && entry.level !== this.filterLevel) return false;
+            if (this.filterModule !== 'all' && entry.module !== this.filterModule) return false;
+            if (this.filterSearch.trim() !== '') {
+                const q = this.filterSearch.toLowerCase();
+                if (!entry.line.toLowerCase().includes(q)) return false;
+            }
+            return true;
+        },
+
+        initEcho() {
+            if (!window.Echo) return;
+
+            this.echoChannel = window.Echo.private('system-console')
+                .listen('.SystemLogEntryCreated', (data) => {
+                    const entry = data.entry;
+                    if (!entry || !this.matchesFilters(entry)) return;
+
+                    // Prepend new entry to Livewire component entries via $wire
+                    this.$wire.entries.unshift(entry);
+                    if (this.$wire.entries.length > this.filterLimit) {
+                        this.$wire.entries.splice(this.filterLimit);
+                    }
+                    this.newCount++;
+                    this.$wire.set('lastRefreshedAt', new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+                })
+                .subscribed(() => { this.realtimeStatus = 'connected'; })
+                .error(() => { this.realtimeStatus = 'error'; });
+
+            // Also track Echo connection state changes
+            if (window.Echo?.connector?.pusher?.connection) {
+                window.Echo.connector.pusher.connection.bind('state_change', ({ current }) => {
+                    if (current === 'connected') this.realtimeStatus = 'connected';
+                    else if (current === 'disconnected' || current === 'failed') this.realtimeStatus = 'disconnected';
+                    else this.realtimeStatus = 'connecting';
+                });
+            }
+        },
+
+        resetNewCount() { this.newCount = 0; },
+    }"
+    x-init="initEcho()"
     x-on:keydown.escape.window="fullscreen = false"
-    x-on:livewire:navigating.window="fullscreen = false"
+    x-on:livewire:navigating.window="fullscreen = false; echoChannel && window.Echo.leave('system-console')"
     x-effect="document.documentElement.classList.toggle('overflow-hidden', fullscreen)"
-    @if (! $paused) wire:poll.2s="refreshLogs" @endif
 >
     <div class="mb-8 flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
         <div>
@@ -13,13 +63,34 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-2">
-            <flux:badge :color="$paused ? 'amber' : 'green'">
-                {{ $paused ? 'Đang tạm dừng' : 'Tự cập nhật mỗi 2 giây' }}
-            </flux:badge>
-            <flux:button wire:click="togglePolling" :icon="$paused ? 'play' : 'pause'">
-                {{ $paused ? 'Tiếp tục' : 'Tạm dừng' }}
-            </flux:button>
-            <flux:button wire:click="refreshLogs" icon="arrow-path" variant="primary">Làm mới log</flux:button>
+            {{-- Realtime connection status badge --}}
+            <span
+                x-show="realtimeStatus === 'connected'"
+                class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300"
+            >
+                <span class="relative flex size-2">
+                    <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+                    <span class="relative inline-flex size-2 rounded-full bg-emerald-500"></span>
+                </span>
+                Realtime
+                <span x-show="newCount > 0" class="ml-0.5 rounded-full bg-emerald-200 px-1.5 py-0.5 text-[10px] text-emerald-800 dark:bg-emerald-800 dark:text-emerald-200" x-text="'+' + newCount + ' mới'"></span>
+            </span>
+            <span
+                x-show="realtimeStatus === 'connecting'"
+                class="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700 dark:bg-amber-950/50 dark:text-amber-300"
+            >
+                <span class="size-2 animate-pulse rounded-full bg-amber-400"></span>
+                Đang kết nối...
+            </span>
+            <span
+                x-show="realtimeStatus === 'disconnected' || realtimeStatus === 'error'"
+                class="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700 dark:bg-red-950/50 dark:text-red-300"
+            >
+                <span class="size-2 rounded-full bg-red-400"></span>
+                Mất kết nối
+            </span>
+
+            <flux:button wire:click="refreshLogs" x-on:click="resetNewCount()" icon="arrow-path" variant="primary">Làm mới log</flux:button>
         </div>
     </div>
 
