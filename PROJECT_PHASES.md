@@ -25,7 +25,7 @@ Tài liệu này là lộ trình và trạng thái checkpoint chính của dự 
 | 6 | Activities và Tasks | Hoàn tất triển khai P6-01 đến P6-07 | Chờ chủ dự án kiểm thử P6-07 | [Chi tiết P6](docs/checkpoints/P6/PHASE_LOG.md) |
 | 7 | Dashboard và Reports | Hoàn tất P7-01 đến P7-06 | Chờ chủ dự án kiểm thử P7-06 | [Chi tiết P7](docs/checkpoints/P7/PHASE_LOG.md) / [Xác minh P7](docs/checkpoints/P7/VERIFICATION.md) |
 | 8 | Import, Export, Notifications và Audit | Hoàn tất P8-01 đến P8-07 | Đã qua checkpoint | [Chi tiết P8](PROJECT_PHASES.md#giai-đoạn-8--import-export-notifications-và-audit) |
-| 9 | Hoàn thiện, Extension Features và  CI/CD  deployment | Đang triển khai (Hoàn tất P9-01, P1-X01, P1-X02, P2-X01, P2-X02) | Đã sẵn sàng nghiệm thu | [Chi tiết Extension](docs/EXTENSION_FEATURES_P1_P8.md) |
+| 9 | Hoàn thiện, Extension Features và deployment | Đang triển khai (Hoàn tất P9-01, P1-X01, P1-X02, P2-X01, P2-X02, P8-X04) | Đã sẵn sàng nghiệm thu | [Chi tiết Extension](docs/EXTENSION_FEATURES_P1_P8.md) |
 
 ---
 

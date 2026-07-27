@@ -196,7 +196,8 @@
                             @foreach ($this->activities as $activity)
                                 <flux:table.row :key="$activity->id" @class([
                                     'bg-emerald-50/80 dark:bg-emerald-950/20' => $latestRealtimeActivityId === $activity->id,
-                                ])>
+                                    'cursor-pointer hover:bg-slate-100/80 dark:hover:bg-slate-800/80' => true,
+                                ]) wire:click="selectActivity({{ $activity->id }})">
                                     <flux:table.cell>
                                         <p class="min-w-36 font-medium">{{ $activity->created_at?->timezone(config('crm.display_timezone'))->format('d/m/Y H:i:s') }}</p>
                                         <p class="text-xs text-slate-500">Log #{{ $activity->id }}</p>
@@ -214,15 +215,18 @@
                                         @if ($activity->request_id)
                                             <p class="mt-1 font-mono text-xs text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 cursor-pointer" 
                                                title="Lọc theo Request ID"
-                                               wire:click="$set('requestId', '{{ $activity->request_id }}')">
+                                               wire:click.stop="$set('requestId', '{{ $activity->request_id }}')">
                                                 Req: {{ str($activity->request_id)->limit(12) }}
                                             </p>
                                         @endif
                                     </flux:table.cell>
                                     <flux:table.cell>
-                                        <div class="min-w-80 max-w-2xl">
-                                            <p>{{ $activity->description }}</p>
-                                            @include('livewire.audit-logs.partials.details', ['activity' => $activity])
+                                        <div class="min-w-80 max-w-2xl flex items-center justify-between gap-4">
+                                            <div>
+                                                <p>{{ $activity->description }}</p>
+                                                @include('livewire.audit-logs.partials.details', ['activity' => $activity])
+                                            </div>
+                                            <flux:button size="xs" variant="subtle" icon="eye" wire:click.stop="selectActivity({{ $activity->id }})">Chi tiết</flux:button>
                                         </div>
                                     </flux:table.cell>
                                 </flux:table.row>
@@ -242,7 +246,7 @@
                                     'border-emerald-400 bg-emerald-500/10' => $latestRealtimeActivityId === $activity->id,
                                     'border-transparent' => $latestRealtimeActivityId !== $activity->id,
                                 ])>
-                                    <summary class="grid cursor-pointer list-none gap-x-3 lg:grid-cols-[10.75rem_1fr]">
+                                    <summary class="grid cursor-pointer list-none gap-x-3 lg:grid-cols-[10.75rem_1fr]" wire:click.prevent="selectActivity({{ $activity->id }})">
                                         <span class="select-none whitespace-nowrap text-blue-500">[{{ $activity->created_at?->timezone(config('crm.display_timezone'))->format('d/m/Y H:i:s') }}]</span>
                                         <span class="text-emerald-400">
                                             <strong>{{ $activity->causer?->name ?? 'Hệ thống' }}</strong>
@@ -263,4 +267,108 @@
             @endif
         </div>
     </section>
+
+    {{-- Slide-over Detail Drawer --}}
+    @if ($selectedActivityId !== null)
+        @php
+            $auditDetail = app(\App\Services\Audit\AuditLogDetailService::class)->getAuditDetail($selectedActivityId);
+        @endphp
+        @if ($auditDetail)
+            <div class="fixed inset-0 z-50 overflow-hidden" aria-labelledby="slide-over-title" role="dialog" aria-modal="true">
+                <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity" wire:click="closeDrawer"></div>
+                <div class="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10">
+                    <div class="pointer-events-auto w-screen max-w-xl bg-white shadow-2xl dark:bg-slate-900 flex flex-col">
+                        <div class="flex items-center justify-between border-b border-slate-200 px-6 py-4 dark:border-slate-800">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <h2 class="text-base font-semibold text-slate-900 dark:text-white" id="slide-over-title">Chi tiết Nhật ký kiểm toán #{{ $auditDetail['id'] }}</h2>
+                                    <flux:badge :color="$auditDetail['event_color']" size="sm">{{ $auditDetail['event_label'] }}</flux:badge>
+                                </div>
+                                <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">Tạo lúc {{ $auditDetail['created_at'] }} (UTC+7)</p>
+                            </div>
+                            <flux:button wire:click="closeDrawer" icon="x-mark" variant="ghost" size="sm" />
+                        </div>
+
+                        <div class="flex-1 overflow-y-auto p-6 space-y-6">
+                            <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950/50">
+                                <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Mô tả hành động</h3>
+                                <p class="mt-1 text-sm font-medium text-slate-900 dark:text-white">{{ $auditDetail['description'] }}</p>
+                                <div class="mt-3 grid grid-cols-2 gap-3 text-xs border-t border-slate-200 pt-3 dark:border-slate-800">
+                                    <div>
+                                        <span class="text-slate-500">Người thực hiện:</span>
+                                        <p class="font-medium text-slate-900 dark:text-white">{{ $auditDetail['causer_name'] }}</p>
+                                        <p class="text-[11px] text-slate-500">{{ $auditDetail['causer_email'] }}</p>
+                                    </div>
+                                    <div>
+                                        <span class="text-slate-500">Đối tượng tác động:</span>
+                                        <p class="font-medium text-slate-900 dark:text-white">{{ $auditDetail['subject_type'] }}</p>
+                                        <p class="text-[11px] text-slate-500">ID: {{ $auditDetail['subject_id'] }}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h3 class="text-sm font-semibold text-slate-900 dark:text-white mb-3">So sánh biến động dữ liệu (Diff)</h3>
+                                @if ($auditDetail['changes'] === [])
+                                    <div class="rounded-lg border border-dashed border-slate-300 p-4 text-center text-xs text-slate-500 dark:border-slate-700">
+                                        Không có biến động thuộc tính được ghi nhận.
+                                    </div>
+                                @else
+                                    <div class="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950/50">
+                                        <table class="w-full text-left text-xs">
+                                            <thead class="border-b border-slate-200 bg-slate-100/50 text-slate-500 dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-400">
+                                                <tr>
+                                                    <th class="py-2.5 pl-3 pr-2 font-medium">Trường dữ liệu</th>
+                                                    <th class="px-2 py-2.5 font-medium">Giá trị cũ (Old)</th>
+                                                    <th class="py-2.5 pl-2 pr-3 font-medium">Giá trị mới (New)</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+                                                @foreach ($auditDetail['changes'] as $change)
+                                                    <tr>
+                                                        <td class="py-2.5 pl-3 pr-2 font-medium text-slate-900 dark:text-white">
+                                                            <div>{{ $change['label'] }}</div>
+                                                            <div class="font-mono text-[10px] text-slate-400">{{ $change['field'] }}</div>
+                                                        </td>
+                                                        <td class="px-2 py-2.5 text-red-700 bg-red-50/50 dark:text-red-300 dark:bg-red-950/20 font-mono break-all">
+                                                            {{ $change['old'] }}
+                                                        </td>
+                                                        <td class="py-2.5 pl-2 pr-3 text-emerald-700 bg-emerald-50/50 dark:text-emerald-300 dark:bg-emerald-950/20 font-mono break-all">
+                                                            {{ $change['new'] }}
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                @endif
+                            </div>
+
+                            <div class="space-y-3">
+                                <h3 class="text-sm font-semibold text-slate-900 dark:text-white">Thông tin kỹ thuật (Request Metadata)</h3>
+                                <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 text-xs space-y-2 dark:border-slate-800 dark:bg-slate-950/50">
+                                    <div class="flex justify-between">
+                                        <span class="text-slate-500">Request ID:</span>
+                                        <code class="font-mono text-slate-900 dark:text-white">{{ $auditDetail['request_id'] }}</code>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-slate-500">Địa chỉ IP:</span>
+                                        <code class="font-mono text-slate-900 dark:text-white">{{ $auditDetail['ip_address'] }}</code>
+                                    </div>
+                                    <div>
+                                        <span class="text-slate-500 block mb-1">User Agent:</span>
+                                        <code class="font-mono text-[11px] text-slate-700 dark:text-slate-300 break-all block bg-white p-2 rounded border border-slate-200 dark:bg-slate-900 dark:border-slate-800">{{ $auditDetail['user_agent'] }}</code>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="border-t border-slate-200 bg-slate-50 px-6 py-3 dark:border-slate-800 dark:bg-slate-950/50 flex justify-end">
+                            <flux:button wire:click="closeDrawer" variant="ghost" size="sm">Đóng</flux:button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+    @endif
 </div>

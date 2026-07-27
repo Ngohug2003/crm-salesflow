@@ -50,6 +50,19 @@ final class AuditLogList extends Component
 
     public ?string $realtimeNotice = null;
 
+    public ?int $selectedActivityId = null;
+
+    public function selectActivity(int $activityId): void
+    {
+        Gate::authorize('viewAny', Activity::class);
+        $this->selectedActivityId = $activityId;
+    }
+
+    public function closeDrawer(): void
+    {
+        $this->selectedActivityId = null;
+    }
+
     public function mount(): void
     {
         Gate::authorize('viewAny', Activity::class);
