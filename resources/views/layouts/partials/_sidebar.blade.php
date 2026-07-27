@@ -145,6 +145,12 @@
                     <flux:icon.arrow-up-tray class="nav-icon" />
                     <span x-show="sidebar">Lịch sử nhập liệu</span>
                 </a>
+                <a href="{{ route('exports.history') }}" wire:navigate.hover
+                   class="nav-link"
+                   :class="path.startsWith('/exports/history') && 'nav-link-active'">
+                    <flux:icon.arrow-down-tray class="nav-icon" />
+                    <span x-show="sidebar">Lịch sử xuất dữ liệu</span>
+                </a>
                 @can('system-console.view')
                     <a href="{{ route('system-console.index') }}" wire:navigate.hover
                        class="nav-link"
