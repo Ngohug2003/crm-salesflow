@@ -17,36 +17,150 @@
             @endif
         </div>
 
-        <flux:modal name="convert-lead-modal" class="md:w-[32rem]" wire:close="cancelConvert">
+        <flux:modal name="convert-lead-modal" class="md:w-[42rem]" wire:close="cancelConvert">
             @if ($showConvertModal)
-                <form wire:submit.prevent="convertLead" class="space-y-5">
+                <form wire:submit.prevent="convertLead" class="space-y-6">
                     <div>
-                        <flux:heading size="lg">Chuyển đổi Khách hàng tiềm năng</flux:heading>
-                        <flux:text class="mt-2">Lead <strong>{{ $this->lead->full_name }}</strong> sẽ được chuyển sang trạng thái <strong>Đã chuyển đổi (Converted)</strong> và khởi tạo tự động các đối tượng chọn bên dưới.</flux:text>
+                        <flux:heading size="lg">Xem trước và ghép nối chuyển đổi Lead</flux:heading>
+                        <flux:text class="mt-1">Lead <strong>{{ $this->lead->full_name }}</strong> sẽ được chuyển sang trạng thái <strong>Đã chuyển đổi (Converted)</strong>. Kiểm tra các gợi ý ghép nối bên dưới để tránh trùng lặp dữ liệu.</flux:text>
                     </div>
 
-                    <div class="space-y-4">
-                        <div class="rounded-xl border border-slate-200 p-4 dark:border-slate-800 space-y-3">
-                            <flux:checkbox wire:model="convertCreateCompany" label="Tạo Doanh nghiệp mới" />
-                            <flux:checkbox wire:model="convertCreateContact" label="Tạo Người liên hệ mới" />
-                            <flux:checkbox wire:model="convertCreateOpportunity" label="Tạo Cơ hội bán hàng mới" />
+                    <div class="space-y-5">
+                        {{-- 1. Ghép nối Công ty --}}
+                        <div class="rounded-xl border border-slate-200 p-4 dark:border-slate-800 space-y-3 bg-slate-50/50 dark:bg-slate-900/50">
+                            <div class="flex items-center justify-between">
+                                <h4 class="font-semibold text-slate-900 dark:text-white">1. Doanh nghiệp (Company)</h4>
+                                @if (! empty($conversionPreview['matchedCompanies']) && $conversionPreview['matchedCompanies']->count() > 0)
+                                    <flux:badge color="amber" size="sm">Phát hiện {{ $conversionPreview['matchedCompanies']->count() }} công ty có thể trùng</flux:badge>
+                                @endif
+                            </div>
+
+                            <div class="grid gap-3 sm:grid-cols-2">
+                                <label class="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 p-3 bg-white dark:border-slate-800 dark:bg-slate-900">
+                                    <input type="radio" wire:model.live="convertCompanyMode" value="existing" class="text-indigo-600 focus:ring-indigo-500">
+                                    <span class="text-sm font-medium">Ghép vào Công ty có sẵn</span>
+                                </label>
+                                <label class="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 p-3 bg-white dark:border-slate-800 dark:bg-slate-900">
+                                    <input type="radio" wire:model.live="convertCompanyMode" value="create" class="text-indigo-600 focus:ring-indigo-500">
+                                    <span class="text-sm font-medium">Tạo Doanh nghiệp mới</span>
+                                </label>
+                            </div>
+
+                            @if ($convertCompanyMode === 'existing')
+                                <flux:select wire:model="convertCompanyId" label="Chọn Công ty có sẵn">
+                                    <option value="">-- Chọn Công ty --</option>
+                                    @if (! empty($conversionPreview['matchedCompanies']))
+                                        <optgroup label="Gợi ý trùng khớp">
+                                            @foreach ($conversionPreview['matchedCompanies'] as $matchedComp)
+                                                <option value="{{ $matchedComp->id }}">{{ $matchedComp->name }} (Website: {{ $matchedComp->website ?: 'Chưa có' }})</option>
+                                            @endforeach
+                                        </optgroup>
+                                    @endif
+                                    @if (! empty($conversionPreview['allCompanies']))
+                                        <optgroup label="Tất cả Công ty khác">
+                                            @foreach ($conversionPreview['allCompanies'] as $compItem)
+                                                <option value="{{ $compItem->id }}">{{ $compItem->name }}</option>
+                                            @endforeach
+                                        </optgroup>
+                                    @endif
+                                </flux:select>
+                            @else
+                                <flux:input wire:model="convertCompanyName" label="Tên Doanh nghiệp mới *" required />
+                            @endif
                         </div>
 
-                        @if ($convertCreateOpportunity)
-                            <div class="space-y-3 pt-2">
-                                <flux:input wire:model="convertOpportunityName" label="Tên Cơ hội bán hàng *" required />
-                                <flux:input wire:model="convertEstimatedValue" type="number" label="Giá trị dự kiến (VNĐ)" />
+                        {{-- 2. Ghép nối Người liên hệ --}}
+                        <div class="rounded-xl border border-slate-200 p-4 dark:border-slate-800 space-y-3 bg-slate-50/50 dark:bg-slate-900/50">
+                            <div class="flex items-center justify-between">
+                                <h4 class="font-semibold text-slate-900 dark:text-white">2. Người liên hệ (Contact)</h4>
+                                @if (! empty($conversionPreview['matchedContacts']) && $conversionPreview['matchedContacts']->count() > 0)
+                                    <flux:badge color="amber" size="sm">Phát hiện {{ $conversionPreview['matchedContacts']->count() }} Contact trùng Email/SĐT</flux:badge>
+                                @endif
                             </div>
-                        @endif
+
+                            <div class="grid gap-3 sm:grid-cols-2">
+                                <label class="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 p-3 bg-white dark:border-slate-800 dark:bg-slate-900">
+                                    <input type="radio" wire:model.live="convertContactMode" value="existing" class="text-emerald-600 focus:ring-emerald-500">
+                                    <span class="text-sm font-medium">Ghép vào Contact có sẵn</span>
+                                </label>
+                                <label class="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 p-3 bg-white dark:border-slate-800 dark:bg-slate-900">
+                                    <input type="radio" wire:model.live="convertContactMode" value="create" class="text-emerald-600 focus:ring-emerald-500">
+                                    <span class="text-sm font-medium">Tạo Contact mới ({{ $this->lead->full_name }})</span>
+                                </label>
+                            </div>
+
+                            @if ($convertContactMode === 'existing')
+                                <flux:select wire:model="convertContactId" label="Chọn Người liên hệ có sẵn">
+                                    <option value="">-- Chọn Contact --</option>
+                                    @if (! empty($conversionPreview['matchedContacts']))
+                                        <optgroup label="Gợi ý trùng email/SĐT">
+                                            @foreach ($conversionPreview['matchedContacts'] as $matchedContact)
+                                                <option value="{{ $matchedContact->id }}">{{ $matchedContact->full_name }} ({{ $matchedContact->email ?: $matchedContact->phone }})</option>
+                                            @endforeach
+                                        </optgroup>
+                                    @endif
+                                    @if (! empty($conversionPreview['allContacts']))
+                                        <optgroup label="Tất cả Contact khác">
+                                            @foreach ($conversionPreview['allContacts'] as $contactItem)
+                                                <option value="{{ $contactItem->id }}">{{ $contactItem->full_name }}</option>
+                                            @endforeach
+                                        </optgroup>
+                                    @endif
+                                </flux:select>
+                            @endif
+                        </div>
+
+                        {{-- 3. Cơ hội bán hàng --}}
+                        <div class="rounded-xl border border-slate-200 p-4 dark:border-slate-800 space-y-3 bg-slate-50/50 dark:bg-slate-900/50">
+                            <div class="flex items-center justify-between">
+                                <h4 class="font-semibold text-slate-900 dark:text-white">3. Cơ hội bán hàng (Opportunity)</h4>
+                                <flux:checkbox wire:model.live="convertCreateOpportunity" label="Tạo Cơ hội mới" />
+                            </div>
+
+                            @if ($convertCreateOpportunity)
+                                <div class="grid gap-3 sm:grid-cols-2 pt-2">
+                                    <div class="sm:col-span-2">
+                                        <flux:input wire:model="convertOpportunityName" label="Tên Cơ hội bán hàng *" required />
+                                    </div>
+                                    <flux:input wire:model="convertEstimatedValue" type="number" label="Giá trị dự kiến (VNĐ)" />
+                                    @if (! empty($conversionPreview['pipelines']))
+                                        <flux:select wire:model.live="convertPipelineId" label="Quy trình bán hàng (Pipeline)">
+                                            @foreach ($conversionPreview['pipelines'] as $pipe)
+                                                <option value="{{ $pipe->id }}">{{ $pipe->name }}</option>
+                                            @endforeach
+                                        </flux:select>
+                                    @endif
+                                </div>
+                            @endif
+                        </div>
+
+                        {{-- Tóm tắt xem trước --}}
+                        <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 text-xs dark:border-slate-800 dark:bg-slate-900/60">
+                            <h5 class="font-semibold text-slate-900 dark:text-white uppercase tracking-wider">Xem trước kết quả sau khi chuyển đổi</h5>
+                            <ul class="mt-2 space-y-1.5 text-slate-700 dark:text-slate-300">
+                                <li>
+                                    <strong>Doanh nghiệp:</strong>
+                                    {{ $convertCompanyMode === 'create' ? 'Khởi tạo mới "'.$convertCompanyName.'"' : 'Ghép nối vào Công ty có sẵn (#'.$convertCompanyId.')' }}
+                                </li>
+                                <li>
+                                    <strong>Người liên hệ:</strong>
+                                    {{ $convertContactMode === 'create' ? 'Khởi tạo mới "'.$this->lead->full_name.'"' : 'Ghép nối vào Contact có sẵn (#'.$convertContactId.')' }}
+                                </li>
+                                <li>
+                                    <strong>Cơ hội bán hàng:</strong>
+                                    {{ $convertCreateOpportunity ? 'Khởi tạo mới "'.$convertOpportunityName.'" (Giá trị: '.($convertEstimatedValue ? number_format($convertEstimatedValue, 0, ',', '.').' ₫' : 'Chưa nhập').')' : 'Không tạo' }}
+                                </li>
+                            </ul>
+                        </div>
 
                         @error('convert')
                             <p class="text-sm font-medium text-red-600 dark:text-red-400">{{ $message }}</p>
                         @enderror
                     </div>
 
-                    <div class="flex justify-end gap-3">
+                    <div class="flex justify-end gap-3 pt-2">
                         <flux:button variant="ghost" x-on:click="$flux.modal('convert-lead-modal').close()">Hủy</flux:button>
-                        <flux:button type="submit" variant="primary" color="emerald" wire:loading.attr="disabled" wire:target="convertLead">Xác nhận Chuyển đổi</flux:button>
+                        <flux:button type="submit" variant="primary" wire:loading.attr="disabled" wire:target="convertLead">Xác nhận Chuyển đổi</flux:button>
                     </div>
                 </form>
             @endif
