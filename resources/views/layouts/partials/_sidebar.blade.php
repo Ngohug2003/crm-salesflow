@@ -115,6 +115,12 @@
                         <flux:icon.trophy class="nav-icon" />
                         <span x-show="sidebar">Hiệu suất Sales</span>
                     </a>
+                    <a href="{{ route('reports.data-quality') }}" wire:navigate.hover
+                       class="nav-link"
+                       :class="path.startsWith('/reports/data-quality') && 'nav-link-active'">
+                        <flux:icon.shield-check class="nav-icon" />
+                        <span x-show="sidebar">Chất lượng dữ liệu</span>
+                    </a>
                 @endcan
             </div>
         </div>

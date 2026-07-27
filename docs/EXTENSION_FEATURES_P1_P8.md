@@ -42,7 +42,7 @@ Khi bắt đầu một feature:
 | 17 | P7-X01 | Report drill-down | `feature/p7-x01-report-drill-down` | P7-FIX, P9-01 | REQ-REPORT | ✅ Hoàn thành | Từ chart/KPI mở ra danh sách dữ liệu gốc theo scope để kiểm chứng số liệu. |
 | 18 | P7-X02 | Saved report filters | `feature/p7-x02-saved-report-filters` | P7-FIX | REQ-REPORT | ✅ Hoàn thành | Người quản lý lưu bộ lọc thường dùng, giảm thao tác lặp. |
 | 19 | P7-X03 | Manager dashboard | `feature/p7-x03-manager-dashboard` | P7-X01 | REQ-REPORT, REQ-RBAC | Màn riêng cho sales-manager theo phòng ban, khác dashboard tổng quan. |
-| 20 | P7-X04 | Data quality dashboard | `feature/p7-x04-data-quality-dashboard` | P3-X03, P4-X02 | REQ-REPORT, REQ-LEAD | Theo dõi dữ liệu thiếu, trùng, chưa chăm sóc, stale records. |
+| 20 | P7-X04 | Data quality dashboard | `feature/p7-x04-data-quality-dashboard` | P3-X03, P4-X02 | REQ-REPORT, REQ-LEAD | ✅ Hoàn thành | Theo dõi dữ liệu thiếu, trùng, chưa chăm sóc, stale records. |
 | 21 | P2-X03 | Invitation flow | `feature/p2-x03-user-invitations` | P2-X01, P8-06 | MOD-AUTH, REQ-NOTIFY | Mời user qua email, phù hợp sau khi notification đã ổn. |
 | 22 | P3-X02 | Lead scoring | `feature/p3-x02-lead-scoring` | P3-X01, P7-X04 | REQ-LEAD, REQ-REPORT | Cần timeline/data quality trước để scoring không cảm tính. |
 | 23 | P4-X03 | Customer relationship map | `feature/p4-x03-customer-relationship-map` | P4-X01, P4-X02 | REQ-CUSTOMER | Hữu ích nhưng nên làm sau khi dữ liệu customer sạch. |
