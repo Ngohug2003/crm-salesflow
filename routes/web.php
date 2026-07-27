@@ -17,6 +17,7 @@ use App\Livewire\Companies\Customer360;
 use App\Livewire\Contacts\ContactDetail;
 use App\Livewire\Contacts\ContactEditor;
 use App\Livewire\Contacts\ContactList;
+use App\Livewire\Customers\CustomerMergeTool;
 use App\Livewire\Dashboard\DashboardOverview;
 use App\Livewire\ImportExport\ExportHistoryIndex;
 use App\Livewire\ImportExport\ImportHistoryIndex;
@@ -69,6 +70,8 @@ Route::middleware(['auth', 'request.context.authenticated', 'verified', 'account
     Route::get('/contacts/create', ContactEditor::class)->name('contacts.create');
     Route::get('/contacts/{contactId}', ContactDetail::class)->whereNumber('contactId')->name('contacts.show');
     Route::get('/contacts/{contactId}/edit', ContactEditor::class)->whereNumber('contactId')->name('contacts.edit');
+
+    Route::get('/customers/merge', CustomerMergeTool::class)->name('customers.merge');
 
     Route::get('/opportunities', OpportunityList::class)->name('opportunities.index');
     Route::get('/opportunities/kanban', OpportunityKanban::class)->name('opportunities.kanban');

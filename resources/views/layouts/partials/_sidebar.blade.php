@@ -49,6 +49,14 @@
                         <span x-show="sidebar">Người liên hệ</span>
                     </a>
                 @endcan
+                @can('update', \App\Models\Company::class)
+                    <a href="{{ route('customers.merge') }}" wire:navigate.hover
+                       class="nav-link"
+                       :class="path.startsWith('/customers/merge') && 'nav-link-active'">
+                        <flux:icon.arrows-right-left class="nav-icon" />
+                        <span x-show="sidebar">Hợp nhất trùng lặp</span>
+                    </a>
+                @endcan
                 @can('viewAny', \App\Models\Opportunity::class)
                     <a href="{{ route('opportunities.index') }}" wire:navigate.hover
                        class="nav-link"

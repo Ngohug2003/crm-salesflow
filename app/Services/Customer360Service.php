@@ -11,8 +11,6 @@ use App\Models\Opportunity;
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 
 final class Customer360Service
