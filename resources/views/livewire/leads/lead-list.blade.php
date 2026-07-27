@@ -139,15 +139,28 @@
             </details>
         </div>
 
-        @if ($selectedLeadIds !== [])
-            <div class="mb-4 flex flex-col justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm dark:border-emerald-900 dark:bg-emerald-950/30 sm:flex-row sm:items-center">
-                <p class="font-medium text-emerald-800 dark:text-emerald-200">
-                    Đã chọn {{ count($selectedLeadIds) }} Lead trên trang hiện tại.
-                    <span class="font-normal text-emerald-700/80 dark:text-emerald-300/80">Bulk action sẽ được bổ sung ở P3-07/P3-08.</span>
-                </p>
+    @if ($bulkFeedback)
+        <div class="mb-4 flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300" role="status">
+            <span>{{ $bulkFeedback }}</span>
+            <button type="button" class="text-xs font-semibold hover:underline" wire:click="$set('bulkFeedback', null)">Ẩn</button>
+        </div>
+    @endif
+
+    @if ($selectedLeadIds !== [])
+        <div class="mb-4 flex flex-col justify-between gap-3 rounded-2xl border border-indigo-200 bg-indigo-50/90 p-4 shadow-sm dark:border-indigo-900/60 dark:bg-indigo-950/50 sm:flex-row sm:items-center">
+            <div class="flex items-center gap-2">
+                <flux:badge color="indigo" size="lg">Đã chọn {{ count($selectedLeadIds) }} Lead</flux:badge>
+                <p class="text-xs text-indigo-700 dark:text-indigo-300">Thao tác sẽ tự động re-authorize kiểm tra quyền trên từng Lead ở backend.</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+                <flux:button size="sm" variant="filled" icon="user-plus" wire:click="openBulkAssign">Gán phụ trách</flux:button>
+                <flux:button size="sm" variant="filled" icon="arrow-path" wire:click="openBulkStatus">Đổi trạng thái</flux:button>
+                <flux:button size="sm" variant="filled" icon="tag" wire:click="openBulkTag">Gán Tag</flux:button>
+                <flux:button size="sm" variant="danger" icon="trash" wire:click="openBulkDelete">Xóa hàng loạt</flux:button>
                 <flux:button size="sm" variant="ghost" wire:click="clearSelection">Bỏ chọn</flux:button>
             </div>
-        @endif
+        </div>
+    @endif
 
         @if ($this->leads->isEmpty())
             @if ($this->visibleTotal === 0)
@@ -313,4 +326,94 @@
             </div>
         @endif
     </section>
+
+    {{-- Modal Phân công hàng loạt --}}
+    <flux:modal name="bulk-assign-modal" class="md:w-[32rem]" wire:close="cancelBulkAssign">
+        @if ($showBulkAssignModal)
+            <form wire:submit.prevent="executeBulkAssign" class="space-y-5">
+                <div>
+                    <flux:heading size="lg">Phân công Lead hàng loạt</flux:heading>
+                    <flux:text class="mt-2">Đang chọn {{ count($selectedLeadIds) }} Lead. Phòng ban sẽ tự động đồng bộ theo NVKD phụ trách mới.</flux:text>
+                </div>
+                <div class="space-y-4">
+                    <flux:select wire:model="bulkOwnerId" label="Người phụ trách mới">
+                        <option value="">Chưa phân công</option>
+                        @foreach ($this->ownerOptions as $ownerOption)
+                            <option value="{{ $ownerOption->id }}">{{ $ownerOption->name }} — {{ $ownerOption->email }}</option>
+                        @endforeach
+                    </flux:select>
+                    <flux:textarea wire:model="bulkAssignReason" label="Lý do phân công" rows="3" maxlength="500" placeholder="Ví dụ: Phân bổ khách hàng khu vực Miền Bắc" />
+                </div>
+                <div class="flex justify-end gap-3">
+                    <flux:button variant="ghost" x-on:click="$flux.modal('bulk-assign-modal').close()">Hủy</flux:button>
+                    <flux:button type="submit" variant="primary" wire:loading.attr="disabled" wire:target="executeBulkAssign">Lưu phân công</flux:button>
+                </div>
+            </form>
+        @endif
+    </flux:modal>
+
+    {{-- Modal Đổi trạng thái hàng loạt --}}
+    <flux:modal name="bulk-status-modal" class="md:w-[32rem]" wire:close="cancelBulkStatus">
+        @if ($showBulkStatusModal)
+            <form wire:submit.prevent="executeBulkStatus" class="space-y-5">
+                <div>
+                    <flux:heading size="lg">Chuyển trạng thái hàng loạt</flux:heading>
+                    <flux:text class="mt-2">Đang chọn {{ count($selectedLeadIds) }} Lead.</flux:text>
+                </div>
+                <div class="space-y-4">
+                    <flux:select wire:model="bulkStatus" label="Trạng thái mục tiêu *" required>
+                        <option value="">Chọn trạng thái</option>
+                        @foreach ($this->statusOptions as $value => $label)
+                            <option value="{{ $value }}">{{ $label }}</option>
+                        @endforeach
+                    </flux:select>
+                    <flux:textarea wire:model="bulkStatusReason" label="Lý do thay đổi" rows="3" maxlength="500" placeholder="Nhập lý do đổi trạng thái..." />
+                </div>
+                <div class="flex justify-end gap-3">
+                    <flux:button variant="ghost" x-on:click="$flux.modal('bulk-status-modal').close()">Hủy</flux:button>
+                    <flux:button type="submit" variant="primary" wire:loading.attr="disabled" wire:target="executeBulkStatus">Cập nhật trạng thái</flux:button>
+                </div>
+            </form>
+        @endif
+    </flux:modal>
+
+    {{-- Modal Gán Tag hàng loạt --}}
+    <flux:modal name="bulk-tag-modal" class="md:w-[28rem]" wire:close="cancelBulkTag">
+        @if ($showBulkTagModal)
+            <form wire:submit.prevent="executeBulkTag" class="space-y-5">
+                <div>
+                    <flux:heading size="lg">Gán Thẻ (Tag) hàng loạt</flux:heading>
+                    <flux:text class="mt-2">Chọn thẻ để đính kèm cho {{ count($selectedLeadIds) }} Lead đang chọn.</flux:text>
+                </div>
+                <div class="space-y-4">
+                    <flux:select wire:model="bulkTagId" label="Thẻ cần gán *" required>
+                        <option value="">Chọn thẻ</option>
+                        @foreach ($this->tagOptions as $tagOption)
+                            <option value="{{ $tagOption->id }}">{{ $tagOption->name }}</option>
+                        @endforeach
+                    </flux:select>
+                </div>
+                <div class="flex justify-end gap-3">
+                    <flux:button variant="ghost" x-on:click="$flux.modal('bulk-tag-modal').close()">Hủy</flux:button>
+                    <flux:button type="submit" variant="primary" wire:loading.attr="disabled" wire:target="executeBulkTag">Xác nhận gán thẻ</flux:button>
+                </div>
+            </form>
+        @endif
+    </flux:modal>
+
+    {{-- Modal Xóa hàng loạt --}}
+    <flux:modal name="bulk-delete-modal" class="md:w-[28rem]" wire:close="cancelBulkDelete">
+        @if ($showBulkDeleteModal)
+            <form wire:submit.prevent="executeBulkDelete" class="space-y-5">
+                <div>
+                    <flux:heading size="lg" class="text-red-600 dark:text-red-400">Xóa Lead hàng loạt</flux:heading>
+                    <flux:text class="mt-2">Bạn có chắc chắn muốn chuyển <strong>{{ count($selectedLeadIds) }} Lead</strong> vào Thùng rác không? Hành động này có thể khôi phục lại từ Thùng rác.</flux:text>
+                </div>
+                <div class="flex justify-end gap-3">
+                    <flux:button variant="ghost" x-on:click="$flux.modal('bulk-delete-modal').close()">Hủy</flux:button>
+                    <flux:button type="submit" variant="danger" wire:loading.attr="disabled" wire:target="executeBulkDelete">Xác nhận Xóa</flux:button>
+                </div>
+            </form>
+        @endif
+    </flux:modal>
 </div>

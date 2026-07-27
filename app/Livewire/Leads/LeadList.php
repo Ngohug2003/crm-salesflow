@@ -10,6 +10,7 @@ use App\Models\LeadSource;
 use App\Models\Tag;
 use App\Models\User;
 use App\Services\Export\ExportExecutionService;
+use App\Services\Lead\LeadBulkActionService;
 use App\Services\LeadDirectoryService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -79,6 +80,166 @@ final class LeadList extends Component
 
     /** @var list<int|string> */
     public array $selectedLeadIds = [];
+
+    public string $bulkOwnerId = '';
+
+    public string $bulkAssignReason = '';
+
+    public bool $showBulkAssignModal = false;
+
+    public string $bulkStatus = '';
+
+    public string $bulkStatusReason = '';
+
+    public bool $showBulkStatusModal = false;
+
+    public string $bulkTagId = '';
+
+    public bool $showBulkTagModal = false;
+
+    public bool $showBulkDeleteModal = false;
+
+    public ?string $bulkFeedback = null;
+
+    public function openBulkAssign(): void
+    {
+        $this->resetValidation();
+        $this->bulkOwnerId = '';
+        $this->bulkAssignReason = '';
+        $this->showBulkAssignModal = true;
+        $this->dispatch('modal-show', name: 'bulk-assign-modal');
+    }
+
+    public function cancelBulkAssign(): void
+    {
+        $this->showBulkAssignModal = false;
+        $this->dispatch('modal-close', name: 'bulk-assign-modal');
+    }
+
+    public function executeBulkAssign(): void
+    {
+        $selected = $this->selectedIds();
+        if ($selected === []) {
+            return;
+        }
+
+        $validated = $this->validate([
+            'bulkOwnerId' => ['nullable', 'integer'],
+            'bulkAssignReason' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        /** @var LeadBulkActionService $bulkService */
+        $bulkService = app(LeadBulkActionService::class);
+        $ownerId = $validated['bulkOwnerId'] === '' ? null : (int) $validated['bulkOwnerId'];
+
+        $res = $bulkService->bulkAssign($this->currentUser(), $selected, $ownerId, $validated['bulkAssignReason']);
+
+        $this->bulkFeedback = "Phân công hàng loạt hoàn tất: {$res['success']} thành công, {$res['failed']} thất bại/bị chặn.";
+        $this->clearSelection();
+        $this->showBulkAssignModal = false;
+        $this->dispatch('modal-close', name: 'bulk-assign-modal');
+    }
+
+    public function openBulkStatus(): void
+    {
+        $this->resetValidation();
+        $this->bulkStatus = '';
+        $this->bulkStatusReason = '';
+        $this->showBulkStatusModal = true;
+        $this->dispatch('modal-show', name: 'bulk-status-modal');
+    }
+
+    public function cancelBulkStatus(): void
+    {
+        $this->showBulkStatusModal = false;
+        $this->dispatch('modal-close', name: 'bulk-status-modal');
+    }
+
+    public function executeBulkStatus(): void
+    {
+        $selected = $this->selectedIds();
+        if ($selected === []) {
+            return;
+        }
+
+        $validated = $this->validate([
+            'bulkStatus' => ['required', 'string'],
+            'bulkStatusReason' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        /** @var LeadBulkActionService $bulkService */
+        $bulkService = app(LeadBulkActionService::class);
+        $res = $bulkService->bulkUpdateStatus($this->currentUser(), $selected, $validated['bulkStatus'], $validated['bulkStatusReason']);
+
+        $this->bulkFeedback = "Đổi trạng thái hàng loạt hoàn tất: {$res['success']} thành công, {$res['failed']} thất bại/bị chặn.";
+        $this->clearSelection();
+        $this->showBulkStatusModal = false;
+        $this->dispatch('modal-close', name: 'bulk-status-modal');
+    }
+
+    public function openBulkTag(): void
+    {
+        $this->resetValidation();
+        $this->bulkTagId = '';
+        $this->showBulkTagModal = true;
+        $this->dispatch('modal-show', name: 'bulk-tag-modal');
+    }
+
+    public function cancelBulkTag(): void
+    {
+        $this->showBulkTagModal = false;
+        $this->dispatch('modal-close', name: 'bulk-tag-modal');
+    }
+
+    public function executeBulkTag(): void
+    {
+        $selected = $this->selectedIds();
+        if ($selected === []) {
+            return;
+        }
+
+        $validated = $this->validate([
+            'bulkTagId' => ['required', 'integer'],
+        ]);
+
+        /** @var LeadBulkActionService $bulkService */
+        $bulkService = app(LeadBulkActionService::class);
+        $res = $bulkService->bulkAddTag($this->currentUser(), $selected, (int) $validated['bulkTagId']);
+
+        $this->bulkFeedback = "Gán thẻ hàng loạt hoàn tất: {$res['success']} thành công, {$res['failed']} thất bại/bị chặn.";
+        $this->clearSelection();
+        $this->showBulkTagModal = false;
+        $this->dispatch('modal-close', name: 'bulk-tag-modal');
+    }
+
+    public function openBulkDelete(): void
+    {
+        $this->showBulkDeleteModal = true;
+        $this->dispatch('modal-show', name: 'bulk-delete-modal');
+    }
+
+    public function cancelBulkDelete(): void
+    {
+        $this->showBulkDeleteModal = false;
+        $this->dispatch('modal-close', name: 'bulk-delete-modal');
+    }
+
+    public function executeBulkDelete(): void
+    {
+        $selected = $this->selectedIds();
+        if ($selected === []) {
+            return;
+        }
+
+        /** @var LeadBulkActionService $bulkService */
+        $bulkService = app(LeadBulkActionService::class);
+        $res = $bulkService->bulkDelete($this->currentUser(), $selected);
+
+        $this->bulkFeedback = "Xóa hàng loạt hoàn tất: {$res['success']} thành công, {$res['failed']} thất bại/bị chặn.";
+        $this->clearSelection();
+        $this->showBulkDeleteModal = false;
+        $this->dispatch('modal-close', name: 'bulk-delete-modal');
+    }
 
     public function mount(): void
     {
