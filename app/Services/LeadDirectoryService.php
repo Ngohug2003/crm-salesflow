@@ -61,6 +61,7 @@ final readonly class LeadDirectoryService
         string $dateTo,
         string $sortBy,
         string $sortDirection,
+        string $scoreLevel = '',
     ): LeadFilterData {
         return new LeadFilterData(
             search: $search,
@@ -72,6 +73,7 @@ final readonly class LeadDirectoryService
             departmentId: $this->positiveId($department),
             createdFrom: $this->date($dateFrom),
             createdTo: $this->date($dateTo),
+            scoreLevel: $scoreLevel !== '' ? $scoreLevel : null,
             sortBy: $sortBy,
             sortDirection: $sortDirection,
         );
@@ -133,6 +135,7 @@ final readonly class LeadDirectoryService
             'status' => 'Trạng thái',
             'priority' => 'Ưu tiên',
             'estimated_value' => 'Giá trị dự kiến',
+            'score' => 'Điểm Lead (Score)',
         ];
     }
 

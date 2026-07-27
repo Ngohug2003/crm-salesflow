@@ -20,6 +20,7 @@ final readonly class LeadFilterData
         public ?int $departmentId = null,
         public ?CarbonImmutable $createdFrom = null,
         public ?CarbonImmutable $createdTo = null,
+        public ?string $scoreLevel = null,
         public string $sortBy = 'created_at',
         public string $sortDirection = 'desc',
     ) {}

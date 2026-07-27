@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Enums\LeadPriority;
 use App\Enums\LeadStatus;
+use App\Services\LeadScoringService;
 use App\Support\LeadContactNormalizer;
 use Database\Factories\LeadFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -15,7 +16,34 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property ?int $lead_source_id
+ * @property ?int $owner_id
+ * @property ?int $department_id
+ * @property string $full_name
+ * @property ?string $email
+ * @property ?string $phone
+ * @property ?string $secondary_phone
+ * @property ?string $company_name
+ * @property ?string $job_title
+ * @property ?string $website
+ * @property ?string $address
+ * @property ?string $city
+ * @property ?string $province
+ * @property ?string $country
+ * @property LeadStatus $status
+ * @property LeadPriority $priority
+ * @property ?string $estimated_value
+ * @property int $score
+ * @property ?string $notes
+ * @property ?Carbon $converted_at
+ * @property string $score_level
+ * @property string $score_badge_color
+ * @property string $score_level_label
+ */
 final class Lead extends Model
 {
     /** @use HasFactory<LeadFactory> */
@@ -40,6 +68,7 @@ final class Lead extends Model
         'status',
         'priority',
         'estimated_value',
+        'score',
         'notes',
         'converted_at',
         'created_by',
@@ -55,7 +84,41 @@ final class Lead extends Model
                 'secondary_phone_normalized',
                 LeadContactNormalizer::phone($lead->secondary_phone),
             );
+            $lead->setAttribute(
+                'score',
+                app(LeadScoringService::class)->calculateScore($lead),
+            );
         });
+    }
+
+    public function getScoreLevelAttribute(): string
+    {
+        if ($this->score >= 70) {
+            return 'hot';
+        }
+        if ($this->score >= 40) {
+            return 'warm';
+        }
+
+        return 'cold';
+    }
+
+    public function getScoreBadgeColorAttribute(): string
+    {
+        return match ($this->score_level) {
+            'hot' => 'emerald',
+            'warm' => 'amber',
+            default => 'slate',
+        };
+    }
+
+    public function getScoreLevelLabelAttribute(): string
+    {
+        return match ($this->score_level) {
+            'hot' => 'Hot Lead',
+            'warm' => 'Warm Lead',
+            default => 'Cold Lead',
+        };
     }
 
     /** @return BelongsTo<LeadSource, $this> */
@@ -125,6 +188,7 @@ final class Lead extends Model
             'status' => LeadStatus::class,
             'priority' => LeadPriority::class,
             'estimated_value' => 'decimal:2',
+            'score' => 'integer',
             'converted_at' => 'datetime',
         ];
     }
