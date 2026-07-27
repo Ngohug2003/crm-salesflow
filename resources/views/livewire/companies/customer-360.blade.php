@@ -1,3 +1,4 @@
+<div class="space-y-8">
     @php
         /** @var \App\Models\Company $company */
         $company = $data['company'];
@@ -335,4 +336,5 @@
             </div>
         </div>
     @endif
+</div>
 </div>

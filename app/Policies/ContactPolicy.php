@@ -27,18 +27,30 @@ final readonly class ContactPolicy
         return $this->dataScope->canWrite($actor) && $actor->can('contacts.create');
     }
 
-    public function update(User $actor, Contact $contact): bool
+    public function update(User $actor, ?Contact $contact = null): bool
     {
+        if ($contact === null) {
+            return $this->dataScope->canWrite($actor) && $actor->can('contacts.update');
+        }
+
         return $this->canMutate($actor, $contact, 'contacts.update');
     }
 
-    public function delete(User $actor, Contact $contact): bool
+    public function delete(User $actor, ?Contact $contact = null): bool
     {
+        if ($contact === null) {
+            return $this->dataScope->canWrite($actor) && $actor->can('contacts.delete');
+        }
+
         return $this->canMutate($actor, $contact, 'contacts.delete');
     }
 
-    public function restore(User $actor, Contact $contact): bool
+    public function restore(User $actor, ?Contact $contact = null): bool
     {
+        if ($contact === null) {
+            return $this->dataScope->canWrite($actor) && $actor->can('contacts.delete');
+        }
+
         return $this->canMutate($actor, $contact, 'contacts.delete');
     }
 

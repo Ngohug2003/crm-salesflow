@@ -69,6 +69,7 @@ Route::middleware(['auth', 'request.context.authenticated', 'verified', 'account
     Route::get('/contacts', ContactList::class)->name('contacts.index');
     Route::get('/contacts/create', ContactEditor::class)->name('contacts.create');
     Route::get('/contacts/{contactId}', ContactDetail::class)->whereNumber('contactId')->name('contacts.show');
+    Route::get('/contacts/{contactId}/edit', ContactEditor::class)->whereNumber('contactId')->name('contacts.edit');
     Route::get('/companies/{companyId}/360', Customer360::class)->whereNumber('companyId')->name('companies.360');
     Route::get('/customers/merge', CustomerMergeTool::class)->name('customers.merge');
     Route::get('/customers/sla', CustomerSlaDashboard::class)->name('customers.sla');
