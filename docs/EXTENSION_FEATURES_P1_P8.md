@@ -34,7 +34,7 @@ Khi bắt đầu một feature:
 | 9 | P3-X01 | Lead notes/timeline hoàn chỉnh | `feature/p3-x01-lead-notes-timeline` | P3-10, P6-02 | REQ-LEAD, REQ-WORK | ✅ Hoàn thành | Lead cần lịch sử chăm sóc rõ trước scoring/bulk nâng cao. |
 | 10 | P3-X03 | Bulk actions for Lead | `feature/p3-x03-lead-bulk-actions` | P3-10, P9-01 | REQ-LEAD, REQ-RBAC | ✅ Hoàn thành | Tăng tốc thao tác dữ liệu lớn, phải re-authorize backend. |
 | 11 | P3-X04 | Lead conversion preview | `feature/p3-x04-lead-conversion-preview` | P3-09, P5-09 | REQ-LEAD, REQ-COMPANY, REQ-PIPELINE | ✅ Hoàn thành | Chuyển đổi Lead cần preview rõ Company/Contact/Opportunity sẽ tạo/ghép. |
-| 12 | P4-X01 | Customer 360 page | `feature/p4-x01-customer-360` | P4-07, P5-09, P6-07 | REQ-COMPANY, REQ-CONTACT, REQ-WORK | Gom hồ sơ khách hàng, contact, opportunity, task, timeline vào một nơi. |
+| 12 | P4-X01 | Customer 360 page | `feature/p4-x01-customer-360` | P4-07, P5-09, P6-07 | REQ-COMPANY, REQ-CONTACT, REQ-WORK | ✅ Hoàn thành | Gom hồ sơ khách hàng, contact, opportunity, task, timeline vào một nơi. |
 | 13 | P4-X02 | Duplicate/merge Company/Contact | `feature/p4-x02-customer-merge` | P4-05, P4-X01 | REQ-COMPANY, REQ-CONTACT, REQ-AUDIT | Dữ liệu khách hàng cần cơ chế merge an toàn trước khi dùng thật. |
 | 14 | P5-X01 | Opportunity product/line items | `feature/p5-x01-opportunity-line-items` | P5-09 | REQ-PIPELINE | Opportunity hiện sơ khai; line items giúp giá trị doanh thu thực hơn. |
 | 15 | P5-X03 | Stage required fields | `feature/p5-x03-stage-required-fields` | P5-05, P5-X01 | REQ-PIPELINE | Ép dữ liệu cần thiết khi chuyển stage, giảm pipeline “ảo”. |

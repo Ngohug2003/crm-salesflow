@@ -13,6 +13,7 @@ use App\Http\Controllers\UserGuideController;
 use App\Livewire\Companies\CompanyDetail;
 use App\Livewire\Companies\CompanyEditor;
 use App\Livewire\Companies\CompanyList;
+use App\Livewire\Companies\Customer360;
 use App\Livewire\Contacts\ContactDetail;
 use App\Livewire\Contacts\ContactEditor;
 use App\Livewire\Contacts\ContactList;
@@ -61,6 +62,7 @@ Route::middleware(['auth', 'request.context.authenticated', 'verified', 'account
     Route::get('/companies', CompanyList::class)->name('companies.index');
     Route::get('/companies/create', CompanyEditor::class)->name('companies.create');
     Route::get('/companies/{companyId}', CompanyDetail::class)->whereNumber('companyId')->name('companies.show');
+    Route::get('/companies/{companyId}/360', Customer360::class)->whereNumber('companyId')->name('companies.360');
     Route::get('/companies/{companyId}/edit', CompanyEditor::class)->whereNumber('companyId')->name('companies.edit');
 
     Route::get('/contacts', ContactList::class)->name('contacts.index');
