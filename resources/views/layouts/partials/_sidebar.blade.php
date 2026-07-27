@@ -152,31 +152,25 @@
                     <flux:icon.device-phone-mobile class="nav-icon" />
                     <span x-show="sidebar">Phiên đăng nhập</span>
                 </a>
+            </div>
+        </div>
+
+        {{-- Trợ giúp --}}
+        <div>
+            <p x-show="sidebar" class="nav-group-label">Trợ giúp</p>
+            <div class="mt-1 space-y-0.5">
+                <a href="{{ route('help.guide') }}" wire:navigate.hover
+                   class="nav-link"
+                   :class="path === '/help/guide' && 'nav-link-active'">
+                    <flux:icon.book-open class="nav-icon" />
+                    <span x-show="sidebar">Hướng dẫn thao tác</span>
+                </a>
                 <a href="{{ route('help.roles') }}" wire:navigate.hover
                    class="nav-link"
                    :class="path === '/help/roles' && 'nav-link-active'">
                     <flux:icon.question-mark-circle class="nav-icon" />
                     <span x-show="sidebar">Vai trò & quyền</span>
                 </a>
-            </div>
-        </div>
-
-        {{-- Sắp có --}}
-        <div>
-            <p x-show="sidebar" class="nav-group-label">Sắp có</p>
-            <div class="mt-1 space-y-0.5">
-                @foreach ([
-                    'Opportunities' => 'sparkles',
-                    'Pipelines' => 'view-columns',
-                    'Activities' => 'clock',
-                    'Tasks' => 'check-circle',
-                    'Reports' => 'chart-bar',
-                ] as $label => $icon)
-                    <span class="nav-link cursor-not-allowed opacity-50" title="Có trong phase tiếp theo">
-                        <flux:icon :name="$icon" class="nav-icon" />
-                        <span x-show="sidebar">{{ $label }}</span>
-                    </span>
-                @endforeach
             </div>
         </div>
     </nav>

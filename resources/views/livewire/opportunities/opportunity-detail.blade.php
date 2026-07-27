@@ -1,46 +1,53 @@
 <div class="space-y-6">
-    <!-- Top Header -->
-    <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+    <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-            <div class="flex flex-wrap items-center gap-3">
-                <h1 class="text-2xl font-bold text-slate-900 dark:text-white">{{ $opportunity->title }}</h1>
+            <div class="flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400">
+                <a href="{{ route('dashboard') }}" class="hover:text-emerald-600 dark:hover:text-emerald-400" wire:navigate>Trang chủ</a>
+                <span>/</span>
+                <a href="{{ route('opportunities.index') }}" class="hover:text-emerald-600 dark:hover:text-emerald-400" wire:navigate>Cơ hội bán hàng</a>
+                <span>/</span>
+                <span class="text-slate-900 dark:text-white">Chi tiết</span>
+            </div>
+
+            <div class="mt-2 flex flex-wrap items-center gap-2">
+                <h1 class="text-2xl font-semibold tracking-tight text-slate-950 dark:text-white">{{ $opportunity->title }}</h1>
 
                 <span class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold" style="background-color: {{ $opportunity->stage?->color }}20; color: {{ $opportunity->stage?->color }}; border: 1px solid {{ $opportunity->stage?->color }}40;">
                     <span class="size-2 rounded-full" style="background-color: {{ $opportunity->stage?->color }};"></span>
-                    {{ $opportunity->stage?->name }} ({{ $opportunity->stage?->probability }}%)
+                    {{ $opportunity->stage?->name }} · {{ $opportunity->stage?->probability }}%
                 </span>
 
                 @if ($opportunity->is_won)
-                    <flux:badge variant="solid" color="emerald" size="sm">Chốt thành công (Won)</flux:badge>
+                    <flux:badge variant="solid" color="emerald" size="sm">Thành công</flux:badge>
                 @elseif ($opportunity->is_lost)
-                    <flux:badge variant="solid" color="red" size="sm">Thất bại (Lost)</flux:badge>
+                    <flux:badge variant="solid" color="red" size="sm">Thất bại</flux:badge>
                 @endif
             </div>
 
-            <p class="mt-1 text-sm text-slate-500">Mã cơ hội: <code class="font-mono text-slate-700 dark:text-slate-300">{{ $opportunity->code }}</code></p>
+            <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">Mã cơ hội: <code class="font-mono text-slate-700 dark:text-slate-300">{{ $opportunity->code }}</code></p>
         </div>
 
         <div class="flex flex-wrap items-center gap-2">
-            <flux:button href="{{ route('opportunities.index') }}" variant="ghost" icon="arrow-left" size="sm">
+            <flux:button href="{{ route('opportunities.index') }}" wire:navigate variant="ghost" size="sm">
                 Danh sách
             </flux:button>
 
             @if (! $opportunity->is_won && ! $opportunity->is_lost)
-                <flux:button wire:click="$set('showWonModal', true)" variant="primary" color="emerald" icon="check-circle" size="sm">
-                    Chốt Won
+                <flux:button wire:click="$set('showWonModal', true)" variant="primary" color="emerald" size="sm">
+                    Chốt thắng
                 </flux:button>
 
-                <flux:button wire:click="$set('showLostModal', true)" variant="danger" icon="x-circle" size="sm">
-                    Báo Lost
+                <flux:button wire:click="$set('showLostModal', true)" variant="danger" size="sm">
+                    Báo thua
                 </flux:button>
             @else
-                <flux:button wire:click="$set('showReopenModal', true)" variant="filled" icon="arrow-path" size="sm">
-                    Mở lại Cơ hội
+                <flux:button wire:click="$set('showReopenModal', true)" variant="filled" size="sm">
+                    Mở lại
                 </flux:button>
             @endif
 
             @can('update', $opportunity)
-                <flux:button href="{{ route('opportunities.edit', $opportunity->id) }}" variant="subtle" icon="pencil" size="sm">
+                <flux:button href="{{ route('opportunities.edit', $opportunity->id) }}" wire:navigate variant="subtle" size="sm">
                     Sửa
                 </flux:button>
             @endcan
@@ -48,25 +55,24 @@
     </div>
 
     @if (session()->has('message'))
-        <div class="rounded-lg bg-emerald-50 p-4 text-sm font-semibold text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300">
+        <div class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200" role="status">
             {{ session('message') }}
         </div>
     @endif
 
     @error('stage_error')
-        <div class="rounded-lg bg-red-50 p-4 text-sm font-semibold text-red-800 dark:bg-red-950/40 dark:text-red-300">
+        <div class="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-200" role="alert">
             {{ $message }}
         </div>
     @enderror
 
-    <!-- Pipeline Stage Progress Bar -->
-    <div class="crm-card">
-        <div class="flex items-center justify-between mb-3">
-            <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-500">Tiến trình Quy trình: {{ $opportunity->pipeline?->name }}</h2>
-            <span class="text-xs text-slate-400">Nhấp vào giai đoạn bên dưới để chuyển Stage nhanh</span>
+    <section class="crm-card space-y-4" aria-labelledby="opportunity-stage-title">
+        <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+            <h2 id="opportunity-stage-title" class="text-base font-semibold text-slate-950 dark:text-white">Tiến trình: {{ $opportunity->pipeline?->name }}</h2>
+            <span class="text-xs text-slate-500 dark:text-slate-400">Bấm vào giai đoạn để chuyển nhanh</span>
         </div>
 
-        <div class="flex items-center gap-2 overflow-x-auto pb-2">
+        <div class="flex gap-2 overflow-x-auto pb-2">
             @foreach ($opportunity->pipeline?->stages ?? [] as $stg)
                 @php
                     $isCurrent = $stg->id === $opportunity->stage_id;
@@ -75,35 +81,34 @@
                 <button
                     type="button"
                     wire:click="changeStage({{ $stg->id }})"
-                    class="flex flex-1 min-w-[140px] flex-col gap-1.5 rounded-lg border p-2.5 text-left transition-all hover:scale-[1.02] {{ $isCurrent ? 'border-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/30 ring-2 ring-indigo-500/20' : ($isPassed ? 'border-emerald-300 bg-emerald-50/30 dark:border-emerald-900/50 dark:bg-emerald-950/20' : 'border-slate-200 bg-slate-50/50 hover:border-indigo-300 dark:border-slate-800 dark:bg-slate-900/50') }}"
+                    class="flex min-w-[150px] flex-1 flex-col gap-2 rounded-lg border p-3 text-left transition {{ $isCurrent ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/20' : ($isPassed ? 'border-emerald-200 bg-emerald-50/30 dark:border-emerald-900/50 dark:bg-emerald-950/10' : 'border-slate-200 bg-slate-50 hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900/50') }}"
                 >
                     <div class="flex items-center justify-between">
-                        <span class="text-xs font-bold {{ $isCurrent ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-600 dark:text-slate-400' }}">
+                        <span class="text-xs font-semibold {{ $isCurrent ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-600 dark:text-slate-400' }}">
                             {{ $stg->position }}. {{ $stg->name }}
                         </span>
                         <span class="text-[10px] font-semibold text-slate-500">{{ $stg->probability }}%</span>
                     </div>
 
-                    <div class="h-1.5 w-full rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
+                    <div class="h-1.5 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
                         <div class="h-full transition-all" style="width: {{ $stg->probability }}%; background-color: {{ $stg->color }};"></div>
                     </div>
                 </button>
             @endforeach
         </div>
-    </div>
+    </section>
 
     <!-- Main 2-Column Grid -->
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <!-- Left 2-Columns: Tasks, Files & Timeline -->
         <div class="lg:col-span-2 space-y-6">
             <!-- Danh sách Công việc (Tasks) thuộc Cơ hội bán hàng này -->
-            <div class="crm-card space-y-4">
-                <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+            <section class="crm-card space-y-4" aria-labelledby="opportunity-tasks-title">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
                     <div class="flex items-center gap-2">
-                        <flux:icon.check-circle class="size-5 text-indigo-600 dark:text-indigo-400" />
-                        <h3 class="text-base font-bold text-slate-900 dark:text-white">Công việc (Tasks) liên quan</h3>
+                        <h3 id="opportunity-tasks-title" class="text-base font-semibold text-slate-950 dark:text-white">Công việc liên quan</h3>
                         @if ($opportunity->tasks->count() > 0)
-                            <flux:badge color="indigo" size="sm">{{ $opportunity->tasks->count() }}</flux:badge>
+                            <flux:badge color="emerald" size="sm">{{ $opportunity->tasks->count() }}</flux:badge>
                         @endif
                     </div>
 
@@ -112,23 +117,22 @@
                             href="{{ route('tasks.create', ['subject_type' => App\Models\Opportunity::class, 'subject_id' => $opportunity->id]) }}"
                             wire:navigate
                             variant="primary"
-                            icon="plus"
                             size="sm"
                         >
-                            + Tạo Công việc
+                            Tạo công việc
                         </flux:button>
                     @endcan
                 </div>
 
                 <div class="divide-y divide-slate-100 dark:divide-slate-800/80">
                     @forelse ($opportunity->tasks as $t)
-                        <div class="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div class="flex flex-col justify-between gap-3 py-3 sm:flex-row sm:items-center">
                             <div class="space-y-1">
                                 <div class="flex flex-wrap items-center gap-2">
                                     <a
                                         href="{{ route('tasks.show', $t->id) }}"
                                         wire:navigate
-                                        class="text-sm font-bold text-slate-900 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline"
+                                        class="text-sm font-semibold text-slate-950 hover:text-emerald-600 dark:text-white dark:hover:text-emerald-400"
                                     >
                                         {{ $t->title }}
                                     </a>
@@ -154,7 +158,7 @@
                                         @if ($uniq->count() > 0)
                                             <div class="flex items-center -space-x-1.5">
                                                 @foreach ($uniq->take(4) as $mb)
-                                                    <span title="{{ $mb->name }}" class="inline-flex items-center justify-center size-5 rounded-full border border-white dark:border-slate-900 bg-gradient-to-br from-indigo-500 to-purple-600 text-white text-[8px] font-bold shadow-sm">
+                                                    <span title="{{ $mb->name }}" class="inline-flex size-5 items-center justify-center rounded-full border border-white bg-slate-700 text-[8px] font-semibold text-white shadow-sm dark:border-slate-900 dark:bg-slate-600">
                                                         {{ mb_strtoupper(mb_substr($mb->name, 0, 1)) }}
                                                     </span>
                                                 @endforeach
@@ -175,8 +179,8 @@
                             </div>
 
                             <div class="flex items-center gap-2 shrink-0">
-                                <flux:button href="{{ route('tasks.show', $t->id) }}" wire:navigate size="sm" variant="subtle" icon="eye">
-                                    Xem / Sửa
+                                <flux:button href="{{ route('tasks.show', $t->id) }}" wire:navigate size="sm" variant="subtle">
+                                    Xem
                                 </flux:button>
                             </div>
                         </div>
@@ -186,7 +190,7 @@
                         </div>
                     @endforelse
                 </div>
-            </div>
+            </section>
 
             <!-- Tệp đính kèm -->
             <livewire:customers.customer-attachment-manager :modelType="App\Models\Opportunity::class" :modelId="$opportunity->id" />
@@ -197,8 +201,8 @@
 
         <!-- Right 1-Column: Thống kê & Thông tin thương mại -->
         <div class="space-y-6">
-            <div class="crm-card space-y-4">
-                <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-500">Thông tin Thương mại</h3>
+            <section class="crm-card space-y-4" aria-labelledby="opportunity-commerce-title">
+                <h3 id="opportunity-commerce-title" class="text-base font-semibold text-slate-950 dark:text-white">Thông tin thương mại</h3>
 
                 <div class="space-y-3 text-sm">
                     <div class="flex items-center justify-between py-1 border-b border-slate-100 dark:border-slate-800">
@@ -213,7 +217,7 @@
 
                     <div class="flex items-center justify-between py-1 border-b border-slate-100 dark:border-slate-800">
                         <span class="text-slate-500">Giá trị Dự báo (Weighted):</span>
-                        <strong class="text-base text-indigo-600 dark:text-indigo-400">{{ number_format($opportunity->weighted_value) }} đ</strong>
+                        <strong class="text-base text-emerald-700 dark:text-emerald-300">{{ number_format($opportunity->weighted_value) }} đ</strong>
                     </div>
 
                     @if ($opportunity->expected_close_date)
@@ -240,7 +244,7 @@
                     <div>
                         <span class="text-slate-500">Doanh nghiệp:</span>
                         @if ($opportunity->company)
-                            <a href="{{ route('companies.show', $opportunity->company->id) }}" class="block font-medium text-indigo-600 hover:underline dark:text-indigo-400">
+                            <a href="{{ route('companies.show', $opportunity->company->id) }}" class="block font-medium text-emerald-700 hover:underline dark:text-emerald-300">
                                 {{ $opportunity->company->name }}
                             </a>
                         @else
@@ -251,7 +255,7 @@
                     <div>
                         <span class="text-slate-500">Người liên hệ:</span>
                         @if ($opportunity->contact)
-                            <a href="{{ route('contacts.show', $opportunity->contact->id) }}" class="block font-medium text-indigo-600 hover:underline dark:text-indigo-400">
+                            <a href="{{ route('contacts.show', $opportunity->contact->id) }}" class="block font-medium text-emerald-700 hover:underline dark:text-emerald-300">
                                 {{ $opportunity->contact->full_name }}
                             </a>
                         @else
@@ -269,13 +273,13 @@
                         <p class="font-medium text-slate-800 dark:text-slate-200">{{ $opportunity->department?->name ?: 'Hệ thống' }}</p>
                     </div>
                 </div>
-            </div>
+            </section>
 
             @if ($opportunity->notes)
-                <div class="crm-card space-y-2">
-                    <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-500">Ghi chú chi tiết</h3>
-                    <p class="text-xs leading-relaxed text-slate-700 dark:text-slate-300 whitespace-pre-line">{{ $opportunity->notes }}</p>
-                </div>
+                <section class="crm-card space-y-2" aria-labelledby="opportunity-notes-title">
+                    <h3 id="opportunity-notes-title" class="text-base font-semibold text-slate-950 dark:text-white">Ghi chú</h3>
+                    <p class="whitespace-pre-line text-sm leading-relaxed text-slate-700 dark:text-slate-300">{{ $opportunity->notes }}</p>
+                </section>
             @endif
         </div>
     </div>
@@ -301,16 +305,16 @@
             x-transition:leave="transition ease-in duration-150 transform"
             x-transition:leave-start="opacity-100 scale-100"
             x-transition:leave-end="opacity-0 scale-95"
-            class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4"
+            class="w-full max-w-md space-y-4 rounded-lg border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-800 dark:bg-slate-900"
         >
             <div class="flex items-center justify-between">
-                <h3 class="text-lg font-bold text-slate-900 dark:text-white">Báo Thất bại Cơ hội bán hàng</h3>
+                <h3 class="text-base font-semibold text-slate-950 dark:text-white">Báo thua cơ hội bán hàng</h3>
                 <button wire:click="$set('showLostModal', false)" type="button" class="text-slate-400 hover:text-slate-600">
                     <flux:icon.x-mark class="size-5" />
                 </button>
             </div>
 
-            <p class="text-xs text-slate-500">Vui lòng cung cấp lý do thất bại để hoàn tất đóng cơ hội này.</p>
+            <p class="text-sm text-slate-600 dark:text-slate-400">Vui lòng cung cấp lý do thất bại để hoàn tất đóng cơ hội này.</p>
 
             <div>
                 <flux:textarea
@@ -319,10 +323,10 @@
                     placeholder="VD: Đối thủ cạnh tranh giảm giá 20%, đối tác tạm hoãn ngân sách năm nay..."
                     rows="3"
                 />
-                @error('lostReason') <span class="text-xs text-red-500 mt-1 block">{{ $message }}</span> @enderror
+                @error('lostReason') <span class="mt-1 block text-xs text-rose-500">{{ $message }}</span> @enderror
             </div>
 
-            <div class="flex items-center justify-end gap-3 pt-2 border-t border-slate-100 dark:border-slate-800">
+            <div class="flex items-center justify-end gap-3 border-t border-slate-200 pt-4 dark:border-slate-800">
                 <flux:button wire:click="$set('showLostModal', false)" variant="ghost" size="sm">
                     Hủy
                 </flux:button>
@@ -355,28 +359,23 @@
             x-transition:leave="transition ease-in duration-150 transform"
             x-transition:leave-start="opacity-100 scale-100"
             x-transition:leave-end="opacity-0 scale-95"
-            class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4"
+            class="w-full max-w-md space-y-4 rounded-lg border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-800 dark:bg-slate-900"
         >
-            <div class="flex items-center gap-3 text-emerald-600 dark:text-emerald-400">
-                <div class="rounded-full bg-emerald-100 p-2.5 dark:bg-emerald-950/60">
-                    <flux:icon.check-circle class="size-6" />
-                </div>
-                <div>
-                    <h3 class="text-lg font-bold text-slate-900 dark:text-white">Chốt thành công Cơ hội</h3>
-                    <p class="text-xs text-slate-500">Chúc mừng! Bạn đã hoàn thành chốt thương vụ.</p>
-                </div>
+            <div>
+                <h3 class="text-base font-semibold text-slate-950 dark:text-white">Chốt thắng cơ hội</h3>
+                <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Xác nhận ghi nhận thương vụ thành công.</p>
             </div>
 
             <p class="text-sm text-slate-600 dark:text-slate-300">
                 Bạn có chắc chắn muốn chốt thành công cơ hội <strong class="text-slate-900 dark:text-white">{{ $opportunity->title }}</strong> với giá trị dự kiến {{ number_format((float) $opportunity->amount, 0, ',', '.') }} VNĐ không?
             </p>
 
-            <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+            <div class="flex items-center justify-end gap-3 border-t border-slate-200 pt-4 dark:border-slate-800">
                 <flux:button wire:click="$set('showWonModal', false)" variant="ghost" size="sm">
-                    Hủy bỏ
+                    Hủy
                 </flux:button>
                 <flux:button wire:click="confirmCloseWon" variant="primary" color="emerald" size="sm">
-                    Xác nhận Chốt Won
+                    Xác nhận chốt thắng
                 </flux:button>
             </div>
         </div>
@@ -403,28 +402,23 @@
             x-transition:leave="transition ease-in duration-150 transform"
             x-transition:leave-start="opacity-100 scale-100"
             x-transition:leave-end="opacity-0 scale-95"
-            class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4"
+            class="w-full max-w-md space-y-4 rounded-lg border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-800 dark:bg-slate-900"
         >
-            <div class="flex items-center gap-3 text-indigo-600 dark:text-indigo-400">
-                <div class="rounded-full bg-indigo-100 p-2.5 dark:bg-indigo-950/60">
-                    <flux:icon.arrow-path class="size-6" />
-                </div>
-                <div>
-                    <h3 class="text-lg font-bold text-slate-900 dark:text-white">Mở lại Cơ hội bán hàng</h3>
-                    <p class="text-xs text-slate-500">Khôi phục cơ hội về trạng thái mở.</p>
-                </div>
+            <div>
+                <h3 class="text-base font-semibold text-slate-950 dark:text-white">Mở lại cơ hội bán hàng</h3>
+                <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Khôi phục cơ hội về trạng thái đang mở.</p>
             </div>
 
             <p class="text-sm text-slate-600 dark:text-slate-300">
                 Bạn có chắc chắn muốn mở lại cơ hội bán hàng <strong class="text-slate-900 dark:text-white">{{ $opportunity->title }}</strong> không?
             </p>
 
-            <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+            <div class="flex items-center justify-end gap-3 border-t border-slate-200 pt-4 dark:border-slate-800">
                 <flux:button wire:click="$set('showReopenModal', false)" variant="ghost" size="sm">
-                    Hủy bỏ
+                    Hủy
                 </flux:button>
                 <flux:button wire:click="confirmReopen" variant="primary" size="sm">
-                    Xác nhận Mở lại
+                    Xác nhận mở lại
                 </flux:button>
             </div>
         </div>

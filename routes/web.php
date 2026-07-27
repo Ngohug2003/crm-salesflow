@@ -6,6 +6,7 @@ use App\Http\Controllers\ExportDownloadController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\RoleGuideController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\UserGuideController;
 use App\Livewire\Companies\CompanyDetail;
 use App\Livewire\Companies\CompanyEditor;
 use App\Livewire\Companies\CompanyList;
@@ -86,5 +87,6 @@ Route::middleware(['auth', 'request.context.authenticated', 'verified', 'account
     Route::get('/settings/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
     Route::get('/settings/system-console', SystemConsole::class)->name('system-console.index');
     Route::get('/settings/sessions', SessionManager::class)->name('sessions.index');
+    Route::get('/help/guide', UserGuideController::class)->name('help.guide');
     Route::get('/help/roles', RoleGuideController::class)->name('help.roles');
 });

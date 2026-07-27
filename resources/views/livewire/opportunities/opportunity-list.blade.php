@@ -1,19 +1,23 @@
 <div class="space-y-6">
-    <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+    <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-            <p class="text-sm text-slate-500">CRM / Bán hàng</p>
-            <h1 class="mt-1 text-3xl font-semibold tracking-tight">Cơ hội bán hàng</h1>
-            <p class="mt-2 max-w-3xl text-slate-500">Quản lý các cơ hội kinh doanh, theo dõi doanh thu và giá trị dự báo.</p>
+            <div class="flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400">
+                <a href="{{ route('dashboard') }}" class="hover:text-emerald-600 dark:hover:text-emerald-400" wire:navigate>Trang chủ</a>
+                <span>/</span>
+                <span class="text-slate-900 dark:text-white">Cơ hội bán hàng</span>
+            </div>
+            <h1 class="mt-2 text-2xl font-semibold tracking-tight text-slate-950 dark:text-white">Cơ hội bán hàng</h1>
+            <p class="mt-2 max-w-3xl text-sm text-slate-600 dark:text-slate-400">
+                Theo dõi thương vụ, doanh thu dự kiến, giai đoạn pipeline và lịch sử chăm sóc.
+            </p>
         </div>
 
-        <div class="flex items-center gap-3">
+        <div class="flex flex-wrap items-center gap-2">
             <div class="inline-flex rounded-lg border border-slate-200 bg-slate-100 p-1 dark:border-slate-800 dark:bg-slate-900">
-                <span class="inline-flex items-center gap-1.5 rounded-md bg-white px-3 py-1.5 text-xs font-semibold text-emerald-600 shadow-sm dark:bg-slate-800 dark:text-emerald-400">
-                    <flux:icon.bars-3-bottom-left class="size-4" />
+                <span class="inline-flex min-h-8 items-center gap-1.5 rounded-md bg-white px-3 text-xs font-semibold text-emerald-700 shadow-xs dark:bg-slate-800 dark:text-emerald-300">
                     Danh sách
                 </span>
-                <a href="{{ route('opportunities.kanban') }}" wire:navigate class="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white">
-                    <flux:icon.view-columns class="size-4" />
+                <a href="{{ route('opportunities.kanban') }}" wire:navigate class="inline-flex min-h-8 items-center gap-1.5 rounded-md px-3 text-xs font-semibold text-slate-600 transition hover:text-slate-950 dark:text-slate-400 dark:hover:text-white">
                     Kanban
                 </a>
             </div>
@@ -27,49 +31,45 @@
     </div>
 
     @if (session()->has('message'))
-        <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200" role="status">
+        <div class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200" role="status">
             {{ session('message') }}
         </div>
     @endif
 
-    <!-- Thẻ Thống kê Doanh thu & Weighted Value -->
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div class="crm-card flex items-center justify-between p-4">
+    @error('opportunity_error')
+        <div class="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-200" role="alert">
+            {{ $message }}
+        </div>
+    @enderror
+
+    <div class="grid gap-4 sm:grid-cols-3">
+        <div class="crm-card p-4">
             <div>
-                <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Tổng số cơ hội</p>
-                <p class="mt-1 text-2xl font-bold text-slate-900 dark:text-white">{{ number_format($this->summary['total_count']) }}</p>
-            </div>
-            <div class="grid size-10 place-items-center rounded-xl bg-blue-100 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400">
-                <flux:icon.briefcase class="size-6" />
+                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Tổng cơ hội</p>
+                <p class="mt-1 text-2xl font-semibold text-slate-950 dark:text-white">{{ number_format($this->summary['total_count']) }}</p>
             </div>
         </div>
 
-        <div class="crm-card flex items-center justify-between p-4">
+        <div class="crm-card p-4">
             <div>
-                <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Tổng Giá trị Hợp đồng</p>
-                <p class="mt-1 text-2xl font-bold text-slate-900 dark:text-white">{{ number_format($this->summary['total_amount']) }} đ</p>
-            </div>
-            <div class="grid size-10 place-items-center rounded-xl bg-emerald-100 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400">
-                <flux:icon.banknotes class="size-6" />
+                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Giá trị hợp đồng</p>
+                <p class="mt-1 text-2xl font-semibold text-slate-950 dark:text-white">{{ number_format($this->summary['total_amount']) }} đ</p>
             </div>
         </div>
 
-        <div class="crm-card flex items-center justify-between p-4">
+        <div class="crm-card p-4">
             <div>
-                <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Tổng Doanh thu Dự báo (Weighted)</p>
-                <p class="mt-1 text-2xl font-bold text-indigo-600 dark:text-indigo-400">{{ number_format($this->summary['total_weighted_value']) }} đ</p>
-            </div>
-            <div class="grid size-10 place-items-center rounded-xl bg-indigo-100 text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-400">
-                <flux:icon.chart-bar class="size-6" />
+                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Doanh thu dự báo</p>
+                <p class="mt-1 text-2xl font-semibold text-emerald-700 dark:text-emerald-300">{{ number_format($this->summary['total_weighted_value']) }} đ</p>
             </div>
         </div>
     </div>
 
-    <div class="crm-card relative">
+    <section class="crm-card relative" aria-labelledby="opportunity-list-title">
         <div class="data-list-heading">
             <div>
-                <h2 class="font-semibold">Danh sách cơ hội bán hàng</h2>
-                <p class="mt-1 text-sm text-slate-500">Có {{ $this->opportunities->total() }} cơ hội phù hợp trong phạm vi.</p>
+                <h2 id="opportunity-list-title" class="font-semibold text-slate-950 dark:text-white">Danh sách cơ hội</h2>
+                <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Có {{ $this->opportunities->total() }} cơ hội phù hợp trong phạm vi.</p>
             </div>
             @if ($search !== '' || $pipelineId !== '' || $stageId !== '' || $status !== '')
                 <flux:button size="sm" variant="ghost" icon="x-mark" wire:click="clearFilters">Xóa bộ lọc</flux:button>
@@ -117,120 +117,97 @@
             @else
                 <div class="data-list-feed">
                     @foreach ($this->opportunities as $opp)
-                        <div class="data-list-feed-item">
-                    <div class="space-y-2">
-                        <div class="flex items-center gap-3">
-                            <a href="{{ route('opportunities.show', $opp->id) }}" wire:navigate class="text-base font-semibold text-slate-900 hover:text-emerald-600 dark:text-white dark:hover:text-emerald-400">
-                                {{ $opp->title }}
-                            </a>
+                        <article class="data-list-feed-item" wire:key="opportunity-row-{{ $opp->id }}">
+                            <div class="min-w-0 flex-1 space-y-3">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <a href="{{ route('opportunities.show', $opp->id) }}" wire:navigate class="text-base font-semibold text-slate-950 transition hover:text-emerald-600 dark:text-white dark:hover:text-emerald-400">
+                                        {{ $opp->title }}
+                                    </a>
 
-                            <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold" style="background-color: {{ $opp->stage?->color }}20; color: {{ $opp->stage?->color }}; border: 1px solid {{ $opp->stage?->color }}40;">
-                                <span class="size-2 rounded-full" style="background-color: {{ $opp->stage?->color }};"></span>
-                                {{ $opp->stage?->name }} ({{ $opp->stage?->probability }}%)
-                            </span>
+                                    <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold" style="background-color: {{ $opp->stage?->color }}20; color: {{ $opp->stage?->color }}; border: 1px solid {{ $opp->stage?->color }}40;">
+                                        <span class="size-2 rounded-full" style="background-color: {{ $opp->stage?->color }};"></span>
+                                        {{ $opp->stage?->name }} · {{ $opp->stage?->probability }}%
+                                    </span>
 
-                            @if ($opp->is_won)
-                                <flux:badge variant="solid" color="emerald" size="sm">Won</flux:badge>
-                            @elseif ($opp->is_lost)
-                                <flux:badge variant="solid" color="red" size="sm">Lost</flux:badge>
-                            @endif
-                        </div>
+                                    @if ($opp->is_won)
+                                        <flux:badge variant="solid" color="emerald" size="sm">Thành công</flux:badge>
+                                    @elseif ($opp->is_lost)
+                                        <flux:badge variant="solid" color="red" size="sm">Thất bại</flux:badge>
+                                    @endif
+                                </div>
 
-                        <div class="flex flex-wrap items-center gap-3 text-xs text-slate-500">
-                            <span>Mã: <code class="font-mono text-slate-700 dark:text-slate-300">{{ $opp->code }}</code></span>
-                            <span>•</span>
-                            @if ($opp->company)
-                                <span>Doanh nghiệp: <strong>{{ $opp->company->name }}</strong></span>
-                                <span>•</span>
-                            @endif
-                            @if ($opp->contact)
-                                <span>Người liên hệ: <strong>{{ $opp->contact->full_name }}</strong></span>
-                                <span>•</span>
-                            @endif
-                            <span>Người phụ trách: {{ $opp->owner?->name ?: 'Hệ thống' }}</span>
-                        </div>
+                                <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500 dark:text-slate-400">
+                                    <span>Mã: <code class="font-mono text-slate-700 dark:text-slate-300">{{ $opp->code }}</code></span>
+                                    @if ($opp->company)
+                                        <span>Doanh nghiệp: <strong>{{ $opp->company->name }}</strong></span>
+                                    @endif
+                                    @if ($opp->contact)
+                                        <span>Liên hệ: <strong>{{ $opp->contact->full_name }}</strong></span>
+                                    @endif
+                                    <span>Phụ trách: {{ $opp->owner?->name ?: 'Hệ thống' }}</span>
+                                </div>
 
-                        <div class="flex items-center gap-4 text-xs font-medium pt-1">
-                            <span class="text-slate-700 dark:text-slate-300">
-                                Giá trị: <strong class="text-slate-900 dark:text-white text-sm">{{ number_format((float) $opp->amount) }} đ</strong>
-                            </span>
-                            <span class="text-indigo-600 dark:text-indigo-400">
-                                Dự báo (Weighted): <strong>{{ number_format($opp->weighted_value) }} đ</strong>
-                            </span>
-                            @if ($opp->expected_close_date)
-                                <span class="text-slate-500">
-                                    Dự kiến đóng: {{ $opp->expected_close_date->format('d/m/Y') }}
-                                </span>
-                            @endif
-                        </div>
-                    </div>
+                                <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+                                    <span class="text-slate-600 dark:text-slate-400">
+                                        Giá trị: <strong class="text-slate-950 dark:text-white">{{ number_format((float) $opp->amount) }} đ</strong>
+                                    </span>
+                                    <span class="text-emerald-700 dark:text-emerald-300">
+                                        Dự báo: <strong>{{ number_format($opp->weighted_value) }} đ</strong>
+                                    </span>
+                                    @if ($opp->expected_close_date)
+                                        <span class="text-slate-500 dark:text-slate-400">Dự kiến đóng: {{ $opp->expected_close_date->format('d/m/Y') }}</span>
+                                    @endif
+                                </div>
+                            </div>
 
-                    <div class="flex items-center gap-2">
-                        @can('update', $opp)
-                            <flux:button :href="route('opportunities.edit', $opp->id)" wire:navigate size="sm" variant="ghost" icon="pencil">
-                                Sửa
-                            </flux:button>
-                        @endcan
+                            <div class="flex shrink-0 flex-wrap items-center gap-2">
+                                <flux:button :href="route('opportunities.show', $opp->id)" wire:navigate size="sm" variant="subtle" icon="eye">
+                                    Xem
+                                </flux:button>
 
-                        @can('delete', $opp)
-                            <flux:button wire:click="confirmDeleteOpportunity({{ $opp->id }})" size="sm" variant="danger" icon="trash">
-                                Xóa
-                            </flux:button>
-                        @endcan
-                    </div>
-                        </div>
+                                @can('update', $opp)
+                                    <flux:button :href="route('opportunities.edit', $opp->id)" wire:navigate size="sm" variant="ghost" icon="pencil">
+                                        Sửa
+                                    </flux:button>
+                                @endcan
+
+                                @can('delete', $opp)
+                                    <flux:button wire:click="confirmDeleteOpportunity({{ $opp->id }})" size="sm" variant="danger" icon="trash">
+                                        Xóa
+                                    </flux:button>
+                                @endcan
+                            </div>
+                        </article>
                     @endforeach
                 </div>
 
                 <x-data-list.pagination :paginator="$this->opportunities" />
             @endif
         </div>
+    </section>
 
-        <!-- Modal Xác nhận xóa Cơ hội bán hàng -->
+    <div
+        x-data="{ open: @entangle('confirmingDeleteOpportunityId') }"
+        x-show="open"
+        x-cloak
+        x-transition.opacity
+        class="fixed inset-0 z-50 grid place-items-center bg-slate-950/60 p-4 backdrop-blur-sm"
+    >
         <div
-            x-data="{ open: @entangle('confirmingDeleteOpportunityId') }"
             x-show="open"
-            x-cloak
-            x-transition:enter="transition ease-out duration-200"
-            x-transition:enter-start="opacity-0"
-            x-transition:enter-end="opacity-100"
-            x-transition:leave="transition ease-in duration-150"
-            x-transition:leave-start="opacity-100"
-            x-transition:leave-end="opacity-0"
-            class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm"
+            x-transition
+            class="w-full max-w-md rounded-lg border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-800 dark:bg-slate-900"
         >
-            <div
-                x-show="open"
-                x-transition:enter="transition ease-out duration-200 transform"
-                x-transition:enter-start="opacity-0 scale-95"
-                x-transition:enter-end="opacity-100 scale-100"
-                x-transition:leave="transition ease-in duration-150 transform"
-                x-transition:leave-start="opacity-100 scale-100"
-                x-transition:leave-end="opacity-0 scale-95"
-                class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4"
-            >
-                <div class="flex items-center gap-3 text-red-600 dark:text-red-400">
-                    <div class="rounded-full bg-red-100 p-2.5 dark:bg-red-950/60">
-                        <flux:icon.exclamation-triangle class="size-6" />
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-bold text-slate-900 dark:text-white">Xác nhận xóa Cơ hội bán hàng</h3>
-                        <p class="text-xs text-slate-500">Hành động này sẽ chuyển cơ hội vào thùng rác.</p>
-                    </div>
+            <div class="flex items-start gap-3">
+                <div>
+                    <h3 class="text-base font-semibold text-slate-950 dark:text-white">Xóa cơ hội bán hàng?</h3>
+                    <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Cơ hội sẽ được chuyển vào thùng rác nếu anh có quyền thực hiện.</p>
                 </div>
+            </div>
 
-                <p class="text-sm text-slate-600 dark:text-slate-300">
-                    Bạn có chắc chắn muốn xóa cơ hội bán hàng này không?
-                </p>
-
-                <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
-                    <flux:button wire:click="$set('confirmingDeleteOpportunityId', null)" variant="ghost" size="sm">
-                        Hủy bỏ
-                    </flux:button>
-                    <flux:button wire:click="deleteConfirmedOpportunity" variant="danger" size="sm">
-                        Xác nhận xóa
-                    </flux:button>
-                </div>
+            <div class="mt-6 flex justify-end gap-2 border-t border-slate-200 pt-4 dark:border-slate-800">
+                <flux:button wire:click="$set('confirmingDeleteOpportunityId', null)" variant="ghost" size="sm">Hủy</flux:button>
+                <flux:button wire:click="deleteConfirmedOpportunity" variant="danger" size="sm">Xác nhận xóa</flux:button>
             </div>
         </div>
     </div>

@@ -20,6 +20,10 @@
             Phiên đăng nhập
         </flux:menu.item>
 
+        <flux:menu.item :href="route('help.guide')" wire:navigate icon="book-open">
+            Hướng dẫn thao tác
+        </flux:menu.item>
+
         <flux:menu.item :href="route('help.roles')" wire:navigate icon="question-mark-circle">
             Vai trò & quyền
         </flux:menu.item>

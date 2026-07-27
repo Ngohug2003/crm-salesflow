@@ -1,125 +1,131 @@
 <div class="space-y-6">
-    <div class="flex items-center justify-between">
+    <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">
+            <div class="flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400">
+                <a href="{{ route('dashboard') }}" class="hover:text-emerald-600 dark:hover:text-emerald-400" wire:navigate>Trang chủ</a>
+                <span>/</span>
+                <a href="{{ route('opportunities.index') }}" class="hover:text-emerald-600 dark:hover:text-emerald-400" wire:navigate>Cơ hội bán hàng</a>
+                <span>/</span>
+                <span class="text-slate-900 dark:text-white">{{ $this->opportunityId ? 'Chỉnh sửa' : 'Tạo mới' }}</span>
+            </div>
+            <h1 class="mt-2 text-2xl font-semibold tracking-tight text-slate-950 dark:text-white">
                 {{ $this->opportunityId ? 'Chỉnh sửa Cơ hội bán hàng' : 'Tạo mới Cơ hội bán hàng' }}
             </h1>
-            <p class="mt-1 text-sm text-slate-500">Cấu hình thông tin thương mại, quy trình bán hàng và đối tác liên quan.</p>
+            <p class="mt-2 max-w-3xl text-sm text-slate-600 dark:text-slate-400">
+                Cập nhật thông tin thương mại, pipeline, khách hàng liên quan và người phụ trách.
+            </p>
         </div>
 
-        <flux:button href="{{ route('opportunities.index') }}" variant="ghost" icon="arrow-left" size="sm">
-            Quay lại danh sách
+        <flux:button :href="route('opportunities.index')" wire:navigate variant="ghost">
+            Danh sách cơ hội
         </flux:button>
     </div>
 
-    <form wire:submit="save" class="crm-card space-y-6">
-        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
-            <div class="sm:col-span-2">
-                <flux:input
-                    wire:model="title"
-                    label="Tên Cơ hội bán hàng *"
-                    placeholder="VD: Dự án phần mềm CRM Doanh nghiệp Vin"
-                />
-                @error('title') <span class="text-xs text-red-500 mt-1 block">{{ $message }}</span> @enderror
-            </div>
-
+    <form wire:submit="save" class="space-y-6">
+        <section class="crm-card space-y-5" aria-labelledby="opportunity-basic-title">
             <div>
-                <flux:input
-                    wire:model="code"
-                    label="Mã Cơ hội (tự động tạo nếu để trống)"
-                    placeholder="VD: OPP-2026-00001"
-                />
-                @error('code') <span class="text-xs text-red-500 mt-1 block">{{ $message }}</span> @enderror
+                <h2 id="opportunity-basic-title" class="text-base font-semibold text-slate-950 dark:text-white">Thông tin thương vụ</h2>
+                <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Tên cơ hội, mã, giá trị hợp đồng và ngày dự kiến chốt.</p>
             </div>
 
+            <div class="grid gap-4 lg:grid-cols-2">
+                <div class="lg:col-span-2">
+                    <flux:input wire:model="title" label="Tên cơ hội bán hàng *" placeholder="VD: Dự án CRM cho khách hàng doanh nghiệp" />
+                    @error('title') <span class="mt-1 block text-xs text-rose-500">{{ $message }}</span> @enderror
+                </div>
+
+                <div>
+                    <flux:input wire:model="code" label="Mã cơ hội" placeholder="Tự động tạo nếu để trống" />
+                    @error('code') <span class="mt-1 block text-xs text-rose-500">{{ $message }}</span> @enderror
+                </div>
+
+                <div>
+                    <flux:input type="number" wire:model="amount" label="Giá trị hợp đồng (VNĐ) *" placeholder="0" min="0" step="1000000" />
+                    @error('amount') <span class="mt-1 block text-xs text-rose-500">{{ $message }}</span> @enderror
+                </div>
+
+                <div>
+                    <flux:input type="date" wire:model="expected_close_date" label="Ngày dự kiến chốt" />
+                    @error('expected_close_date') <span class="mt-1 block text-xs text-rose-500">{{ $message }}</span> @enderror
+                </div>
+
+                <div>
+                    <flux:select wire:model="owner_id" label="Người phụ trách">
+                        <option value="">Tự động gán</option>
+                        @foreach ($this->users as $u)
+                            <option value="{{ $u->id }}">{{ $u->name }} ({{ $u->email }})</option>
+                        @endforeach
+                    </flux:select>
+                    @error('owner_id') <span class="mt-1 block text-xs text-rose-500">{{ $message }}</span> @enderror
+                </div>
+            </div>
+        </section>
+
+        <section class="crm-card space-y-5" aria-labelledby="opportunity-pipeline-title">
             <div>
-                <flux:input
-                    type="number"
-                    wire:model="amount"
-                    label="Giá trị Hợp đồng (VNĐ) *"
-                    placeholder="0"
-                    min="0"
-                    step="1000000"
-                />
-                @error('amount') <span class="text-xs text-red-500 mt-1 block">{{ $message }}</span> @enderror
+                <h2 id="opportunity-pipeline-title" class="text-base font-semibold text-slate-950 dark:text-white">Quy trình và khách hàng</h2>
+                <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Chọn pipeline, giai đoạn hiện tại và khách hàng liên quan.</p>
             </div>
 
+            <div class="grid gap-4 lg:grid-cols-2">
+                <div>
+                    <flux:select wire:model.live="pipeline_id" label="Quy trình bán hàng *">
+                        <option value="">Chọn quy trình</option>
+                        @foreach ($this->pipelines as $pipe)
+                            <option value="{{ $pipe->id }}">{{ $pipe->name }}</option>
+                        @endforeach
+                    </flux:select>
+                    @error('pipeline_id') <span class="mt-1 block text-xs text-rose-500">{{ $message }}</span> @enderror
+                </div>
+
+                <div>
+                    <flux:select wire:model="stage_id" label="Giai đoạn bán hàng *">
+                        <option value="">Chọn giai đoạn</option>
+                        @foreach ($this->stages as $stg)
+                            <option value="{{ $stg->id }}">{{ $stg->name }} ({{ $stg->probability }}%)</option>
+                        @endforeach
+                    </flux:select>
+                    @error('stage_id') <span class="mt-1 block text-xs text-rose-500">{{ $message }}</span> @enderror
+                </div>
+
+                <div>
+                    <flux:select wire:model.live="company_id" label="Doanh nghiệp liên quan">
+                        <option value="">Không chọn</option>
+                        @foreach ($this->companies as $comp)
+                            <option value="{{ $comp->id }}">{{ $comp->name }}</option>
+                        @endforeach
+                    </flux:select>
+                    @error('company_id') <span class="mt-1 block text-xs text-rose-500">{{ $message }}</span> @enderror
+                </div>
+
+                <div>
+                    <flux:select wire:model="contact_id" label="Người liên hệ chính">
+                        <option value="">Không chọn</option>
+                        @foreach ($this->contacts as $cont)
+                            <option value="{{ $cont->id }}">{{ $cont->full_name }} ({{ $cont->email ?: $cont->phone }})</option>
+                        @endforeach
+                    </flux:select>
+                    @error('contact_id') <span class="mt-1 block text-xs text-rose-500">{{ $message }}</span> @enderror
+                </div>
+            </div>
+        </section>
+
+        <section class="crm-card space-y-4" aria-labelledby="opportunity-note-title">
             <div>
-                <flux:select wire:model.live="pipeline_id" label="Quy trình Bán hàng *">
-                    <option value="">-- Chọn Quy trình --</option>
-                    @foreach ($this->pipelines as $pipe)
-                        <option value="{{ $pipe->id }}">{{ $pipe->name }}</option>
-                    @endforeach
-                </flux:select>
-                @error('pipeline_id') <span class="text-xs text-red-500 mt-1 block">{{ $message }}</span> @enderror
+                <h2 id="opportunity-note-title" class="text-base font-semibold text-slate-950 dark:text-white">Ghi chú</h2>
+                <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Nhu cầu khách hàng, điều kiện thương mại, mốc thanh toán hoặc rủi ro cần theo dõi.</p>
             </div>
 
-            <div>
-                <flux:select wire:model="stage_id" label="Giai đoạn Bán hàng (Stage) *">
-                    <option value="">-- Chọn Giai đoạn --</option>
-                    @foreach ($this->stages as $stg)
-                        <option value="{{ $stg->id }}">{{ $stg->name }} ({{ $stg->probability }}%)</option>
-                    @endforeach
-                </flux:select>
-                @error('stage_id') <span class="text-xs text-red-500 mt-1 block">{{ $message }}</span> @enderror
-            </div>
+            <flux:textarea wire:model="notes" label="Ghi chú chi tiết" rows="4" placeholder="Nhập ghi chú nội bộ cho cơ hội này..." />
+        </section>
 
-            <div>
-                <flux:select wire:model.live="company_id" label="Doanh nghiệp liên quan">
-                    <option value="">-- Không chọn --</option>
-                    @foreach ($this->companies as $comp)
-                        <option value="{{ $comp->id }}">{{ $comp->name }}</option>
-                    @endforeach
-                </flux:select>
-                @error('company_id') <span class="text-xs text-red-500 mt-1 block">{{ $message }}</span> @enderror
-            </div>
-
-            <div>
-                <flux:select wire:model="contact_id" label="Người liên hệ chính">
-                    <option value="">-- Không chọn --</option>
-                    @foreach ($this->contacts as $cont)
-                        <option value="{{ $cont->id }}">{{ $cont->full_name }} ({{ $cont->email ?: $cont->phone }})</option>
-                    @endforeach
-                </flux:select>
-                @error('contact_id') <span class="text-xs text-red-500 mt-1 block">{{ $message }}</span> @enderror
-            </div>
-
-            <div>
-                <flux:input
-                    type="date"
-                    wire:model="expected_close_date"
-                    label="Ngày dự kiến chốt hợp đồng"
-                />
-                @error('expected_close_date') <span class="text-xs text-red-500 mt-1 block">{{ $message }}</span> @enderror
-            </div>
-
-            <div>
-                <flux:select wire:model="owner_id" label="Người phụ trách">
-                    <option value="">-- Tự động gán --</option>
-                    @foreach ($this->users as $u)
-                        <option value="{{ $u->id }}">{{ $u->name }} ({{ $u->email }})</option>
-                    @endforeach
-                </flux:select>
-                @error('owner_id') <span class="text-xs text-red-500 mt-1 block">{{ $message }}</span> @enderror
-            </div>
-
-            <div class="sm:col-span-2">
-                <flux:textarea
-                    wire:model="notes"
-                    label="Ghi chú chi tiết"
-                    rows="3"
-                    placeholder="Mô tả nhu cầu khách hàng, yêu cầu kỹ thuật, mốc thanh toán..."
-                />
-            </div>
-        </div>
-
-        <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
-            <flux:button href="{{ route('opportunities.index') }}" variant="ghost">
-                Hủy bỏ
+        <div class="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-end">
+            <flux:button :href="route('opportunities.index')" wire:navigate variant="ghost">
+                Hủy
             </flux:button>
 
-            <flux:button type="submit" variant="primary" icon="check">
-                {{ $this->opportunityId ? 'Cập nhật Cơ hội' : 'Lưu Cơ hội mới' }}
+            <flux:button type="submit" variant="primary" icon="check" wire:loading.attr="disabled">
+                {{ $this->opportunityId ? 'Cập nhật cơ hội' : 'Lưu cơ hội mới' }}
             </flux:button>
         </div>
     </form>
