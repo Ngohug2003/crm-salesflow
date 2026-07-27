@@ -39,7 +39,7 @@ Khi bắt đầu một feature:
 | 14 | P5-X01 | Opportunity product/line items | `feature/p5-x01-opportunity-line-items` | P5-09 | REQ-PIPELINE | ✅ Hoàn thành | Opportunity hiện sơ khai; line items giúp giá trị doanh thu thực hơn. |
 | 15 | P5-X03 | Stage required fields | `feature/p5-x03-stage-required-fields` | P5-05, P5-X01 | REQ-PIPELINE | ✅ Hoàn thành | Ép dữ liệu cần thiết khi chuyển stage, giảm pipeline “ảo”. |
 | 16 | P6-X04 | SLA chăm sóc khách hàng | `feature/p6-x04-customer-sla` | P6-07, P4-X01 | REQ-WORK, REQ-NOTIFY | ✅ Hoàn thành | Giúp CRM có cảnh báo chăm sóc đúng hạn, không chỉ lưu task. |
-| 17 | P7-X01 | Report drill-down | `feature/p7-x01-report-drill-down` | P7-FIX, P9-01 | REQ-REPORT | Từ chart/KPI mở ra danh sách dữ liệu gốc theo scope để kiểm chứng số liệu. |
+| 17 | P7-X01 | Report drill-down | `feature/p7-x01-report-drill-down` | P7-FIX, P9-01 | REQ-REPORT | ✅ Hoàn thành | Từ chart/KPI mở ra danh sách dữ liệu gốc theo scope để kiểm chứng số liệu. |
 | 18 | P7-X02 | Saved report filters | `feature/p7-x02-saved-report-filters` | P7-FIX | REQ-REPORT | Người quản lý lưu bộ lọc thường dùng, giảm thao tác lặp. |
 | 19 | P7-X03 | Manager dashboard | `feature/p7-x03-manager-dashboard` | P7-X01 | REQ-REPORT, REQ-RBAC | Màn riêng cho sales-manager theo phòng ban, khác dashboard tổng quan. |
 | 20 | P7-X04 | Data quality dashboard | `feature/p7-x04-data-quality-dashboard` | P3-X03, P4-X02 | REQ-REPORT, REQ-LEAD | Theo dõi dữ liệu thiếu, trùng, chưa chăm sóc, stale records. |
