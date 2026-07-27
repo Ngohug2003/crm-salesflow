@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Events\OpportunityStageUpdatedEvent;
+use App\Exceptions\StageRequirementsUnfulfilledException;
 use App\Exceptions\StaleOpportunityException;
 use App\Models\Opportunity;
 use App\Models\OpportunityStageHistory;
@@ -52,6 +53,8 @@ final readonly class OpportunityStageTransitionService
             $targetStage = PipelineStage::query()
                 ->where('pipeline_id', $opportunity->pipeline_id)
                 ->findOrFail($targetStageId);
+
+            $this->validateStageRequirements($opportunity, $targetStage, $notes);
 
             $oldStageId = $opportunity->stage_id;
             $oldStage = $opportunity->stage;
@@ -120,5 +123,38 @@ final readonly class OpportunityStageTransitionService
 
             return $updatedOpportunity;
         });
+    }
+
+    private function validateStageRequirements(Opportunity $opportunity, PipelineStage $targetStage, ?string $notes = null): void
+    {
+        $probability = (int) $targetStage->probability;
+
+        // Rule 1: Closed Lost validation
+        if ((bool) $targetStage->is_lost && trim((string) $notes) === '' && trim((string) $opportunity->lost_reason) === '') {
+            throw new StageRequirementsUnfulfilledException(
+                "Không thể chuyển sang trạng thái Thất bại '{$targetStage->name}' nếu chưa nhập Lý do thất bại."
+            );
+        }
+
+        // Rule 2: Quote/Proposal stage (probability >= 20%) requires amount > 0
+        if ($probability >= 20 && (float) $opportunity->amount <= 0) {
+            throw new StageRequirementsUnfulfilledException(
+                "Không thể chuyển sang giai đoạn '{$targetStage->name}' ({$probability}%). Cơ hội bán hàng phải có Giá trị dự kiến (Doanh thu) lớn hơn 0 VNĐ."
+            );
+        }
+
+        // Rule 3: Negotiation stage (probability >= 50%) requires expected_close_date
+        if ($probability >= 50 && $opportunity->expected_close_date === null) {
+            throw new StageRequirementsUnfulfilledException(
+                "Không thể chuyển sang giai đoạn '{$targetStage->name}' ({$probability}%). Vui lòng cập nhật Ngày đóng dự kiến (Expected Close Date)."
+            );
+        }
+
+        // Rule 4: Closing/Won stage (probability >= 70% or is_won) requires company_id or contact_id
+        if (($probability >= 70 || (bool) $targetStage->is_won) && $opportunity->company_id === null && $opportunity->contact_id === null) {
+            throw new StageRequirementsUnfulfilledException(
+                "Không thể chuyển sang giai đoạn '{$targetStage->name}' ({$probability}%). Cơ hội bán hàng phải được liên kết với ít nhất 1 Doanh nghiệp hoặc Người liên hệ đại diện."
+            );
+        }
     }
 }
