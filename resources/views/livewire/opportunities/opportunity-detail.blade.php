@@ -100,8 +100,11 @@
 
     <!-- Main 2-Column Grid -->
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <!-- Left 2-Columns: Tasks, Files & Timeline -->
+        <!-- Left 2-Columns: Line Items, Tasks, Files & Timeline -->
         <div class="lg:col-span-2 space-y-6">
+            <!-- Danh mục Sản phẩm & Dịch vụ (Line Items) -->
+            <livewire:opportunities.opportunity-line-items :opportunityId="$opportunity->id" />
+
             <!-- Danh sách Công việc (Tasks) thuộc Cơ hội bán hàng này -->
             <section class="crm-card space-y-4" aria-labelledby="opportunity-tasks-title">
                 <div class="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">

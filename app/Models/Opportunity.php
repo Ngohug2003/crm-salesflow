@@ -128,6 +128,12 @@ final class Opportunity extends Model
         return $this->morphMany(Attachment::class, 'attachable');
     }
 
+    /** @return HasMany<OpportunityItem, $this> */
+    public function items(): HasMany
+    {
+        return $this->hasMany(OpportunityItem::class, 'opportunity_id');
+    }
+
     /** @return HasMany<OpportunityStageHistory, $this> */
     public function stageHistories(): HasMany
     {
