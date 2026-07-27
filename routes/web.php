@@ -10,6 +10,7 @@ use App\Http\Controllers\LeadController;
 use App\Http\Controllers\RoleGuideController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserGuideController;
+use App\Livewire\Auth\AcceptInvitation;
 use App\Livewire\Companies\CompanyDetail;
 use App\Livewire\Companies\CompanyEditor;
 use App\Livewire\Companies\CompanyList;
@@ -47,6 +48,7 @@ use App\Livewire\Users\UserSessionHistory;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/dashboard');
+Route::get('/register/invitation/{token}', AcceptInvitation::class)->name('invitations.accept');
 
 Route::middleware(['auth', 'request.context.authenticated', 'verified', 'account.active'])->group(function (): void {
     Route::get('/dashboard', DashboardOverview::class)->name('dashboard');
