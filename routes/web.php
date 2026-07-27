@@ -26,6 +26,7 @@ use App\Livewire\ImportExport\ExportHistoryIndex;
 use App\Livewire\ImportExport\ImportHistoryIndex;
 use App\Livewire\Imports\LeadImportWizard;
 use App\Livewire\Notifications\NotificationCenter;
+use App\Livewire\Notifications\NotificationPreferences;
 use App\Livewire\Opportunities\OpportunityDetail;
 use App\Livewire\Opportunities\OpportunityEditor;
 use App\Livewire\Opportunities\OpportunityKanban;
@@ -60,6 +61,7 @@ Route::middleware(['auth', 'request.context.authenticated', 'verified', 'account
     Route::get('/leads/{leadId}/edit', [LeadController::class, 'edit'])->whereNumber('leadId')->name('leads.edit');
 
     Route::get('/notifications', NotificationCenter::class)->name('notifications.index');
+    Route::get('/notifications/settings', NotificationPreferences::class)->name('notifications.settings');
     Route::get('/imports/leads', LeadImportWizard::class)->name('imports.leads');
     Route::get('/exports/download/{batch}', ExportDownloadController::class)
         ->name('exports.download')
