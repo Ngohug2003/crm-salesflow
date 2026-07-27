@@ -123,6 +123,14 @@
                         <span x-show="sidebar">Phòng ban</span>
                     </a>
                 @endcan
+                @if (auth()->user()?->can('roles.view') || auth()->user()?->can('roles.assign') || auth()->user()?->can('users.manage'))
+                    <a href="{{ route('roles.permission-matrix') }}" wire:navigate.hover
+                       class="nav-link"
+                       :class="path.startsWith('/settings/permission-matrix') && 'nav-link-active'">
+                        <flux:icon.shield-check class="nav-icon" />
+                        <span x-show="sidebar">Ma trận phân quyền</span>
+                    </a>
+                @endif
                 @can('viewAny', \Spatie\Activitylog\Models\Activity::class)
                     <a href="{{ route('audit-logs.index') }}" wire:navigate.hover
                        class="nav-link"
