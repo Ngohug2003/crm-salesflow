@@ -7,6 +7,7 @@ use App\Http\Controllers\ExportDownloadController;
 use App\Http\Controllers\ImportExport\ExportHistoryController;
 use App\Http\Controllers\ImportExport\ImportHistoryController;
 use App\Http\Controllers\LeadController;
+use App\Http\Controllers\QuoteController;
 use App\Http\Controllers\RoleGuideController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserGuideController;
@@ -82,6 +83,7 @@ Route::middleware(['auth', 'request.context.authenticated', 'verified', 'account
     Route::get('/opportunities/create', OpportunityEditor::class)->name('opportunities.create');
     Route::get('/opportunities/{opportunityId}', OpportunityDetail::class)->whereNumber('opportunityId')->name('opportunities.show');
     Route::get('/opportunities/{opportunityId}/edit', OpportunityEditor::class)->whereNumber('opportunityId')->name('opportunities.edit');
+    Route::get('/quotes/{quoteId}', [QuoteController::class, 'show'])->whereNumber('quoteId')->name('quotes.show');
 
     Route::get('/pipelines', PipelineList::class)->name('pipelines.index');
     Route::get('/pipelines/create', PipelineEditor::class)->name('pipelines.create');

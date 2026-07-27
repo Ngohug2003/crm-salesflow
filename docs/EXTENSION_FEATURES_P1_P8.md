@@ -46,7 +46,7 @@ Khi bắt đầu một feature:
 | 21 | P2-X03 | Invitation flow | `feature/p2-x03-user-invitations` | P2-X01, P8-06 | MOD-AUTH, REQ-NOTIFY | ✅ Hoàn thành | Mời user qua email, phù hợp sau khi notification đã ổn. |
 | 22 | P3-X02 | Lead scoring | `feature/p3-x02-lead-scoring` | P3-X01, P7-X04 | REQ-LEAD, REQ-REPORT | ✅ Hoàn thành | Cần timeline/data quality trước để scoring không cảm tính. |
 | 23 | P4-X03 | Customer relationship map | `feature/p4-x03-customer-relationship-map` | P4-X01, P4-X02 | REQ-CUSTOMER | ✅ Hoàn thành | Hữu ích nhưng nên làm sau khi dữ liệu customer sạch. |
-| 24 | P5-X02 | Quote/proposal basic | `feature/p5-x02-quote-proposal-basic` | P5-X01 | REQ-PIPELINE, REQ-IO | Tạo báo giá cơ bản từ opportunity, có thể export/download. |
+| 24 | P5-X02 | Quote/proposal basic | `feature/p5-x02-quote-proposal-basic` | P5-X01 | REQ-PIPELINE, REQ-IO | ✅ Hoàn thành | Tạo báo giá cơ bản từ opportunity, có thể export/download. |
 | 25 | P5-X04 | Forecast category | `feature/p5-x04-forecast-category` | P5-X03, P7-X01 | REQ-PIPELINE, REQ-REPORT | Tăng độ chính xác forecast sau khi stage rule ổn. |
 | 26 | P6-X01 | Calendar export | `feature/p6-x01-calendar-export` | P6-06 | REQ-WORK | Export lịch `.ics`, chưa cần tích hợp calendar bên thứ ba. |
 | 27 | P6-X02 | Task recurring/reminder nâng cao | `feature/p6-x02-recurring-reminders` | P6-X04 | REQ-WORK, REQ-NOTIFY | Làm sau SLA để tránh nhắc hạn trùng logic. |
