@@ -18,6 +18,7 @@ use App\Livewire\Contacts\ContactDetail;
 use App\Livewire\Contacts\ContactEditor;
 use App\Livewire\Contacts\ContactList;
 use App\Livewire\Customers\CustomerMergeTool;
+use App\Livewire\Customers\CustomerSlaDashboard;
 use App\Livewire\Dashboard\DashboardOverview;
 use App\Livewire\ImportExport\ExportHistoryIndex;
 use App\Livewire\ImportExport\ImportHistoryIndex;
@@ -63,15 +64,14 @@ Route::middleware(['auth', 'request.context.authenticated', 'verified', 'account
     Route::get('/companies', CompanyList::class)->name('companies.index');
     Route::get('/companies/create', CompanyEditor::class)->name('companies.create');
     Route::get('/companies/{companyId}', CompanyDetail::class)->whereNumber('companyId')->name('companies.show');
-    Route::get('/companies/{companyId}/360', Customer360::class)->whereNumber('companyId')->name('companies.360');
     Route::get('/companies/{companyId}/edit', CompanyEditor::class)->whereNumber('companyId')->name('companies.edit');
 
     Route::get('/contacts', ContactList::class)->name('contacts.index');
     Route::get('/contacts/create', ContactEditor::class)->name('contacts.create');
     Route::get('/contacts/{contactId}', ContactDetail::class)->whereNumber('contactId')->name('contacts.show');
-    Route::get('/contacts/{contactId}/edit', ContactEditor::class)->whereNumber('contactId')->name('contacts.edit');
-
+    Route::get('/companies/{companyId}/360', Customer360::class)->whereNumber('companyId')->name('companies.360');
     Route::get('/customers/merge', CustomerMergeTool::class)->name('customers.merge');
+    Route::get('/customers/sla', CustomerSlaDashboard::class)->name('customers.sla');
 
     Route::get('/opportunities', OpportunityList::class)->name('opportunities.index');
     Route::get('/opportunities/kanban', OpportunityKanban::class)->name('opportunities.kanban');

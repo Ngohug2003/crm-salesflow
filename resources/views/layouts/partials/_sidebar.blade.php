@@ -57,6 +57,14 @@
                         <span x-show="sidebar">Hợp nhất trùng lặp</span>
                     </a>
                 @endcan
+                @can('viewAny', \App\Models\Company::class)
+                    <a href="{{ route('customers.sla') }}" wire:navigate.hover
+                       class="nav-link"
+                       :class="path.startsWith('/customers/sla') && 'nav-link-active'">
+                        <flux:icon.clock class="nav-icon" />
+                        <span x-show="sidebar">SLA Chăm sóc</span>
+                    </a>
+                @endcan
                 @can('viewAny', \App\Models\Opportunity::class)
                     <a href="{{ route('opportunities.index') }}" wire:navigate.hover
                        class="nav-link"
