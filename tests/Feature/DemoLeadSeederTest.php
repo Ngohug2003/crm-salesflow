@@ -6,15 +6,22 @@ use App\Enums\LeadPriority;
 use App\Enums\LeadStatus;
 use App\Models\Department;
 use App\Models\Lead;
-use Database\Seeders\DatabaseSeeder;
+use Database\Seeders\DemoLeadSeeder;
+use Database\Seeders\DemoUserSeeder;
+use Database\Seeders\DepartmentSeeder;
+use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 
 uses(RefreshDatabase::class);
 
 it('seeds thirty distributed demo leads idempotently', function (): void {
-    $this->seed(DatabaseSeeder::class);
-    $this->seed(DatabaseSeeder::class);
+    $this->seed(DepartmentSeeder::class);
+    $this->seed(RolePermissionSeeder::class);
+    $this->seed(LeadTaxonomySeeder::class);
+    $this->seed(DemoUserSeeder::class);
+    $this->seed(DemoLeadSeeder::class);
+    $this->seed(DemoLeadSeeder::class);
 
     $demoLeads = Lead::query()
         ->whereLike('email', 'lead.demo%@salesflow.test')

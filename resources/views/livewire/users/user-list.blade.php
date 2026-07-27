@@ -148,50 +148,48 @@
             </div>
 
             <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm">
-                    <thead class="border-b border-slate-200 text-xs font-semibold uppercase text-slate-500 dark:border-slate-800">
-                        <tr>
-                            <th class="py-2.5 px-3">Người được mời</th>
-                            <th class="py-2.5 px-3">Phòng ban & Vai trò</th>
-                            <th class="py-2.5 px-3">Người mời</th>
-                            <th class="py-2.5 px-3">Hạn sử dụng</th>
-                            <th class="py-2.5 px-3 text-right">Thao tác</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                <flux:table class="w-full text-left text-sm">
+                    <flux:table.columns>
+                        <flux:table.column>Người được mời</flux:table.column>
+                        <flux:table.column>Phòng ban & Vai trò</flux:table.column>
+                        <flux:table.column>Người mời</flux:table.column>
+                        <flux:table.column>Hạn sử dụng</flux:table.column>
+                        <flux:table.column align="end">Thao tác</flux:table.column>
+                    </flux:table.columns>
+                    <flux:table.rows>
                         @foreach ($this->pendingInvitations as $invitation)
-                            <tr>
-                                <td class="py-3 px-3">
+                            <flux:table.row>
+                                <flux:table.cell>
                                     <p class="font-medium text-slate-900 dark:text-white">{{ $invitation->name }}</p>
                                     <p class="text-xs text-slate-500">{{ $invitation->email }}</p>
-                                </td>
-                                <td class="py-3 px-3 text-slate-600 dark:text-slate-400">
+                                </flux:table.cell>
+                                <flux:table.cell>
                                     {{ $invitation->department?->name ?: 'Chưa gán' }}
                                     <span class="inline-block rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                                         {{ $this->roleOptions[$invitation->role] ?? $invitation->role }}
                                     </span>
-                                </td>
-                                <td class="py-3 px-3 text-slate-600 dark:text-slate-400">
+                                </flux:table.cell>
+                                <flux:table.cell>
                                     {{ $invitation->inviter->name }}
-                                </td>
-                                <td class="py-3 px-3 text-slate-600 dark:text-slate-400">
+                                </flux:table.cell>
+                                <flux:table.cell>
                                     <span @class(['text-red-500 font-medium' => $invitation->isExpired()])>
                                         {{ $invitation->expires_at->format('H:i d/m/Y') }}
                                         @if ($invitation->isExpired())
                                             (Hết hạn)
                                         @endif
                                     </span>
-                                </td>
-                                <td class="py-3 px-3 text-right">
+                                </flux:table.cell>
+                                <flux:table.cell align="end">
                                     <div class="flex justify-end gap-2">
                                         <flux:button size="sm" variant="ghost" wire:click="resendInvitation({{ $invitation->id }})">Gửi lại</flux:button>
                                         <flux:button size="sm" variant="subtle" color="red" wire:click="revokeInvitation({{ $invitation->id }})">Hủy</flux:button>
                                     </div>
-                                </td>
-                            </tr>
+                                </flux:table.cell>
+                            </flux:table.row>
                         @endforeach
-                    </tbody>
-                </table>
+                    </flux:table.rows>
+                </flux:table>
             </div>
         </div>
     @endif

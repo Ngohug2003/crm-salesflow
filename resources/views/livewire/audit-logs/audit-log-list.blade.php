@@ -315,7 +315,7 @@
                                     </div>
                                 @else
                                     <div class="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950/50">
-                                        <table class="w-full text-left text-xs">
+                                        <flux:table class="w-full text-left text-xs">
                                             <thead class="border-b border-slate-200 bg-slate-100/50 text-slate-500 dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-400">
                                                 <tr>
                                                     <th class="py-2.5 pl-3 pr-2 font-medium">Trường dữ liệu</th>
@@ -339,7 +339,7 @@
                                                     </tr>
                                                 @endforeach
                                             </tbody>
-                                        </table>
+                                        </flux:table>
                                     </div>
                                 @endif
                             </div>

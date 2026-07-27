@@ -16,6 +16,7 @@ use App\Models\Company;
 use App\Models\Contact;
 use App\Models\Lead;
 use App\Models\LeadNote;
+use App\Models\LeadSource;
 use App\Models\Opportunity;
 use App\Models\OpportunityItem;
 use App\Models\OpportunityStageHistory;
@@ -185,8 +186,8 @@ final class FullDemoSeeder extends Seeder
                     'owner_id' => $owner->id,
                     'department_id' => $owner->department_id,
                     'name' => $d['name'],
-                    'website' => 'https://' . $d['site'],
-                    'email' => 'info@' . $d['site'],
+                    'website' => 'https://'.$d['site'],
+                    'email' => 'info@'.$d['site'],
                     'phone' => sprintf('02838%05d', $i + 1),
                     'industry' => $d['industry'],
                     'company_size' => $d['size'],
@@ -260,7 +261,7 @@ final class FullDemoSeeder extends Seeder
                     'department_id' => $company->department_id,
                     'first_name' => $def['first'],
                     'last_name' => $def['last'],
-                    'full_name' => $def['last'] . ' ' . $def['first'],
+                    'full_name' => $def['last'].' '.$def['first'],
                     'phone' => sprintf('0909%06d', $num),
                     'secondary_phone' => sprintf('0912%06d', $num),
                     'job_title' => $def['title'],
@@ -294,8 +295,8 @@ final class FullDemoSeeder extends Seeder
      */
     private function seedLeads(array $contacts): array
     {
-        /** @var Collection<int, \App\Models\LeadSource> $sources */
-        $sources = \App\Models\LeadSource::query()->where('is_active', true)->orderBy('sort_order')->get();
+        /** @var Collection<int, LeadSource> $sources */
+        $sources = LeadSource::query()->where('is_active', true)->orderBy('sort_order')->get();
         /** @var Collection<int, Tag> $tags */
         $tags = Tag::query()->get();
 
@@ -343,7 +344,7 @@ final class FullDemoSeeder extends Seeder
                     'priority' => $priorities[$i % count($priorities)],
                     'score' => 20 + ($i * 3 % 80),
                     'estimated_value' => (string) (15_000_000 + ($i * 8_000_000)),
-                    'notes' => "Lead đến từ kênh " . ($sources->isNotEmpty() ? $sources->values()[$i % $sources->count()]->name : 'Online') . ". Quan tâm đến giải pháp CRM doanh nghiệp.",
+                    'notes' => 'Lead đến từ kênh '.($sources->isNotEmpty() ? $sources->values()[$i % $sources->count()]->name : 'Online').'. Quan tâm đến giải pháp CRM doanh nghiệp.',
                     'converted_at' => $status === LeadStatus::Converted ? $createdAt->addDays(5) : null,
                     'created_by' => $owner->id,
                     'updated_by' => $owner->id,
@@ -374,7 +375,7 @@ final class FullDemoSeeder extends Seeder
                 LeadNote::query()->create([
                     'lead_id' => $lead->id,
                     'user_id' => $this->managersMap['sales']->id,
-                    'content' => "Manager review: Lead có tiềm năng chuyển đổi cao. Ưu tiên theo dõi trong tuần này.",
+                    'content' => 'Manager review: Lead có tiềm năng chuyển đổi cao. Ưu tiên theo dõi trong tuần này.',
                     'is_pinned' => true,
                 ]);
             }
@@ -390,9 +391,9 @@ final class FullDemoSeeder extends Seeder
     // ─────────────────────────────────────────────────────────────────
 
     /**
-     * @param  list<Company>   $companies
-     * @param  list<Contact>   $contacts
-     * @param  list<Lead>      $leads
+     * @param  list<Company>  $companies
+     * @param  list<Contact>  $contacts
+     * @param  list<Lead>  $leads
      * @return list<Opportunity>
      */
     private function seedOpportunities(array $companies, array $contacts, array $leads): array
@@ -516,7 +517,7 @@ final class FullDemoSeeder extends Seeder
                 'from_stage_id' => $path[$pos - 1]->id,
                 'to_stage_id' => $path[$pos]->id,
                 'user_id' => $user->id,
-                'notes' => "Chuyển giai đoạn theo quy trình bán hàng.",
+                'notes' => 'Chuyển giai đoạn theo quy trình bán hàng.',
                 'duration_seconds' => 86400 * (2 + $pos),
                 'created_at' => $createdAt->addDays($pos * 4)->min($this->now),
             ]);
@@ -575,7 +576,7 @@ final class FullDemoSeeder extends Seeder
 
     /**
      * @param  list<Opportunity>  $opportunities
-     * @param  list<Contact>      $contacts
+     * @param  list<Contact>  $contacts
      */
     private function seedQuotes(array $opportunities, array $contacts): void
     {
@@ -665,10 +666,10 @@ final class FullDemoSeeder extends Seeder
     // ─────────────────────────────────────────────────────────────────
 
     /**
-     * @param  list<Lead>         $leads
+     * @param  list<Lead>  $leads
      * @param  list<Opportunity>  $opportunities
-     * @param  list<Contact>      $contacts
-     * @param  list<Company>      $companies
+     * @param  list<Contact>  $contacts
+     * @param  list<Company>  $companies
      */
     private function seedActivities(array $leads, array $opportunities, array $contacts, array $companies): void
     {
@@ -730,7 +731,7 @@ final class FullDemoSeeder extends Seeder
                     'activity_type' => ActivityType::Meeting,
                     'subject_type' => Company::class,
                     'subject_id' => $company->id,
-                    'description' => "Cuộc họp khảo sát nhu cầu và đánh giá ngân sách với đại diện doanh nghiệp.",
+                    'description' => 'Cuộc họp khảo sát nhu cầu và đánh giá ngân sách với đại diện doanh nghiệp.',
                     'user_id' => $owner->id,
                     'performed_at' => $this->now->subDays(2 + $i)->setTime(9, 0),
                     'duration_minutes' => 60,
@@ -748,7 +749,7 @@ final class FullDemoSeeder extends Seeder
 
     /**
      * @param  list<Opportunity>  $opportunities
-     * @param  list<Lead>         $leads
+     * @param  list<Lead>  $leads
      */
     private function seedTasks(array $opportunities, array $leads): void
     {
@@ -793,7 +794,7 @@ final class FullDemoSeeder extends Seeder
 
                 $task = Task::query()->updateOrCreate(
                     [
-                        'title' => $template[0] . " — {$opp->title}",
+                        'title' => $template[0]." — {$opp->title}",
                         'created_by' => $owner->id,
                     ],
                     [
@@ -832,7 +833,7 @@ final class FullDemoSeeder extends Seeder
 
             $task = Task::query()->updateOrCreate(
                 [
-                    'title' => $template[0] . " — {$lead->full_name}",
+                    'title' => $template[0]." — {$lead->full_name}",
                     'created_by' => $owner->id,
                 ],
                 [

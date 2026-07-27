@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Enums\LeadPriority;
+use App\Enums\LeadStatus;
 use App\Models\Activity;
 use App\Models\Lead;
 use Illuminate\Support\Carbon;
@@ -38,7 +40,10 @@ final class LeadScoringService
         }
 
         // 2. Status Points
-        $statusKey = match ($lead->status->value) {
+        /** @var LeadStatus|null $status */
+        $status = $lead->status;
+        $statusValue = $status !== null ? $status->value : 'new';
+        $statusKey = match ($statusValue) {
             'qualified' => 'qualified',
             'contacted' => 'in_progress',
             'new' => 'new',
@@ -49,7 +54,10 @@ final class LeadScoringService
         $score += config("lead_scoring.status_points.{$statusKey}", 0);
 
         // 3. Priority Points
-        $priorityKey = match ($lead->priority->value) {
+        /** @var LeadPriority|null $priority */
+        $priority = $lead->priority;
+        $priorityValue = $priority !== null ? $priority->value : 'medium';
+        $priorityKey = match ($priorityValue) {
             'urgent', 'high' => 'high',
             'medium' => 'medium',
             default => 'low',

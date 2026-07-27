@@ -61,21 +61,18 @@ it('requires authentication and only renders navigation for authorized roles', f
         ->assertDontSee('System Console');
 });
 
-it('polls filters pauses and reauthorizes every action', function (): void {
+it('filters and reauthorizes every action', function (): void {
     $admin = systemConsoleUser('admin');
 
     $component = Livewire::actingAs($admin)
         ->test(SystemConsole::class)
-        ->assertSet('paused', false)
         ->assertSee('req-console-001')
         ->set('search', 'not-found')
         ->assertSet('entries', [])
         ->call('clearFilters')
         ->assertSee('req-console-001')
-        ->call('togglePolling')
-        ->assertSet('paused', true)
-        ->call('togglePolling')
-        ->assertSet('paused', false);
+        ->call('refreshLogs')
+        ->assertSee('req-console-001');
 
     Role::findOrCreate('sales', 'web');
     $admin->syncRoles('sales');

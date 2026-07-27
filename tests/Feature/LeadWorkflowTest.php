@@ -245,7 +245,7 @@ it('records initial workflow and renders a read-only unified timeline for viewer
 
     Livewire::actingAs($viewer)
         ->test(LeadWorkflow::class, ['leadId' => $lead->getKey()])
-        ->assertSee('Timeline nghiệp vụ')
+        ->assertSee('Quy trình và lịch sử Lead')
         ->assertSee('Khởi tạo → Mới')
         ->assertSee('Chưa phân công → Sales Owner')
         ->assertDontSee('wire:submit="assign"', false)

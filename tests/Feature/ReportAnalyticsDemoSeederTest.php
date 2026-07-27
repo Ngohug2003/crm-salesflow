@@ -8,7 +8,12 @@ use App\Models\Activity;
 use App\Models\Lead;
 use App\Models\Opportunity;
 use App\Models\Task;
-use Database\Seeders\DatabaseSeeder;
+use Database\Seeders\DemoPipelineSeeder;
+use Database\Seeders\DemoUserSeeder;
+use Database\Seeders\DepartmentSeeder;
+use Database\Seeders\LeadTaxonomySeeder;
+use Database\Seeders\ReportAnalyticsDemoSeeder;
+use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -18,7 +23,12 @@ final class ReportAnalyticsDemoSeederTest extends TestCase
 
     public function test_it_seeds_one_hundred_report_scenarios_across_multiple_years(): void
     {
-        $this->seed(DatabaseSeeder::class);
+        $this->seed(DepartmentSeeder::class);
+        $this->seed(RolePermissionSeeder::class);
+        $this->seed(LeadTaxonomySeeder::class);
+        $this->seed(DemoUserSeeder::class);
+        $this->seed(DemoPipelineSeeder::class);
+        $this->seed(ReportAnalyticsDemoSeeder::class);
 
         self::assertSame(100, Lead::query()->where('email', 'like', 'report.demo%@salesflow.test')->count());
         self::assertSame(100, Opportunity::query()->where('code', 'like', 'RPT-DEMO-%')->count());
