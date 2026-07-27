@@ -117,43 +117,98 @@
         </flux:modal>
     @endif
 
+    {{-- Form Tạo Ghi chú mới --}}
+    <div class="crm-card">
+        <form wire:submit.prevent="addNote" class="space-y-4">
+            <div>
+                <h3 class="text-base font-semibold text-slate-900 dark:text-white">Thêm ghi chú chăm sóc Lead</h3>
+                <p class="mt-0.5 text-xs text-slate-500">Lưu lại thông tin trao đổi, phản hồi của khách hàng hoặc các lưu ý quan trọng.</p>
+            </div>
+            <div>
+                <flux:textarea wire:model="noteContent" placeholder="Nhập ghi chú mới tại đây..." rows="3" required />
+                @error('noteContent')
+                    <p class="mt-1 text-xs font-medium text-red-600 dark:text-red-400">{{ $message }}</p>
+                @enderror
+            </div>
+            <div class="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+                <flux:checkbox wire:model="noteIsPinned" label="Ghim ghi chú này lên đầu Dòng thời gian" />
+                <flux:button type="submit" variant="primary" icon="paper-airplane" size="sm" wire:loading.attr="disabled" wire:target="addNote">
+                    Lưu ghi chú
+                </flux:button>
+            </div>
+        </form>
+    </div>
+
     <div class="crm-card">
         <div class="flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
             <div>
-                <h3 class="font-semibold">Timeline nghiệp vụ</h3>
-                <p class="mt-1 text-sm text-slate-500">Sắp xếp mới nhất trước, thời gian hiển thị theo giờ Việt Nam.</p>
+                <h3 class="font-semibold text-slate-900 dark:text-white">Dòng thời gian tích hợp (Complete Timeline)</h3>
+                <p class="mt-1 text-sm text-slate-500">Tổng hợp Ghi chú, Hoạt động chăm sóc, Chuyển trạng thái và Lịch sử phân công (UTC+7).</p>
             </div>
-            <flux:badge color="zinc">{{ $this->timeline->count() }} sự kiện</flux:badge>
+            <flux:badge color="zinc">{{ $this->timeline->count() }} nhật ký</flux:badge>
         </div>
 
         @if ($this->timeline->isEmpty())
             <div class="mt-5 rounded-xl border border-dashed border-slate-300 px-5 py-10 text-center dark:border-slate-700">
-                <p class="font-medium">Chưa có lịch sử workflow</p>
-                <p class="mt-1 text-sm text-slate-500">Lần phân công hoặc chuyển trạng thái tiếp theo sẽ xuất hiện tại đây.</p>
+                <p class="font-medium text-slate-900 dark:text-white">Chưa có nhật ký nào</p>
+                <p class="mt-1 text-sm text-slate-500">Tạo ghi chú hoặc thực hiện chuyển đổi trạng thái để ghi nhận dòng thời gian tại đây.</p>
             </div>
         @else
             <ol class="relative mt-6 space-y-0 before:absolute before:bottom-3 before:left-[0.6875rem] before:top-3 before:w-px before:bg-slate-200 dark:before:bg-slate-800">
                 @foreach ($this->timeline as $entry)
-                    <li class="relative flex gap-4 pb-6 last:pb-0">
+                    <li wire:key="timeline-{{ $entry->type }}-{{ $entry->noteId ?? $loop->index }}" class="relative flex gap-4 pb-6 last:pb-0">
                         <span @class([
                             'relative z-10 mt-1 size-6 shrink-0 rounded-full border-4 border-white dark:border-slate-900',
+                            'bg-amber-500 ring-2 ring-amber-300' => $entry->type === 'note' && $entry->isPinned,
+                            'bg-purple-500' => $entry->type === 'note' && ! $entry->isPinned,
+                            'bg-emerald-500' => $entry->type === 'activity',
                             'bg-blue-500' => $entry->type === 'status',
-                            'bg-emerald-500' => $entry->type === 'assignment',
+                            'bg-orange-500' => $entry->type === 'assignment',
                         ])></span>
-                        <div class="min-w-0 flex-1 rounded-xl border border-slate-200 p-4 dark:border-slate-800">
+
+                        <div @class([
+                            'min-w-0 flex-1 rounded-xl border p-4 transition',
+                            'border-amber-300 bg-amber-50/50 dark:border-amber-900/50 dark:bg-amber-950/20' => $entry->type === 'note' && $entry->isPinned,
+                            'border-purple-200 bg-purple-50/30 dark:border-purple-900/30 dark:bg-purple-950/10' => $entry->type === 'note' && ! $entry->isPinned,
+                            'border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900' => in_array($entry->type, ['activity', 'status', 'assignment'], true),
+                        ])>
                             <div class="flex flex-col justify-between gap-1 sm:flex-row sm:items-start">
-                                <div>
-                                    <p class="font-medium">{{ $entry->title }}</p>
-                                    <p class="mt-1 text-sm">{{ $entry->description }}</p>
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <p class="font-semibold text-slate-900 dark:text-white">{{ $entry->title }}</p>
+                                    @if ($entry->type === 'note' && $entry->isPinned)
+                                        <flux:badge color="amber" size="sm">Đã ghim</flux:badge>
+                                    @endif
+                                    @if ($entry->type === 'activity')
+                                        <flux:badge color="emerald" size="sm">Hoạt động</flux:badge>
+                                    @endif
+                                    @if ($entry->type === 'status')
+                                        <flux:badge color="blue" size="sm">Trạng thái</flux:badge>
+                                    @endif
+                                    @if ($entry->type === 'assignment')
+                                        <flux:badge color="orange" size="sm">Phân công</flux:badge>
+                                    @endif
                                 </div>
-                                <time class="shrink-0 text-xs text-slate-500">
-                                    {{ $entry->occurredAt->timezone(config('crm.display_timezone'))->format('d/m/Y H:i:s') }}
-                                </time>
+
+                                <div class="flex items-center gap-2">
+                                    <time class="shrink-0 text-xs text-slate-500">
+                                        {{ $entry->occurredAt->timezone(config('crm.display_timezone', 'Asia/Ho_Chi_Minh'))->format('d/m/Y H:i:s') }}
+                                    </time>
+                                    @if ($entry->type === 'note' && $entry->noteId)
+                                        <div class="flex items-center gap-1">
+                                            <flux:button wire:click="togglePinNote({{ $entry->noteId }})" size="xs" variant="ghost" icon="bookmark" title="{{ $entry->isPinned ? 'Bỏ ghim' : 'Ghim ở đầu' }}" />
+                                            <flux:button wire:click="deleteNote({{ $entry->noteId }})" size="xs" variant="ghost" icon="trash" class="text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40" title="Xóa ghi chú" />
+                                        </div>
+                                    @endif
+                                </div>
                             </div>
+
+                            <p class="mt-2 text-sm text-slate-700 dark:text-slate-300 whitespace-pre-line leading-relaxed">{{ $entry->description }}</p>
+
                             @if ($entry->reason)
-                                <p class="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-600 dark:bg-slate-950/60 dark:text-slate-300">{{ $entry->reason }}</p>
+                                <p class="mt-3 rounded-lg bg-slate-100 px-3 py-2 text-xs text-slate-600 dark:bg-slate-950/60 dark:text-slate-400">Lý do: {{ $entry->reason }}</p>
                             @endif
-                            <p class="mt-3 text-xs text-slate-500">Thực hiện bởi {{ $entry->actorName }}</p>
+
+                            <p class="mt-3 text-xs text-slate-400">Tác giả: <span class="font-medium text-slate-600 dark:text-slate-300">{{ $entry->actorName }}</span></p>
                         </div>
                     </li>
                 @endforeach

@@ -9,9 +9,11 @@ use App\Data\LeadTimelineEntry;
 use App\Enums\LeadStatus;
 use App\Exceptions\LeadWorkflowException;
 use App\Models\Lead;
+use App\Models\LeadNote;
 use App\Models\User;
 use App\Repositories\Contracts\LeadRepository;
 use App\Repositories\Contracts\LeadWorkflowRepository;
+use App\Services\Lead\LeadTimelineService;
 use App\Services\LeadAssignmentService;
 use App\Services\LeadConversionService;
 use App\Services\LeadDirectoryService;
@@ -39,6 +41,48 @@ final class LeadWorkflow extends Component
     public bool $showAssignModal = false;
 
     public bool $showStatusModal = false;
+
+    public string $noteContent = '';
+
+    public bool $noteIsPinned = false;
+
+    public function addNote(): void
+    {
+        $validated = $this->validate([
+            'noteContent' => ['required', 'string', 'max:2000'],
+            'noteIsPinned' => ['boolean'],
+        ]);
+
+        /** @var LeadTimelineService $service */
+        $service = app(LeadTimelineService::class);
+        $service->createNote($this->currentUser(), $this->lead(), $validated['noteContent'], (bool) $validated['noteIsPinned']);
+
+        $this->reset('noteContent', 'noteIsPinned');
+        session()->flash('status', 'Đã lưu ghi chú mới vào dòng thời gian Lead.');
+    }
+
+    public function togglePinNote(int $noteId): void
+    {
+        /** @var LeadNote|null $note */
+        $note = LeadNote::find($noteId);
+        if ($note !== null) {
+            /** @var LeadTimelineService $service */
+            $service = app(LeadTimelineService::class);
+            $service->togglePinNote($this->currentUser(), $note);
+        }
+    }
+
+    public function deleteNote(int $noteId): void
+    {
+        /** @var LeadNote|null $note */
+        $note = LeadNote::find($noteId);
+        if ($note !== null) {
+            /** @var LeadTimelineService $service */
+            $service = app(LeadTimelineService::class);
+            $service->deleteNote($this->currentUser(), $note);
+            session()->flash('status', 'Đã xóa ghi chú khỏi dòng thời gian.');
+        }
+    }
 
     public function mount(int $leadId): void
     {
