@@ -19,9 +19,108 @@
             <flux:button wire:click="togglePolling" :icon="$paused ? 'play' : 'pause'">
                 {{ $paused ? 'Tiếp tục' : 'Tạm dừng' }}
             </flux:button>
-            <flux:button wire:click="refreshLogs" icon="arrow-path" variant="primary">Làm mới</flux:button>
+            <flux:button wire:click="refreshLogs" icon="arrow-path" variant="primary">Làm mới log</flux:button>
         </div>
     </div>
+
+    @if ($healthReport)
+        <section class="crm-card mb-8" aria-labelledby="health-check-title">
+            <div class="flex items-center justify-between border-b border-slate-200 pb-4 dark:border-slate-800">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h2 id="health-check-title" class="text-base font-semibold text-slate-950 dark:text-white">Kiểm tra sức khỏe hệ thống</h2>
+                        @php
+                            $badgeColor = match ($healthReport['status']) {
+                                'ok' => 'emerald',
+                                'warning' => 'amber',
+                                default => 'red',
+                            };
+                            $badgeText = match ($healthReport['status']) {
+                                'ok' => 'Tất cả dịch vụ OK',
+                                'warning' => 'Có cảnh báo',
+                                default => 'Phát hiện lỗi dịch vụ',
+                            };
+                        @endphp
+                        <flux:badge :color="$badgeColor" size="sm">{{ $badgeText }}</flux:badge>
+                    </div>
+                    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Kiểm tra trực tiếp kết nối Database, Redis, Queue, Realtime, Storage và Runtime.</p>
+                </div>
+                <flux:button wire:click="refreshHealthCheck" icon="arrow-path" variant="ghost" size="sm">Kiểm tra lại</flux:button>
+            </div>
+
+            <div class="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                @php $svc = $healthReport['services']; @endphp
+
+                {{-- 1. Database --}}
+                <div class="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">1. PostgreSQL Database</span>
+                        <flux:badge :color="$svc['database']['status'] === 'ok' ? 'emerald' : ($svc['database']['status'] === 'warning' ? 'amber' : 'red')" size="sm">
+                            {{ strtoupper($svc['database']['status']) }}
+                        </flux:badge>
+                    </div>
+                    <p class="mt-2 text-lg font-bold text-slate-950 dark:text-white">{{ $svc['database']['latency_ms'] }} ms</p>
+                    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ $svc['database']['details'] }}</p>
+                </div>
+
+                {{-- 2. Redis --}}
+                <div class="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">2. Redis Cache</span>
+                        <flux:badge :color="$svc['redis']['status'] === 'ok' ? 'emerald' : ($svc['redis']['status'] === 'warning' ? 'amber' : 'red')" size="sm">
+                            {{ strtoupper($svc['redis']['status']) }}
+                        </flux:badge>
+                    </div>
+                    <p class="mt-2 text-lg font-bold text-slate-950 dark:text-white">{{ $svc['redis']['latency_ms'] }} ms</p>
+                    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ $svc['redis']['details'] }}</p>
+                </div>
+
+                {{-- 3. Queue Workers --}}
+                <div class="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">3. Queue Workers</span>
+                        <flux:badge :color="$svc['queue']['status'] === 'ok' ? 'emerald' : 'amber'" size="sm">
+                            {{ strtoupper($svc['queue']['status']) }}
+                        </flux:badge>
+                    </div>
+                    <p class="mt-2 text-lg font-bold text-slate-950 dark:text-white">{{ $svc['queue']['pending_jobs'] }} chờ / {{ $svc['queue']['failed_jobs'] }} lỗi</p>
+                    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ $svc['queue']['details'] }}</p>
+                </div>
+
+                {{-- 4. Reverb Realtime --}}
+                <div class="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">4. Reverb WebSocket</span>
+                        <flux:badge color="emerald" size="sm">OK</flux:badge>
+                    </div>
+                    <p class="mt-2 text-lg font-bold text-slate-950 dark:text-white">{{ $svc['realtime']['host'] }}:{{ $svc['realtime']['port'] }}</p>
+                    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ $svc['realtime']['details'] }}</p>
+                </div>
+
+                {{-- 5. Storage Disks --}}
+                <div class="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">5. Storage Disks</span>
+                        <flux:badge :color="$svc['storage']['status'] === 'ok' ? 'emerald' : 'red'" size="sm">
+                            {{ strtoupper($svc['storage']['status']) }}
+                        </flux:badge>
+                    </div>
+                    <p class="mt-2 text-lg font-bold text-slate-950 dark:text-white">Local & Public</p>
+                    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ $svc['storage']['details'] }}</p>
+                </div>
+
+                {{-- 6. Application Environment --}}
+                <div class="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">6. Runtime Environment</span>
+                        <flux:badge color="emerald" size="sm">PHP {{ $svc['app']['php_version'] }}</flux:badge>
+                    </div>
+                    <p class="mt-2 text-lg font-bold text-slate-950 dark:text-white">Laravel {{ $svc['app']['laravel_version'] }}</p>
+                    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ $svc['app']['details'] }}</p>
+                </div>
+            </div>
+        </section>
+    @endif
 
     <section class="crm-card">
         <div class="mb-5 grid gap-4 md:grid-cols-2 xl:grid-cols-12">
