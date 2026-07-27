@@ -130,4 +130,25 @@
             </flux:table>
         </section>
     </div>
+
+    <!-- Thống kê Dự báo theo Forecast Category -->
+    @if (!empty($metrics['forecast_by_category']))
+        <section class="crm-card space-y-4">
+            <div>
+                <h2 class="text-base font-semibold text-slate-900 dark:text-white">Dự báo theo Danh mục (Forecast Category)</h2>
+                <p class="mt-1 text-sm text-slate-500">Phân bổ giá trị cơ hội đang mở theo khả năng chốt đơn (Cam kết chốt, Kịch bản tối ưu, Pipeline, Loại trừ).</p>
+            </div>
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+                @foreach ($metrics['forecast_by_category'] as $fcItem)
+                    <div class="rounded-xl border border-slate-200 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-950/40">
+                        <div class="flex items-center justify-between">
+                            <flux:badge :color="$fcItem['color']" size="sm">{{ $fcItem['label'] }}</flux:badge>
+                            <span class="text-xs text-slate-400">{{ $fcItem['count'] }} cơ hội</span>
+                        </div>
+                        <p class="mt-2 text-lg font-bold text-slate-900 dark:text-white">{{ number_format($fcItem['total_amount']) }} đ</p>
+                    </div>
+                @endforeach
+            </div>
+        </section>
+    @endif
 </div>

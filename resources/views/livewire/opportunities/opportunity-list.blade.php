@@ -76,7 +76,7 @@
             @endif
         </div>
 
-        <div class="data-list-filters mb-5 xl:grid-cols-3">
+        <div class="data-list-filters mb-5 sm:grid-cols-2 lg:grid-cols-4">
             <flux:input
                 wire:model.live.debounce.300ms="search"
                 label="Tìm kiếm"
@@ -96,6 +96,13 @@
                 <option value="open">Đang mở</option>
                 <option value="won">Thành công</option>
                 <option value="lost">Thất bại</option>
+            </flux:select>
+
+            <flux:select wire:model.live="forecastCategory" label="Dự báo (Forecast)">
+                <option value="">Tất cả danh mục dự báo</option>
+                @foreach (\App\Enums\ForecastCategory::cases() as $fcOption)
+                    <option value="{{ $fcOption->value }}">{{ $fcOption->label() }}</option>
+                @endforeach
             </flux:select>
         </div>
 
@@ -133,6 +140,10 @@
                                         <flux:badge variant="solid" color="emerald" size="sm">Thành công</flux:badge>
                                     @elseif ($opp->is_lost)
                                         <flux:badge variant="solid" color="red" size="sm">Thất bại</flux:badge>
+                                    @endif
+
+                                    @if ($opp->forecast_category)
+                                        <flux:badge :color="$opp->forecast_category->color()" size="sm">{{ $opp->forecast_category->label() }}</flux:badge>
                                     @endif
                                 </div>
 

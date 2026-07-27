@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Enums\ForecastCategory;
 use App\Events\OpportunityStageUpdatedEvent;
 use App\Models\Opportunity;
 use App\Models\OpportunityStageHistory;
@@ -69,6 +70,7 @@ final readonly class OpportunityCloseWorkflowService
                 'stage_id' => $wonStage->id,
                 'is_won' => true,
                 'is_lost' => false,
+                'forecast_category' => ForecastCategory::Closed,
                 'actual_close_date' => now()->format('Y-m-d'),
                 'updated_by' => $actor->getKey(),
             ]);
@@ -157,6 +159,7 @@ final readonly class OpportunityCloseWorkflowService
                 'stage_id' => $lostStage->id,
                 'is_won' => false,
                 'is_lost' => true,
+                'forecast_category' => ForecastCategory::Closed,
                 'lost_reason' => $reason,
                 'actual_close_date' => now()->format('Y-m-d'),
                 'updated_by' => $actor->getKey(),

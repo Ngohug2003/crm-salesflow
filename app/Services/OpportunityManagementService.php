@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Data\OpportunityFilterData;
+use App\Enums\ForecastCategory;
 use App\Models\Opportunity;
 use App\Models\PipelineStage;
 use App\Models\User;
@@ -69,10 +70,13 @@ final readonly class OpportunityManagementService
             $stageId = (int) $data['stage_id'];
             $stage = PipelineStage::query()->findOrFail($stageId);
 
+            $forecastCategory = $data['forecast_category'] ?? ($stage->is_won || $stage->is_lost ? ForecastCategory::Closed : ForecastCategory::Pipeline);
+
             $payload = array_merge($data, [
                 'code' => $code,
                 'is_won' => $stage->is_won,
                 'is_lost' => $stage->is_lost,
+                'forecast_category' => $forecastCategory,
                 'owner_id' => $ownerId,
                 'department_id' => $departmentId,
                 'created_by' => $actor->getKey(),

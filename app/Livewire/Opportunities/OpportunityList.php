@@ -38,6 +38,9 @@ final class OpportunityList extends Component
     #[Url(as: 'status', history: true)]
     public string $status = '';
 
+    #[Url(as: 'forecast', history: true)]
+    public string $forecastCategory = '';
+
     #[Url(as: 'sort', history: true)]
     public string $sortBy = 'created_at';
 
@@ -141,6 +144,7 @@ final class OpportunityList extends Component
             pipelineId: $this->pipelineId !== '' ? (int) $this->pipelineId : null,
             stageId: $this->stageId !== '' ? (int) $this->stageId : null,
             status: $this->status !== '' ? $this->status : null,
+            forecastCategory: $this->forecastCategory !== '' ? $this->forecastCategory : null,
             sortBy: $this->sortBy,
             sortDirection: $this->sortDirection,
         );

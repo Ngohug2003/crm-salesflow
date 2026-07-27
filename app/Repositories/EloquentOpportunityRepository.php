@@ -136,6 +136,10 @@ final readonly class EloquentOpportunityRepository implements OpportunityReposit
             $query->where('is_won', false)->where('is_lost', false);
         }
 
+        if ($filters->forecastCategory !== null && $filters->forecastCategory !== '') {
+            $query->where('forecast_category', $filters->forecastCategory);
+        }
+
         if ($filters->expectedCloseFrom !== null && $filters->expectedCloseFrom !== '') {
             $query->whereDate('expected_close_date', '>=', $filters->expectedCloseFrom);
         }

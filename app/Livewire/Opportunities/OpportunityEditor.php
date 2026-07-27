@@ -44,6 +44,8 @@ final class OpportunityEditor extends Component
 
     public string $notes = '';
 
+    public string $forecast_category = 'pipeline';
+
     public function mount(?int $opportunityId = null): void
     {
         /** @var User $actor */
@@ -69,6 +71,7 @@ final class OpportunityEditor extends Component
                 : null;
             $this->owner_id = $opportunity->owner_id;
             $this->notes = (string) $opportunity->notes;
+            $this->forecast_category = $opportunity->forecast_category->value;
         } else {
             Gate::forUser($actor)->authorize('create', Opportunity::class);
 
@@ -108,6 +111,7 @@ final class OpportunityEditor extends Component
             'contact_id' => ['nullable', 'integer', 'exists:contacts,id'],
             'expected_close_date' => ['nullable', 'date'],
             'owner_id' => ['nullable', 'integer', 'exists:users,id'],
+            'forecast_category' => ['required', 'string', 'in:omitted,pipeline,best_case,commit,closed'],
             'notes' => ['nullable', 'string'],
         ]);
 
@@ -122,6 +126,7 @@ final class OpportunityEditor extends Component
             'amount' => (float) $this->amount,
             'pipeline_id' => $this->pipeline_id,
             'stage_id' => $this->stage_id,
+            'forecast_category' => $this->forecast_category,
             'company_id' => $this->company_id,
             'contact_id' => $this->contact_id,
             'expected_close_date' => $this->expected_close_date,
