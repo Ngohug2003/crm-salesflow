@@ -89,6 +89,15 @@
                 </div>
 
                 <div>
+                    <flux:select wire:model="forecast_category" label="Danh mục dự báo (Forecast Category) *">
+                        @foreach (\App\Enums\ForecastCategory::cases() as $fc)
+                            <option value="{{ $fc->value }}">{{ $fc->label() }}</option>
+                        @endforeach
+                    </flux:select>
+                    @error('forecast_category') <span class="mt-1 block text-xs text-rose-500">{{ $message }}</span> @enderror
+                </div>
+
+                <div>
                     <flux:select wire:model.live="company_id" label="Doanh nghiệp liên quan">
                         <option value="">Không chọn</option>
                         @foreach ($this->companies as $comp)

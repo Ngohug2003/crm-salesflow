@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\ForecastCategory;
 use Database\Factories\OpportunityFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -13,6 +14,17 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @property int $id
+ * @property string $title
+ * @property string $code
+ * @property float|string $amount
+ * @property int $pipeline_id
+ * @property int $stage_id
+ * @property ForecastCategory $forecast_category
+ * @property bool $is_won
+ * @property bool $is_lost
+ */
 final class Opportunity extends Model
 {
     /** @use HasFactory<OpportunityFactory> */
@@ -27,6 +39,7 @@ final class Opportunity extends Model
         'amount',
         'pipeline_id',
         'stage_id',
+        'forecast_category',
         'company_id',
         'contact_id',
         'lead_id',
@@ -47,6 +60,7 @@ final class Opportunity extends Model
     {
         return [
             'amount' => 'decimal:2',
+            'forecast_category' => ForecastCategory::class,
             'is_won' => 'boolean',
             'is_lost' => 'boolean',
             'expected_close_date' => 'date',

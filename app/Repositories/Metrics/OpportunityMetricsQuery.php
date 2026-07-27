@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Repositories\Metrics;
 
 use App\Data\ReportFilterData;
+use App\Enums\ForecastCategory;
 use App\Models\Opportunity;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
@@ -92,6 +93,7 @@ final readonly class OpportunityMetricsQuery
             'avg_sales_cycle_days' => round((float) ($averageCycle ?? 0), 1),
             'loss_reasons' => $lossReasons,
             'forecast_by_stage' => $this->forecastByStage($forecast),
+            'forecast_by_category' => $this->forecastByCategory($forecast),
             'revenue_series' => $this->revenueSeries($closed, $forecast),
         ];
     }
@@ -117,6 +119,29 @@ final readonly class OpportunityMetricsQuery
                 'weighted_amount' => round((float) $row->getAttribute('weighted_amount'), 2),
             ])
             ->all();
+    }
+
+    /** @return array<string, array{category: string, label: string, color: string, count: int, total_amount: float}> */
+    private function forecastByCategory(Builder $forecast): array
+    {
+        $rows = (clone $forecast)
+            ->selectRaw("COALESCE(opportunities.forecast_category, 'pipeline') AS category, COUNT(opportunities.id) AS opportunity_count, COALESCE(SUM(opportunities.amount), 0) AS total_amount")
+            ->groupBy('category')
+            ->get();
+
+        $result = [];
+        foreach (ForecastCategory::cases() as $fc) {
+            $matched = $rows->firstWhere('category', $fc->value);
+            $result[$fc->value] = [
+                'category' => $fc->value,
+                'label' => $fc->label(),
+                'color' => $fc->color(),
+                'count' => $matched !== null ? (int) $matched->getAttribute('opportunity_count') : 0,
+                'total_amount' => $matched !== null ? round((float) $matched->getAttribute('total_amount'), 2) : 0.0,
+            ];
+        }
+
+        return $result;
     }
 
     /** @return array{labels: list<string>, won: list<float>, forecast: list<float>} */
