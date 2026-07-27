@@ -31,6 +31,7 @@ final class LeadList extends Component
         'search',
         'status',
         'priority',
+        'scoreLevel',
         'source',
         'tag',
         'owner',
@@ -50,6 +51,9 @@ final class LeadList extends Component
 
     #[Url(except: 'all')]
     public string $priority = 'all';
+
+    #[Url(except: 'all')]
+    public string $scoreLevel = 'all';
 
     #[Url(except: 'all')]
     public string $source = 'all';
@@ -267,6 +271,7 @@ final class LeadList extends Component
                 $this->dateTo,
                 $this->sort,
                 $this->direction,
+                $this->scoreLevel,
             ),
             $this->perPage,
         );
@@ -333,6 +338,7 @@ final class LeadList extends Component
         return $this->search !== ''
             || $this->status !== 'all'
             || $this->priority !== 'all'
+            || $this->scoreLevel !== 'all'
             || $this->source !== 'all'
             || $this->tag !== 'all'
             || $this->owner !== 'all'

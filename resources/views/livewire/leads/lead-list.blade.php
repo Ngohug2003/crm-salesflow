@@ -89,12 +89,19 @@
                 </flux:select>
             </div>
 
-            <details class="group mt-4 rounded-xl border border-slate-200 bg-slate-50/70 dark:border-slate-800 dark:bg-slate-950/30" @if ($tag !== 'all' || $owner !== 'all' || $department !== 'all' || $dateFrom !== '' || $dateTo !== '' || $sort !== 'created_at' || $direction !== 'desc' || $perPage !== 15) open @endif>
+            <details class="group mt-4 rounded-xl border border-slate-200 bg-slate-50/70 dark:border-slate-800 dark:bg-slate-950/30" @if ($scoreLevel !== 'all' || $tag !== 'all' || $owner !== 'all' || $department !== 'all' || $dateFrom !== '' || $dateTo !== '' || $sort !== 'created_at' || $direction !== 'desc' || $perPage !== 15) open @endif>
                 <summary class="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 px-4 text-sm font-medium">
                     <span>Bộ lọc nâng cao và sắp xếp</span>
                     <span class="text-slate-400 transition group-open:rotate-180">⌄</span>
                 </summary>
                 <div class="grid gap-3 border-t border-slate-200 p-4 md:grid-cols-2 xl:grid-cols-4 dark:border-slate-800">
+                    <flux:select wire:model.live="scoreLevel" label="Cấp độ Điểm Lead">
+                        <option value="all">Tất cả điểm</option>
+                        <option value="hot">Hot Lead (≥ 70đ)</option>
+                        <option value="warm">Warm Lead (40-69đ)</option>
+                        <option value="cold">Cold Lead (< 40đ)</option>
+                    </flux:select>
+
                     <flux:select wire:model.live="tag" label="Tag">
                         <option value="all">Tất cả tag</option>
                         @foreach ($this->tagOptions as $tagOption)
@@ -246,9 +253,14 @@
                                         </div>
                                     </flux:table.cell>
                                     <flux:table.cell>
-                                        <div class="flex min-w-32 flex-col items-start gap-1.5">
-                                            <flux:badge :color="$lead->status->color()" size="sm">{{ $lead->status->label() }}</flux:badge>
-                                            <flux:badge :color="$lead->priority->color()" size="sm">{{ $lead->priority->label() }}</flux:badge>
+                                        <div class="flex min-w-36 flex-col items-start gap-1.5">
+                                            <flux:badge :color="$lead->score_badge_color" size="sm">
+                                                {{ $lead->score }}đ — {{ $lead->score_level_label }}
+                                            </flux:badge>
+                                            <div class="flex flex-wrap gap-1">
+                                                <flux:badge :color="$lead->status->color()" size="sm">{{ $lead->status->label() }}</flux:badge>
+                                                <flux:badge :color="$lead->priority->color()" size="sm">{{ $lead->priority->label() }}</flux:badge>
+                                            </div>
                                         </div>
                                     </flux:table.cell>
                                     <flux:table.cell align="end">

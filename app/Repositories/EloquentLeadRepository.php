@@ -22,6 +22,7 @@ final readonly class EloquentLeadRepository implements LeadRepository
         'status' => 'leads.status',
         'priority' => 'leads.priority',
         'estimated_value' => 'leads.estimated_value',
+        'score' => 'leads.score',
     ];
 
     public function __construct(private DataScopeService $dataScope) {}
@@ -68,6 +69,17 @@ final readonly class EloquentLeadRepository implements LeadRepository
             ->when(
                 $filters->priority !== null,
                 fn (Builder $query): Builder => $query->where('priority', $filters->priority),
+            )
+            ->when(
+                $filters->scoreLevel !== null && $filters->scoreLevel !== '' && $filters->scoreLevel !== 'all',
+                function (Builder $query) use ($filters): void {
+                    match ($filters->scoreLevel) {
+                        'hot' => $query->where('score', '>=', 70),
+                        'warm' => $query->where('score', '>=', 40)->where('score', '<', 70),
+                        'cold' => $query->where('score', '<', 40),
+                        default => null,
+                    };
+                },
             )
             ->when(
                 $filters->sourceId !== null && $filters->sourceId > 0,

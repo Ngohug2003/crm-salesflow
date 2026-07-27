@@ -6,6 +6,7 @@
             <p class="text-sm text-slate-500">CRM / Lead / #{{ $lead->id }}</p>
             <h1 class="mt-1 text-3xl font-semibold tracking-tight">{{ $lead->full_name }}</h1>
             <div class="mt-3 flex flex-wrap gap-2">
+                <flux:badge :color="$lead->score_badge_color">Điểm Lead: {{ $lead->score }}đ ({{ $lead->score_level_label }})</flux:badge>
                 <flux:badge :color="$lead->status->color()">{{ $lead->status->label() }}</flux:badge>
                 <flux:badge :color="$lead->priority->color()">Ưu tiên {{ mb_strtolower($lead->priority->label()) }}</flux:badge>
                 @if ($lead->source)
