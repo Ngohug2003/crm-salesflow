@@ -35,6 +35,7 @@ use App\Livewire\Tasks\TaskCreate;
 use App\Livewire\Tasks\TaskKanban;
 use App\Livewire\Tasks\TaskList;
 use App\Livewire\Tasks\TaskShow;
+use App\Livewire\Users\UserSessionHistory;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/dashboard');
@@ -91,6 +92,7 @@ Route::middleware(['auth', 'request.context.authenticated', 'verified', 'account
     Route::get('/settings/system-console', SystemConsole::class)->name('system-console.index');
     Route::get('/settings/system-console/health-api', SystemHealthCheckApiController::class)->name('system-console.health-api');
     Route::get('/settings/sessions', SessionManager::class)->name('sessions.index');
+    Route::get('/settings/user-sessions', UserSessionHistory::class)->name('users.session-history');
     Route::get('/help/guide', UserGuideController::class)->name('help.guide');
     Route::get('/help/roles', RoleGuideController::class)->name('help.roles');
 });

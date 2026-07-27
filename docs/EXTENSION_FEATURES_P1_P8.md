@@ -21,13 +21,13 @@ Khi bắt đầu một feature:
 
 ## 3. Thứ tự ưu tiên tổng thể
 
-| Thứ tự | Mã | Feature | Branch đề xuất | Phụ thuộc | Requirement/GAP chính | Lý do làm trước/sau |
-|---:|---|---|---|---|---|---|
-| 1 | P9-01 | UI/UX hardening toàn hệ thống | `feature/p9-01-ui-ux-hardening` | P8-07 | REQ-UI, GAP-UI-001..003 | Chuẩn hóa trải nghiệm trước khi mở rộng chức năng mới, tránh mỗi màn một kiểu. |
-| 2 | P1-X01 | Health check page/API | `feature/p1-x01-health-check` | P1, P8-07 | REQ-PLATFORM, REQ-OPS | Có điểm kiểm tra app/queue/db/realtime trước deploy thử. |
-| 3 | P1-X02 | Environment readiness checklist | `feature/p1-x02-env-readiness` | P1-X01 | REQ-OPS, REQ-DOC | Giúp local/staging/production tự kiểm tra cấu hình thiếu. |
-| 4 | P2-X01 | Permission matrix UI | `feature/p2-x01-permission-matrix-ui` | P2-08, P9-01 | REQ-RBAC | Admin nhìn rõ role nào có quyền gì, dễ nghiệm thu phân quyền. |
-| 5 | P2-X02 | User activity/session history | `feature/p2-x02-user-session-history` | P1-T02, P2-08 | MOD-AUTH, REQ-AUDIT | Bổ sung kiểm soát phiên và lịch sử đăng nhập thực tế. |
+| Thứ tự | Mã | Feature | Branch đề xuất | Phụ thuộc | Requirement/GAP chính | Trạng thái | Lý do làm trước/sau |
+|---:|---|---|---|---|---|---|---|
+| 1 | P9-01 | UI/UX hardening toàn hệ thống | `feature/p9-01-ui-ux-hardening` | P8-07 | REQ-UI, GAP-UI-001..003 | ✅ Hoàn thành | Chuẩn hóa trải nghiệm trước khi mở rộng chức năng mới, tránh mỗi màn một kiểu. |
+| 2 | P1-X01 | Health check page/API | `feature/p1-x01-health-check` | P1, P8-07 | REQ-PLATFORM, REQ-OPS | ✅ Hoàn thành | Có điểm kiểm tra app/queue/db/realtime trước deploy thử. |
+| 3 | P1-X02 | Environment readiness checklist | `feature/p1-x02-env-readiness` | P1-X01 | REQ-OPS, REQ-DOC | ✅ Hoàn thành | Giúp local/staging/production tự kiểm tra cấu hình thiếu. |
+| 4 | P2-X01 | Permission matrix UI | `feature/p2-x01-permission-matrix-ui` | P2-08, P9-01 | REQ-RBAC | ✅ Hoàn thành | Admin nhìn rõ role nào có quyền gì, dễ nghiệm thu phân quyền. |
+| 5 | P2-X02 | User activity/session history | `feature/p2-x02-user-session-history` | P1-T02, P2-08 | MOD-AUTH, REQ-AUDIT | ✅ Hoàn thành | Bổ sung kiểm soát phiên và lịch sử đăng nhập thực tế. |
 | 6 | P8-X04 | Audit detail drawer | `feature/p8-x04-audit-detail-drawer` | P8-07, P9-01 | REQ-AUDIT | Audit hiện có cần xem chi tiết dễ hơn nhưng vẫn immutable. |
 | 7 | P8-X01 | Import history page | `feature/p8-x01-import-history` | P8-04, P9-01 | REQ-IO, REQ-NOTIFY | Người dùng cần xem lại các lần import, lỗi và file kết quả. |
 | 8 | P8-X02 | Export history page | `feature/p8-x02-export-history` | P8-05, P9-01 | REQ-IO | Theo dõi file export, trạng thái, hạn tải và quyền tải lại. |
