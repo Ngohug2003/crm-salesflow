@@ -16,7 +16,7 @@
 
         <flux:menu.separator />
 
-        <flux:menu.item :href="route('sessions.index')" wire:navigate icon="device-phone-mobile">
+        <flux:menu.item :href="route('users.session-history')" wire:navigate icon="device-phone-mobile">
             Phiên đăng nhập
         </flux:menu.item>
 
