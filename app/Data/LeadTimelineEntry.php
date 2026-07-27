@@ -15,5 +15,8 @@ final readonly class LeadTimelineEntry
         public ?string $reason,
         public string $actorName,
         public Carbon $occurredAt,
+        public ?int $noteId = null,
+        public bool $isPinned = false,
+        public ?string $activityType = null,
     ) {}
 }
