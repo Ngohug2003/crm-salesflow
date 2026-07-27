@@ -6,8 +6,8 @@
 @endphp
 
 @if (! $console)
-    <details class="mt-2 text-sm">
-        <summary class="cursor-pointer font-medium text-emerald-700 hover:underline dark:text-emerald-400">Xem dữ liệu trước–sau</summary>
+    <details class="mt-2 text-sm" onclick="event.stopPropagation()">
+        <summary class="cursor-pointer font-medium text-emerald-700 hover:underline dark:text-emerald-400">Xem dữ liệu trước–sau (inline)</summary>
 @endif
         <div @class(['mt-3 grid gap-3 xl:grid-cols-2' => ! $console, 'grid gap-3 xl:grid-cols-2' => $console])>
             <div>
