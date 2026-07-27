@@ -36,7 +36,7 @@ Khi bắt đầu một feature:
 | 11 | P3-X04 | Lead conversion preview | `feature/p3-x04-lead-conversion-preview` | P3-09, P5-09 | REQ-LEAD, REQ-COMPANY, REQ-PIPELINE | ✅ Hoàn thành | Chuyển đổi Lead cần preview rõ Company/Contact/Opportunity sẽ tạo/ghép. |
 | 12 | P4-X01 | Customer 360 page | `feature/p4-x01-customer-360` | P4-07, P5-09, P6-07 | REQ-COMPANY, REQ-CONTACT, REQ-WORK | ✅ Hoàn thành | Gom hồ sơ khách hàng, contact, opportunity, task, timeline vào một nơi. |
 | 13 | P4-X02 | Duplicate/merge Company/Contact | `feature/p4-x02-customer-merge` | P4-05, P4-X01 | REQ-COMPANY, REQ-CONTACT, REQ-AUDIT | ✅ Hoàn thành | Dữ liệu khách hàng cần cơ chế merge an toàn trước khi dùng thật. |
-| 14 | P5-X01 | Opportunity product/line items | `feature/p5-x01-opportunity-line-items` | P5-09 | REQ-PIPELINE | Opportunity hiện sơ khai; line items giúp giá trị doanh thu thực hơn. |
+| 14 | P5-X01 | Opportunity product/line items | `feature/p5-x01-opportunity-line-items` | P5-09 | REQ-PIPELINE | ✅ Hoàn thành | Opportunity hiện sơ khai; line items giúp giá trị doanh thu thực hơn. |
 | 15 | P5-X03 | Stage required fields | `feature/p5-x03-stage-required-fields` | P5-05, P5-X01 | REQ-PIPELINE | Ép dữ liệu cần thiết khi chuyển stage, giảm pipeline “ảo”. |
 | 16 | P6-X04 | SLA chăm sóc khách hàng | `feature/p6-x04-customer-sla` | P6-07, P4-X01 | REQ-WORK, REQ-NOTIFY | Giúp CRM có cảnh báo chăm sóc đúng hạn, không chỉ lưu task. |
 | 17 | P7-X01 | Report drill-down | `feature/p7-x01-report-drill-down` | P7-FIX, P9-01 | REQ-REPORT | Từ chart/KPI mở ra danh sách dữ liệu gốc theo scope để kiểm chứng số liệu. |

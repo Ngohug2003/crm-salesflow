@@ -15,6 +15,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
@@ -140,7 +141,8 @@ final class OpportunityDetail extends Component
         }
     }
 
-    private function reloadOpportunity(): void
+    #[On('attachment-updated')]
+    public function reloadOpportunity(): void
     {
         /** @var User $actor */
         $actor = Auth::user();
