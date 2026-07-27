@@ -1,13 +1,16 @@
-<div>
     @php
         /** @var \App\Models\Company $company */
         $company = $data['company'];
+        $sla = app(\App\Services\CustomerSlaService::class)->getSlaInfo($company);
     @endphp
 
     <!-- Header -->
     <div class="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-            <p class="text-sm text-slate-500">CRM / Doanh nghiệp / Góc nhìn 360°</p>
+            <div class="flex items-center gap-3">
+                <p class="text-sm text-slate-500">CRM / Doanh nghiệp / Góc nhìn 360°</p>
+                <flux:badge color="{{ $sla['color'] }}" size="sm" class="font-semibold">{{ $sla['label'] }} (Hạn SLA {{ $sla['target_hours'] }}h)</flux:badge>
+            </div>
             <h1 class="mt-1 text-3xl font-semibold tracking-tight">Hồ sơ 360° — {{ $company->name }}</h1>
             <p class="mt-2 max-w-3xl text-slate-500">
                 Mã số thuế: <span class="font-mono text-slate-700 dark:text-slate-300">{{ $company->tax_code ?: '—' }}</span> | Ngành nghề: <span class="font-medium text-slate-700 dark:text-slate-300">{{ $company->industry ?: '—' }}</span> | Người phụ trách: <span class="font-medium text-slate-700 dark:text-slate-300">{{ $company->owner?->name ?: 'Chưa phân công' }}</span>
