@@ -139,6 +139,12 @@
                         <span x-show="sidebar">Nhật ký kiểm toán</span>
                     </a>
                 @endcan
+                <a href="{{ route('imports.history') }}" wire:navigate.hover
+                   class="nav-link"
+                   :class="path.startsWith('/imports/history') && 'nav-link-active'">
+                    <flux:icon.arrow-up-tray class="nav-icon" />
+                    <span x-show="sidebar">Lịch sử nhập liệu</span>
+                </a>
                 @can('system-console.view')
                     <a href="{{ route('system-console.index') }}" wire:navigate.hover
                        class="nav-link"

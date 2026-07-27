@@ -29,7 +29,7 @@ Khi bắt đầu một feature:
 | 4 | P2-X01 | Permission matrix UI | `feature/p2-x01-permission-matrix-ui` | P2-08, P9-01 | REQ-RBAC | ✅ Hoàn thành | Admin nhìn rõ role nào có quyền gì, dễ nghiệm thu phân quyền. |
 | 5 | P2-X02 | User activity/session history | `feature/p2-x02-user-session-history` | P1-T02, P2-08 | MOD-AUTH, REQ-AUDIT | ✅ Hoàn thành | Bổ sung kiểm soát phiên và lịch sử đăng nhập thực tế. |
 | 6 | P8-X04 | Audit detail drawer | `feature/p8-x04-audit-detail-drawer` | P8-07, P9-01 | REQ-AUDIT | ✅ Hoàn thành | Audit hiện có cần xem chi tiết dễ hơn nhưng vẫn immutable. |
-| 7 | P8-X01 | Import history page | `feature/p8-x01-import-history` | P8-04, P9-01 | REQ-IO, REQ-NOTIFY | Người dùng cần xem lại các lần import, lỗi và file kết quả. |
+| 7 | P8-X01 | Import history page | `feature/p8-x01-import-history` | P8-04, P9-01 | REQ-IO, REQ-NOTIFY | ✅ Hoàn thành | Người dùng cần xem lại các lần import, lỗi và file kết quả. |
 | 8 | P8-X02 | Export history page | `feature/p8-x02-export-history` | P8-05, P9-01 | REQ-IO | Theo dõi file export, trạng thái, hạn tải và quyền tải lại. |
 | 9 | P3-X01 | Lead notes/timeline hoàn chỉnh | `feature/p3-x01-lead-notes-timeline` | P3-10, P6-02 | REQ-LEAD, REQ-WORK | Lead cần lịch sử chăm sóc rõ trước scoring/bulk nâng cao. |
 | 10 | P3-X03 | Bulk actions for Lead | `feature/p3-x03-lead-bulk-actions` | P3-10, P9-01 | REQ-LEAD, REQ-RBAC | Tăng tốc thao tác dữ liệu lớn, phải re-authorize backend. |
