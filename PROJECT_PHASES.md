@@ -24,8 +24,8 @@ Tài liệu này là lộ trình và trạng thái checkpoint chính của dự 
 | 5 | Pipelines và Opportunities | Hoàn tất triển khai P5-01 đến P5-09 | Chờ checkpoint nghiệm thu thủ công | [Chi tiết P5](docs/checkpoints/P5/PHASE_LOG.md) |
 | 6 | Activities và Tasks | Hoàn tất triển khai P6-01 đến P6-07 | Chờ chủ dự án kiểm thử P6-07 | [Chi tiết P6](docs/checkpoints/P6/PHASE_LOG.md) |
 | 7 | Dashboard và Reports | Hoàn tất P7-01 đến P7-06 | Chờ chủ dự án kiểm thử P7-06 | [Chi tiết P7](docs/checkpoints/P7/PHASE_LOG.md) / [Xác minh P7](docs/checkpoints/P7/VERIFICATION.md) |
-| 8 | Import, Export, Notifications và Audit | Chưa bắt đầu | — | — |
-| 9 | Hoàn thiện, CI/CD và deployment | Chưa bắt đầu | — | — |
+| 8 | Import, Export, Notifications và Audit | Hoàn tất P8-01 đến P8-07 | Đã qua checkpoint | [Chi tiết P8](PROJECT_PHASES.md#giai-đoạn-8--import-export-notifications-và-audit) |
+| 9 | Hoàn thiện, CI/CD và deployment | Đang triển khai (Hoàn tất P9-01) | Chờ kiểm thử P9-01 | [Chi tiết P9](PROJECT_PHASES.md#giai-đoạn-9--hoàn-thiện-cicd-và-deployment) |
 
 ---
 
@@ -185,7 +185,7 @@ Tài liệu này là lộ trình và trạng thái checkpoint chính của dự 
 
 | Mã | Feature | Branch đề xuất | Phụ thuộc | Trạng thái |
 |---|---|---|---|---|
-| P9-01 | Responsive và accessibility audit | `feature/p9-01-accessibility-responsive` | P8-07 | ⏳ Chưa bắt đầu |
+| P9-01 | Responsive và accessibility audit (UI/UX Hardening) | `feature/p9-01-ui-ux-hardening` | P8-07 | ✅ Hoàn thành |
 | P9-02 | Security hardening | `feature/p9-02-security-hardening` | P8-07 | ⏳ Chưa bắt đầu |
 | P9-03 | Performance và database indexes | `feature/p9-03-performance-indexes` | P8-07 | ⏳ Chưa bắt đầu |
 | P9-04 | Complete regression suite | `feature/p9-04-regression-suite` | P9-01..P9-03 | ⏳ Chưa bắt đầu |

@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -61,16 +62,18 @@ it('does not authenticate a locked user', function (): void {
 });
 
 it('renders the dashboard for a verified active user', function (): void {
+    $this->seed(RolePermissionSeeder::class);
     $user = User::factory()->create([
         'email_verified_at' => now(),
         'is_active' => true,
     ]);
+    $user->assignRole('sales');
 
     $this->actingAs($user)
         ->get('/dashboard')
         ->assertOk()
         ->assertSee('SalesFlow CRM')
-        ->assertSee('Thống kê hiệu suất bán hàng thực tế');
+        ->assertSee('Tổng quan bán hàng');
 });
 
 it('requires email verification', function (): void {

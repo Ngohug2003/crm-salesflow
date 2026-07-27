@@ -86,7 +86,7 @@ final class DashboardKpiTest extends TestCase
         Livewire::test(DashboardOverview::class)
             ->assertOk()
             ->assertSee('150,000,000')
-            ->assertSee('Thống kê Khách hàng tiềm năng');
+            ->assertSee('Khách hàng tiềm năng theo trạng thái');
     }
 
     public function test_it_updates_metrics_when_filters_change(): void

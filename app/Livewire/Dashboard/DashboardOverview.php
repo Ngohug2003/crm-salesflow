@@ -18,11 +18,6 @@ final class DashboardOverview extends Component
 {
     use InteractsWithReportFilters;
 
-    public function mount(): void
-    {
-        $this->authorizeReportAccess();
-    }
-
     /**
      * Tải số liệu thống kê tổng quan KPI từ SalesMetricsQueryService
      *
