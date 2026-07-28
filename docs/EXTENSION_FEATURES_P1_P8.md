@@ -41,18 +41,13 @@ Khi bắt đầu một feature:
 | 16 | P6-X04 | SLA chăm sóc khách hàng | `feature/p6-x04-customer-sla` | P6-07, P4-X01 | REQ-WORK, REQ-NOTIFY | ✅ Hoàn thành | Giúp CRM có cảnh báo chăm sóc đúng hạn, không chỉ lưu task. |
 | 17 | P7-X01 | Report drill-down | `feature/p7-x01-report-drill-down` | P7-FIX, P9-01 | REQ-REPORT | ✅ Hoàn thành | Từ chart/KPI mở ra danh sách dữ liệu gốc theo scope để kiểm chứng số liệu. |
 | 18 | P7-X02 | Saved report filters | `feature/p7-x02-saved-report-filters` | P7-FIX | REQ-REPORT | ✅ Hoàn thành | Người quản lý lưu bộ lọc thường dùng, giảm thao tác lặp. |
-| 19 | P7-X03 | Manager dashboard | `feature/p7-x03-manager-dashboard` | P7-X01 | REQ-REPORT, REQ-RBAC | Màn riêng cho sales-manager theo phòng ban, khác dashboard tổng quan. |  ❌ Bỏ ko làm
-| 20 | P7-X04 | Data quality dashboard | `feature/p7-x04-data-quality-dashboard` | P3-X03, P4-X02 | REQ-REPORT, REQ-LEAD | ✅ Hoàn thành | Theo dõi dữ liệu thiếu, trùng, chưa chăm sóc, stale records. |
-| 21 | P2-X03 | Invitation flow | `feature/p2-x03-user-invitations` | P2-X01, P8-06 | MOD-AUTH, REQ-NOTIFY | ✅ Hoàn thành | Mời user qua email, phù hợp sau khi notification đã ổn. |
-| 22 | P3-X02 | Lead scoring | `feature/p3-x02-lead-scoring` | P3-X01, P7-X04 | REQ-LEAD, REQ-REPORT | ✅ Hoàn thành | Cần timeline/data quality trước để scoring không cảm tính. |
-| 23 | P4-X03 | Customer relationship map | `feature/p4-x03-customer-relationship-map` | P4-X01, P4-X02 | REQ-CUSTOMER | ✅ Hoàn thành | Hữu ích nhưng nên làm sau khi dữ liệu customer sạch. |
-| 24 | P5-X02 | Quote/proposal basic | `feature/p5-x02-quote-proposal-basic` | P5-X01 | REQ-PIPELINE, REQ-IO | ✅ Hoàn thành | Tạo báo giá cơ bản từ opportunity, có thể export/download. |
-| 25 | P5-X04 | Forecast category | `feature/p5-x04-forecast-category` | P5-X03, P7-X01 | REQ-PIPELINE, REQ-REPORT | ✅ Hoàn thành | Tăng độ chính xác forecast sau khi stage rule ổn. |
-| 26 | P6-X01 | Calendar export | `feature/p6-x01-calendar-export` | P6-06 | REQ-WORK | Export lịch `.ics`, chưa cần tích hợp calendar bên thứ ba. | ❌ Bỏ ko làm
-| 27 | P6-X02 | Task recurring/reminder nâng cao | `feature/p6-x02-recurring-reminders` | P6-X04 | REQ-WORK, REQ-NOTIFY | Làm sau SLA để tránh nhắc hạn trùng logic. | ❌ Bỏ ko làm
-| 28 | P6-X03 | Comment attachments/mentions | `feature/p6-x03-comments-mentions-attachments` | P6-04, P8-06 | REQ-WORK, REQ-NOTIFY, REQ-PLATFORM | Collaboration sâu hơn, phụ thuộc notification và file private. | ❌ Bỏ ko làm
-| 29 | P8-X03 | Notification preferences | `feature/p8-x03-notification-preferences` | P8-06, P2-X03 | REQ-NOTIFY | ✅ Hoàn thành | User tự bật/tắt email/broadcast/database theo loại sự kiện. |
-| 30 | P8-X05 | Audit retention policy | `feature/p8-x05-audit-retention-policy` | P8-X04 | REQ-AUDIT, REQ-OPS | Chính sách lưu giữ audit cho production; không xóa tùy tiện trên UI. | ❌ Bỏ ko làm
+| 19 | P7-X04 | Data quality dashboard | `feature/p7-x04-data-quality-dashboard` | P3-X03, P4-X02 | REQ-REPORT, REQ-LEAD | ✅ Hoàn thành | Theo dõi dữ liệu thiếu, trùng, chưa chăm sóc, stale records. |
+| 20 | P2-X03 | Invitation flow | `feature/p2-x03-user-invitations` | P2-X01, P8-06 | MOD-AUTH, REQ-NOTIFY | ✅ Hoàn thành | Mời user qua email, phù hợp sau khi notification đã ổn. |
+| 21 | P3-X02 | Lead scoring | `feature/p3-x02-lead-scoring` | P3-X01, P7-X04 | REQ-LEAD, REQ-REPORT | ✅ Hoàn thành | Cần timeline/data quality trước để scoring không cảm tính. |
+| 22 | P4-X03 | Customer relationship map | `feature/p4-x03-customer-relationship-map` | P4-X01, P4-X02 | REQ-CUSTOMER | ✅ Hoàn thành | Hữu ích nhưng nên làm sau khi dữ liệu customer sạch. |
+| 23 | P5-X02 | Quote/proposal basic | `feature/p5-x02-quote-proposal-basic` | P5-X01 | REQ-PIPELINE, REQ-IO | ✅ Hoàn thành | Tạo báo giá cơ bản từ opportunity, có thể export/download. |
+| 24 | P5-X04 | Forecast category | `feature/p5-x04-forecast-category` | P5-X03, P7-X01 | REQ-PIPELINE, REQ-REPORT | ✅ Hoàn thành | Tăng độ chính xác forecast sau khi stage rule ổn. |
+| 25 | P8-X03 | Notification preferences | `feature/p8-x03-notification-preferences` | P8-06, P2-X03 | REQ-NOTIFY | ✅ Hoàn thành | User tự bật/tắt email/broadcast/database theo loại sự kiện. |
 
 ## 4. Chi tiết theo giai đoạn
 
@@ -180,27 +175,6 @@ Khi bắt đầu một feature:
 
 ### P6 — Activities & Tasks mở rộng
 
-#### P6-X01 — Calendar export
-
-- **Mục tiêu**: Cho user export lịch task/meeting ra file `.ics`.
-- **Phạm vi**: Download theo scope, timezone Việt Nam, route có quyền.
-- **Không làm**: Sync hai chiều Google/Outlook.
-- **Nghiệm thu**: File import được vào calendar ngoài, không chứa task ngoài scope.
-
-#### P6-X02 — Task recurring/reminder nâng cao
-
-- **Mục tiêu**: Task lặp và reminder linh hoạt hơn nhưng không gửi trùng.
-- **Phạm vi**: Rule lặp đơn giản, scheduler idempotent, notification.
-- **Không làm**: Cron expression builder phức tạp.
-- **Nghiệm thu**: Reminder đúng thời điểm, retry không tạo thông báo lặp.
-
-#### P6-X03 — Comment attachments/mentions
-
-- **Mục tiêu**: Comment trong task/activity hỗ trợ file riêng tư và nhắc người liên quan.
-- **Phạm vi**: Upload private, mention user theo scope, notification, audit.
-- **Không làm**: Rich collaborative editor realtime.
-- **Nghiệm thu**: User được mention nhận thông báo; file download luôn authorize.
-
 #### P6-X04 — SLA chăm sóc khách hàng
 
 - **Mục tiêu**: Cảnh báo Lead/Customer/Opportunity quá hạn chăm sóc.
@@ -223,13 +197,6 @@ Khi bắt đầu một feature:
 - **Phạm vi**: CRUD filter preset cá nhân, đặt mặc định, URL state tương thích.
 - **Không làm**: Chia sẻ filter giữa team nếu chưa xác nhận.
 - **Nghiệm thu**: Reload không mất preset; mỗi tab báo cáo giữ filter riêng.
-
-#### P7-X03 — Manager dashboard
-
-- **Mục tiêu**: Dashboard riêng cho sales-manager theo đội/phòng ban.
-- **Phạm vi**: KPI team, leaderboard, overdue, pipeline snapshot.
-- **Không làm**: Admin analytics toàn công ty nếu trùng dashboard hiện có.
-- **Nghiệm thu**: Manager chỉ thấy team/department đúng scope.
 
 #### P7-X04 — Data quality dashboard
 
@@ -267,13 +234,6 @@ Khi bắt đầu một feature:
 - **Phạm vi**: Old/new values masked, request ID, actor, subject, timeline; chỉ super-admin/Admin IT.
 - **Không làm**: Sửa/xóa audit từ UI.
 - **Nghiệm thu**: Không lộ secret; realtime/list/detail đều permission-aware.
-
-#### P8-X05 — Audit retention policy
-
-- **Mục tiêu**: Định nghĩa cách lưu giữ, archive hoặc rotate audit/log cho production.
-- **Phạm vi**: Policy tài liệu + scheduler/job nếu cần, không phá immutable audit UI.
-- **Không làm**: Xóa audit tùy tiện không có retention rule.
-- **Nghiệm thu**: Có quy tắc rõ audit giữ bao lâu, log vận hành rotate thế nào.
 
 ### P9-01 — UI/UX hardening toàn hệ thống
 
