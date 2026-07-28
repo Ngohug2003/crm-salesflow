@@ -37,22 +37,22 @@
                 </div>
                 <div class="md:col-span-3">
                     <label class="mb-1.5 block text-xs font-medium text-slate-600 dark:text-slate-300" for="import-type">Loại dữ liệu</label>
-                    <flux:select id="import-type" wire:model.live="type">
+                    <x-forms.smart-select id="import-type" wire:model.live="type">
                         <option value="all">Tất cả loại dữ liệu</option>
                         <option value="lead">Khách hàng tiềm năng (Lead)</option>
                         <option value="company">Doanh nghiệp (Company)</option>
                         <option value="contact">Người liên hệ (Contact)</option>
-                    </flux:select>
+                    </x-forms.smart-select>
                 </div>
                 <div class="md:col-span-4">
                     <label class="mb-1.5 block text-xs font-medium text-slate-600 dark:text-slate-300" for="import-status">Trạng thái</label>
-                    <flux:select id="import-status" wire:model.live="status">
+                    <x-forms.smart-select id="import-status" wire:model.live="status">
                         <option value="all">Tất cả trạng thái</option>
                         <option value="completed">Hoàn thành (Completed)</option>
                         <option value="processing">Đang xử lý (Processing)</option>
                         <option value="failed">Thất bại (Failed)</option>
                         <option value="pending">Chờ xử lý (Pending)</option>
-                    </flux:select>
+                    </x-forms.smart-select>
                 </div>
             </div>
         </div>

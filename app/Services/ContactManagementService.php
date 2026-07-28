@@ -19,6 +19,7 @@ final readonly class ContactManagementService
         private ContactRepository $contacts,
         private SystemAuditService $audit,
         private DuplicateContactService $duplicates,
+        private AdministrativeUnitService $administrativeUnits,
     ) {}
 
     /** @return LengthAwarePaginator<int, Contact> */
@@ -45,6 +46,7 @@ final readonly class ContactManagementService
         ?string $duplicateOverrideReason = null,
     ): Contact {
         Gate::forUser($actor)->authorize('create', Contact::class);
+        $data = $this->administrativeUnits->normalizeAddressPayload($data);
 
         $currentSignature = $this->duplicates->signature($data);
         $candidates = $this->duplicates->candidates($actor, $data);
@@ -123,6 +125,7 @@ final readonly class ContactManagementService
         ?string $duplicateConfirmedSignature = null,
         ?string $duplicateOverrideReason = null,
     ): Contact {
+        $data = $this->administrativeUnits->normalizeAddressPayload($data);
         $currentSignature = $this->duplicates->signature($data);
         $candidates = $this->duplicates->candidates($actor, $data, $id);
 
@@ -227,6 +230,11 @@ final readonly class ContactManagementService
             'phone' => $contact->phone,
             'job_title' => $contact->job_title,
             'is_primary' => $contact->is_primary,
+            'address' => $contact->address,
+            'province_id' => $contact->province_id,
+            'ward_id' => $contact->ward_id,
+            'province' => $contact->province,
+            'city' => $contact->city,
             'owner_id' => $contact->owner_id,
             'department_id' => $contact->department_id,
         ];

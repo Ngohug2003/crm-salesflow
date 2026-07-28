@@ -33,26 +33,26 @@
                     placeholder="Tên doanh nghiệp, MST, email, phone, ngành..."
                 />
 
-                <flux:select wire:model.live="industry" label="Ngành nghề">
+                <x-forms.smart-select wire:model.live="industry" label="Ngành nghề">
                     <option value="all">Tất cả ngành nghề</option>
                     @foreach ($this->industries as $industryOption)
                         <option value="{{ $industryOption }}">{{ $industryOption }}</option>
                     @endforeach
-                </flux:select>
+                </x-forms.smart-select>
 
-                <flux:select wire:model.live="size" label="Quy mô">
+                <x-forms.smart-select wire:model.live="size" label="Quy mô">
                     <option value="all">Tất cả quy mô</option>
                     @foreach ($this->sizes as $sizeOption)
                         <option value="{{ $sizeOption }}">{{ $sizeOption }}</option>
                     @endforeach
-                </flux:select>
+                </x-forms.smart-select>
 
-                <flux:select wire:model.live="owner" label="Người phụ trách">
+                <x-forms.smart-select wire:model.live="owner" label="Người phụ trách">
                     <option value="all">Tất cả người phụ trách</option>
                     @foreach ($this->users as $userOption)
                         <option value="{{ $userOption->id }}">{{ $userOption->name }}</option>
                     @endforeach
-                </flux:select>
+                </x-forms.smart-select>
             </div>
         </div>
 

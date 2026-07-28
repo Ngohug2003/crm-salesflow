@@ -6,12 +6,17 @@ namespace App\Livewire\Companies;
 
 use App\Exceptions\DuplicateCompanyException;
 use App\Models\Company;
+use App\Models\Province;
 use App\Models\User;
+use App\Models\Ward;
+use App\Services\AdministrativeUnitService;
 use App\Services\CompanyManagementService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -39,6 +44,10 @@ final class CompanyEditor extends Component
 
     public string $address = '';
 
+    public ?string $provinceId = null;
+
+    public ?string $wardId = null;
+
     public string $city = '';
 
     public string $province = '';
@@ -59,6 +68,8 @@ final class CompanyEditor extends Component
     public bool $showDuplicateWarning = false;
 
     public string $duplicateOverrideReason = '';
+
+    public bool $administrativeUnitSelectionChanged = false;
 
     public function mount(?int $companyId = null): void
     {
@@ -88,6 +99,8 @@ final class CompanyEditor extends Component
             $this->companySize = (string) $company->company_size;
             $this->annualRevenue = $company->annual_revenue ? (string) $company->annual_revenue : '';
             $this->address = (string) $company->address;
+            $this->provinceId = $company->province_id ? (string) $company->province_id : null;
+            $this->wardId = $company->ward_id ? (string) $company->ward_id : null;
             $this->city = (string) $company->city;
             $this->province = (string) $company->province;
             $this->country = $company->country ?: 'Việt Nam';
@@ -96,7 +109,7 @@ final class CompanyEditor extends Component
         }
     }
 
-    /** @return array<string, array<int, string>> */
+    /** @return array<string, list<mixed>> */
     protected function rules(): array
     {
         return [
@@ -109,6 +122,22 @@ final class CompanyEditor extends Component
             'companySize' => ['nullable', 'string', 'max:255'],
             'annualRevenue' => ['nullable', 'numeric', 'min:0'],
             'address' => ['nullable', 'string', 'max:255'],
+            'provinceId' => [
+                'nullable',
+                'integer',
+                Rule::exists('provinces', 'id')->where(
+                    fn (Builder $query): Builder => $query->where('is_active', true),
+                ),
+            ],
+            'wardId' => [
+                'nullable',
+                'integer',
+                Rule::exists('wards', 'id')->where(
+                    fn (Builder $query): Builder => $query
+                        ->where('is_active', true)
+                        ->where('province_id', filled($this->provinceId) ? (int) $this->provinceId : 0),
+                ),
+            ],
             'city' => ['nullable', 'string', 'max:255'],
             'province' => ['nullable', 'string', 'max:255'],
             'country' => ['nullable', 'string', 'max:255'],
@@ -143,6 +172,14 @@ final class CompanyEditor extends Component
             'notes' => trim($this->notes) !== '' ? trim($this->notes) : null,
             'owner_id' => $this->ownerId !== '' ? (int) $this->ownerId : null,
         ];
+
+        if ($this->companyId === null
+            || $this->administrativeUnitSelectionChanged
+            || filled($this->provinceId)
+            || filled($this->wardId)) {
+            $data['province_id'] = filled($this->provinceId) ? (int) $this->provinceId : null;
+            $data['ward_id'] = filled($this->wardId) ? (int) $this->wardId : null;
+        }
 
         try {
             if ($this->companyId === null) {
@@ -211,6 +248,35 @@ final class CompanyEditor extends Component
         $this->resetErrorBag('duplicateOverrideReason');
     }
 
+    public function updatedProvinceId(): void
+    {
+        $this->wardId = null;
+        $this->administrativeUnitSelectionChanged = true;
+        $this->resetValidation(['provinceId', 'wardId']);
+    }
+
+    public function updatedWardId(): void
+    {
+        $this->administrativeUnitSelectionChanged = true;
+        $this->resetValidation('wardId');
+    }
+
+    /** @return Collection<int, Province> */
+    #[Computed]
+    public function provinceOptions(): Collection
+    {
+        return $this->administrativeUnits()->provinceOptions();
+    }
+
+    /** @return Collection<int, Ward> */
+    #[Computed]
+    public function wardOptions(): Collection
+    {
+        return $this->administrativeUnits()->wardOptions(
+            filled($this->provinceId) ? (int) $this->provinceId : null,
+        );
+    }
+
     /** @return Collection<int, User> */
     #[Computed]
     public function users(): Collection
@@ -235,5 +301,10 @@ final class CompanyEditor extends Component
     public function render(): View
     {
         return view('livewire.companies.company-editor');
+    }
+
+    private function administrativeUnits(): AdministrativeUnitService
+    {
+        return app(AdministrativeUnitService::class);
     }
 }

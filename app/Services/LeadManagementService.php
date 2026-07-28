@@ -29,6 +29,7 @@ final readonly class LeadManagementService
         private DataScopeService $dataScope,
         private SystemAuditService $audit,
         private DuplicateLeadService $duplicates,
+        private AdministrativeUnitService $administrativeUnits,
     ) {}
 
     /** @param array<string, mixed> $attributes */
@@ -40,6 +41,7 @@ final readonly class LeadManagementService
         ?string $duplicateOverrideReason = null,
     ): Lead {
         Gate::forUser($actor)->authorize($lead === null ? 'create' : 'update', $lead ?? Lead::class);
+        $attributes = $this->administrativeUnits->normalizeAddressPayload($attributes);
 
         // Duplicate detection check
         $currentSignature = $this->duplicates->signature($attributes);
@@ -232,6 +234,8 @@ final readonly class LeadManagementService
             'job_title' => $lead->job_title,
             'website' => $lead->website,
             'address' => $lead->address,
+            'province_id' => $lead->province_id,
+            'ward_id' => $lead->ward_id,
             'city' => $lead->city,
             'province' => $lead->province,
             'country' => $lead->country,

@@ -1,6 +1,8 @@
 # SalesFlow CRM — Spec Tính năng Nâng cao B2B Sales Enablement (P10)
 
 > **Tài liệu đặc tả (Specification)** này định nghĩa các tính năng nâng cao cấp doanh nghiệp (Enterprise Grade) nhằm gia tăng giá trị thương mại cho SalesFlow CRM khi trình diễn và chào bán cho các doanh nghiệp B2B.
+>
+> **Bản mở rộng P10–P12:** xem [`B2B_PRODUCT_AUTOMATION_ROADMAP_P10_P12.md`](B2B_PRODUCT_AUTOMATION_ROADMAP_P10_P12.md). File hiện tại giữ lại đặc tả ban đầu của P10-01 và P10-02 để bảo toàn lịch sử quyết định.
 
 ---
 

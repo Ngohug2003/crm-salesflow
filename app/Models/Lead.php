@@ -31,6 +31,8 @@ use Illuminate\Support\Carbon;
  * @property ?string $job_title
  * @property ?string $website
  * @property ?string $address
+ * @property ?int $province_id
+ * @property ?int $ward_id
  * @property ?string $city
  * @property ?string $province
  * @property ?string $country
@@ -62,6 +64,8 @@ final class Lead extends Model
         'job_title',
         'website',
         'address',
+        'province_id',
+        'ward_id',
         'city',
         'province',
         'country',
@@ -137,6 +141,18 @@ final class Lead extends Model
     public function department(): BelongsTo
     {
         return $this->belongsTo(Department::class);
+    }
+
+    /** @return BelongsTo<Province, $this> */
+    public function provinceUnit(): BelongsTo
+    {
+        return $this->belongsTo(Province::class, 'province_id');
+    }
+
+    /** @return BelongsTo<Ward, $this> */
+    public function ward(): BelongsTo
+    {
+        return $this->belongsTo(Ward::class, 'ward_id');
     }
 
     /** @return BelongsTo<User, $this> */

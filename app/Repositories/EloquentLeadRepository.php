@@ -267,6 +267,8 @@ final readonly class EloquentLeadRepository implements LeadRepository
             'source:id,name,code,color',
             'owner:id,name,email',
             'department:id,name,code',
+            'provinceUnit:id,code,name,full_name',
+            'ward:id,province_id,code,name,full_name',
             'tags:id,name,slug,color',
             'createdBy:id,name,email',
             'updatedBy:id,name,email',

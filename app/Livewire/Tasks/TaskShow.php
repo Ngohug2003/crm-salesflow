@@ -110,6 +110,11 @@ final class TaskShow extends Component
         }
     }
 
+    public function updatedAssigneeId(): void
+    {
+        $this->updateTaskSettings();
+    }
+
     public function addChecklistItem(): void
     {
         $this->validate(['newChecklistTitle' => ['required', 'string', 'max:255']]);

@@ -7,12 +7,17 @@ namespace App\Livewire\Contacts;
 use App\Exceptions\DuplicateContactException;
 use App\Models\Company;
 use App\Models\Contact;
+use App\Models\Province;
 use App\Models\User;
+use App\Models\Ward;
+use App\Services\AdministrativeUnitService;
 use App\Services\ContactManagementService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -44,6 +49,10 @@ final class ContactEditor extends Component
 
     public string $address = '';
 
+    public ?string $provinceId = null;
+
+    public ?string $wardId = null;
+
     public string $city = '';
 
     public string $province = '';
@@ -64,6 +73,8 @@ final class ContactEditor extends Component
     public bool $showDuplicateWarning = false;
 
     public string $duplicateOverrideReason = '';
+
+    public bool $administrativeUnitSelectionChanged = false;
 
     public function mount(?int $contactId = null): void
     {
@@ -95,6 +106,8 @@ final class ContactEditor extends Component
             $this->birthday = $contact->birthday !== null ? (string) $contact->birthday : '';
             $this->isPrimary = (bool) $contact->is_primary;
             $this->address = (string) $contact->address;
+            $this->provinceId = $contact->province_id ? (string) $contact->province_id : null;
+            $this->wardId = $contact->ward_id ? (string) $contact->ward_id : null;
             $this->city = (string) $contact->city;
             $this->province = (string) $contact->province;
             $this->country = $contact->country ?: 'Việt Nam';
@@ -103,7 +116,7 @@ final class ContactEditor extends Component
         }
     }
 
-    /** @return array<string, array<int, string>> */
+    /** @return array<string, list<mixed>> */
     protected function rules(): array
     {
         return [
@@ -118,6 +131,22 @@ final class ContactEditor extends Component
             'birthday' => ['nullable', 'date'],
             'isPrimary' => ['boolean'],
             'address' => ['nullable', 'string', 'max:255'],
+            'provinceId' => [
+                'nullable',
+                'integer',
+                Rule::exists('provinces', 'id')->where(
+                    fn (Builder $query): Builder => $query->where('is_active', true),
+                ),
+            ],
+            'wardId' => [
+                'nullable',
+                'integer',
+                Rule::exists('wards', 'id')->where(
+                    fn (Builder $query): Builder => $query
+                        ->where('is_active', true)
+                        ->where('province_id', filled($this->provinceId) ? (int) $this->provinceId : 0),
+                ),
+            ],
             'city' => ['nullable', 'string', 'max:255'],
             'province' => ['nullable', 'string', 'max:255'],
             'country' => ['nullable', 'string', 'max:255'],
@@ -154,6 +183,14 @@ final class ContactEditor extends Component
             'notes' => trim($this->notes) !== '' ? trim($this->notes) : null,
             'owner_id' => $this->ownerId !== '' ? (int) $this->ownerId : null,
         ];
+
+        if ($this->contactId === null
+            || $this->administrativeUnitSelectionChanged
+            || filled($this->provinceId)
+            || filled($this->wardId)) {
+            $data['province_id'] = filled($this->provinceId) ? (int) $this->provinceId : null;
+            $data['ward_id'] = filled($this->wardId) ? (int) $this->wardId : null;
+        }
 
         try {
             if ($this->contactId === null) {
@@ -222,6 +259,35 @@ final class ContactEditor extends Component
         $this->resetErrorBag('duplicateOverrideReason');
     }
 
+    public function updatedProvinceId(): void
+    {
+        $this->wardId = null;
+        $this->administrativeUnitSelectionChanged = true;
+        $this->resetValidation(['provinceId', 'wardId']);
+    }
+
+    public function updatedWardId(): void
+    {
+        $this->administrativeUnitSelectionChanged = true;
+        $this->resetValidation('wardId');
+    }
+
+    /** @return Collection<int, Province> */
+    #[Computed]
+    public function provinceOptions(): Collection
+    {
+        return $this->administrativeUnits()->provinceOptions();
+    }
+
+    /** @return Collection<int, Ward> */
+    #[Computed]
+    public function wardOptions(): Collection
+    {
+        return $this->administrativeUnits()->wardOptions(
+            filled($this->provinceId) ? (int) $this->provinceId : null,
+        );
+    }
+
     /** @return Collection<int, Company> */
     #[Computed]
     public function companies(): Collection
@@ -239,5 +305,10 @@ final class ContactEditor extends Component
     public function render(): View
     {
         return view('livewire.contacts.contact-editor');
+    }
+
+    private function administrativeUnits(): AdministrativeUnitService
+    {
+        return app(AdministrativeUnitService::class);
     }
 }

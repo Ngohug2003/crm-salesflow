@@ -36,12 +36,12 @@
                 />
             </div>
             <div class="xl:col-span-4">
-                <flux:select wire:model.live="module" label="Lọc theo phân hệ">
+                <x-forms.smart-select wire:model.live="module" label="Lọc theo phân hệ">
                     <option value="all">Tất cả phân hệ (7 phân hệ)</option>
                     @foreach ($allModuleKeys as $label => $key)
                         <option value="{{ $key }}">{{ $label }}</option>
                     @endforeach
-                </flux:select>
+                </x-forms.smart-select>
             </div>
         </div>
 

@@ -19,6 +19,7 @@ final readonly class CompanyManagementService
         private CompanyRepository $companies,
         private SystemAuditService $audit,
         private DuplicateCompanyService $duplicates,
+        private AdministrativeUnitService $administrativeUnits,
     ) {}
 
     /** @return LengthAwarePaginator<int, Company> */
@@ -45,6 +46,7 @@ final readonly class CompanyManagementService
         ?string $duplicateOverrideReason = null,
     ): Company {
         Gate::forUser($actor)->authorize('create', Company::class);
+        $data = $this->administrativeUnits->normalizeAddressPayload($data);
 
         $currentSignature = $this->duplicates->signature($data);
         $candidates = $this->duplicates->candidates($actor, $data);
@@ -109,6 +111,7 @@ final readonly class CompanyManagementService
         ?string $duplicateConfirmedSignature = null,
         ?string $duplicateOverrideReason = null,
     ): Company {
+        $data = $this->administrativeUnits->normalizeAddressPayload($data);
         $currentSignature = $this->duplicates->signature($data);
         $candidates = $this->duplicates->candidates($actor, $data, $id);
 
@@ -199,6 +202,11 @@ final readonly class CompanyManagementService
             'industry' => $company->industry,
             'company_size' => $company->company_size,
             'annual_revenue' => $company->annual_revenue,
+            'address' => $company->address,
+            'province_id' => $company->province_id,
+            'ward_id' => $company->ward_id,
+            'province' => $company->province,
+            'city' => $company->city,
             'owner_id' => $company->owner_id,
             'department_id' => $company->department_id,
         ];

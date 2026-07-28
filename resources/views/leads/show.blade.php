@@ -47,8 +47,8 @@
                 <h2 id="lead-detail-address" class="text-lg font-semibold">Địa chỉ và nhu cầu</h2>
                 <dl class="mt-5 grid gap-x-6 gap-y-5 sm:grid-cols-2">
                     <div class="sm:col-span-2"><dt class="text-sm text-slate-500">Địa chỉ</dt><dd class="mt-1 font-medium">{{ $lead->address ?: 'Chưa có' }}</dd></div>
-                    <div><dt class="text-sm text-slate-500">Thành phố</dt><dd class="mt-1 font-medium">{{ $lead->city ?: 'Chưa có' }}</dd></div>
-                    <div><dt class="text-sm text-slate-500">Tỉnh / Thành</dt><dd class="mt-1 font-medium">{{ $lead->province ?: 'Chưa có' }}</dd></div>
+                    <div><dt class="text-sm text-slate-500">Tỉnh/Thành phố</dt><dd class="mt-1 font-medium">{{ $lead->provinceUnit?->full_name ?? $lead->province ?? 'Chưa có' }}</dd></div>
+                    <div><dt class="text-sm text-slate-500">Phường/Xã</dt><dd class="mt-1 font-medium">{{ $lead->ward?->full_name ?? $lead->city ?? 'Chưa có' }}</dd></div>
                     <div><dt class="text-sm text-slate-500">Quốc gia</dt><dd class="mt-1 font-medium">{{ $lead->country ?: 'Chưa có' }}</dd></div>
                     <div><dt class="text-sm text-slate-500">Giá trị dự kiến</dt><dd class="mt-1 font-medium">{{ $lead->estimated_value !== null ? number_format((float) $lead->estimated_value, 0, ',', '.').' ₫' : 'Chưa xác định' }}</dd></div>
                     <div class="sm:col-span-2"><dt class="text-sm text-slate-500">Ghi chú</dt><dd class="mt-1 whitespace-pre-line text-sm leading-6">{{ $lead->notes ?: 'Chưa có ghi chú' }}</dd></div>

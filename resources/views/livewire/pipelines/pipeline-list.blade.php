@@ -51,11 +51,11 @@
                 icon="magnifying-glass"
             />
 
-            <flux:select wire:model.live="isActive" label="Trạng thái">
+            <x-forms.smart-select wire:model.live="isActive" label="Trạng thái">
                 <option value="">Tất cả trạng thái</option>
                 <option value="true">Đang hoạt động</option>
                 <option value="false">Tạm ngừng</option>
-            </flux:select>
+            </x-forms.smart-select>
         </div>
 
         <div class="data-list-content">

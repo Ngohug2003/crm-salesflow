@@ -17,7 +17,8 @@
         "livewire/flux": "^2.0",
         "livewire/livewire": "^3.6",
         "spatie/laravel-activitylog": "^5.0",
-        "spatie/laravel-permission": "^8.3"
+        "spatie/laravel-permission": "^8.3",
+        "williamug/searchable-select": "^3.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

@@ -43,11 +43,11 @@
     <div class="crm-card">
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div>
-                <flux:select wire:model.live="pipelineId" label="Quy trình Bán hàng">
+                <x-forms.smart-select wire:model.live="pipelineId" label="Quy trình Bán hàng">
                     @foreach ($this->pipelines as $pipe)
                         <option value="{{ $pipe->id }}">{{ $pipe->name }}</option>
                     @endforeach
-                </flux:select>
+                </x-forms.smart-select>
             </div>
 
             <div>
@@ -60,21 +60,21 @@
             </div>
 
             <div>
-                <flux:select wire:model.live="ownerId" label="Người phụ trách">
+                <x-forms.smart-select wire:model.live="ownerId" label="Người phụ trách">
                     <option value="">Tất cả người phụ trách</option>
                     @foreach ($this->users as $u)
                         <option value="{{ $u->id }}">{{ $u->name }}</option>
                     @endforeach
-                </flux:select>
+                </x-forms.smart-select>
             </div>
 
             <div>
-                <flux:select wire:model.live="status" label="Trạng thái">
+                <x-forms.smart-select wire:model.live="status" label="Trạng thái">
                     <option value="">Tất cả (All)</option>
                     <option value="open">Đang mở (Open)</option>
                     <option value="won">Thành công (Won)</option>
                     <option value="lost">Thất bại (Lost)</option>
-                </flux:select>
+                </x-forms.smart-select>
             </div>
         </div>
     </div>

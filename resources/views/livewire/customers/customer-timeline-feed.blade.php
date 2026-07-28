@@ -142,11 +142,11 @@
             </div>
 
             <div class="space-y-4">
-                <flux:select wire:model="activityType" label="Loại tương tác *">
+                <x-forms.smart-select wire:model="activityType" label="Loại tương tác *">
                     @foreach (App\Enums\ActivityType::cases() as $type)
                         <option value="{{ $type->value }}">{{ $type->label() }}</option>
                     @endforeach
-                </flux:select>
+                </x-forms.smart-select>
 
                 <flux:input wire:model="activityTitle" label="Tiêu đề tương tác *" placeholder="VD: Cuộc gọi tư vấn giải pháp, Họp ký hợp đồng..." required />
 

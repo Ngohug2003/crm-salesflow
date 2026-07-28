@@ -33,25 +33,25 @@
                     placeholder="Họ tên, email, điện thoại, chức danh..."
                 />
 
-                <flux:select wire:model.live="company" label="Doanh nghiệp">
+                <x-forms.smart-select wire:model.live="company" label="Doanh nghiệp">
                     <option value="all">Tất cả doanh nghiệp</option>
                     @foreach ($this->companies as $companyOption)
                         <option value="{{ $companyOption->id }}">{{ $companyOption->name }}</option>
                     @endforeach
-                </flux:select>
+                </x-forms.smart-select>
 
-                <flux:select wire:model.live="primary" label="Đại diện chính">
+                <x-forms.smart-select wire:model.live="primary" label="Đại diện chính">
                     <option value="all">Tất cả liên hệ</option>
                     <option value="yes">Chỉ Đại diện chính</option>
                     <option value="no">Liên hệ thường</option>
-                </flux:select>
+                </x-forms.smart-select>
 
-                <flux:select wire:model.live="owner" label="Người phụ trách">
+                <x-forms.smart-select wire:model.live="owner" label="Người phụ trách">
                     <option value="all">Tất cả người phụ trách</option>
                     @foreach ($this->users as $userOption)
                         <option value="{{ $userOption->id }}">{{ $userOption->name }}</option>
                     @endforeach
-                </flux:select>
+                </x-forms.smart-select>
             </div>
         </div>
 

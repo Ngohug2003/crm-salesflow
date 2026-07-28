@@ -35,6 +35,10 @@ final class LeadForm extends Form
 
     public string $address = '';
 
+    public ?string $provinceId = null;
+
+    public ?string $wardId = null;
+
     public string $city = '';
 
     public string $province = '';
@@ -46,6 +50,8 @@ final class LeadForm extends Form
     public string $estimatedValue = '';
 
     public string $notes = '';
+
+    public bool $administrativeUnitSelectionChanged = false;
 
     /** @var list<int|string> */
     public array $tagIds = [];
@@ -76,6 +82,22 @@ final class LeadForm extends Form
             'jobTitle' => ['nullable', 'string', 'max:100'],
             'website' => ['nullable', 'url:http,https', 'max:255'],
             'address' => ['nullable', 'string', 'max:255'],
+            'provinceId' => [
+                'nullable',
+                'integer',
+                Rule::exists('provinces', 'id')->where(
+                    fn (Builder $query): Builder => $query->where('is_active', true),
+                ),
+            ],
+            'wardId' => [
+                'nullable',
+                'integer',
+                Rule::exists('wards', 'id')->where(
+                    fn (Builder $query): Builder => $query
+                        ->where('is_active', true)
+                        ->where('province_id', $this->nullableId($this->provinceId) ?? 0),
+                ),
+            ],
             'city' => ['nullable', 'string', 'max:100'],
             'province' => ['nullable', 'string', 'max:100'],
             'country' => ['nullable', 'string', 'max:100'],
@@ -107,6 +129,8 @@ final class LeadForm extends Form
             'jobTitle' => 'chức danh',
             'website' => 'website',
             'address' => 'địa chỉ',
+            'provinceId' => 'tỉnh/thành phố',
+            'wardId' => 'phường/xã',
             'city' => 'thành phố',
             'province' => 'tỉnh/thành',
             'country' => 'quốc gia',
@@ -125,6 +149,8 @@ final class LeadForm extends Form
             'email.lowercase' => 'Email phải được viết bằng chữ thường.',
             'email.email' => 'Email không đúng định dạng.',
             'website.url' => 'Website phải là URL bắt đầu bằng http:// hoặc https://.',
+            'provinceId.exists' => 'Tỉnh/Thành phố không tồn tại hoặc đã ngừng sử dụng.',
+            'wardId.exists' => 'Phường/Xã không thuộc Tỉnh/Thành phố đã chọn.',
             'sourceId.exists' => 'Nguồn Lead không tồn tại hoặc đã ngừng hoạt động.',
             'ownerId.exists' => 'Người phụ trách không tồn tại hoặc đã bị khóa.',
             'priority.enum' => 'Mức ưu tiên không hợp lệ.',
@@ -143,7 +169,7 @@ final class LeadForm extends Form
         $this->normalize();
         $validated = $this->validate();
 
-        return [
+        $payload = [
             'lead_source_id' => $this->nullableId($validated['sourceId']),
             'owner_id' => $this->nullableId($validated['ownerId']),
             'full_name' => $validated['fullName'],
@@ -166,6 +192,16 @@ final class LeadForm extends Form
                 ->values()
                 ->all(),
         ];
+
+        if ($this->leadId === null
+            || $this->administrativeUnitSelectionChanged
+            || filled($this->provinceId)
+            || filled($this->wardId)) {
+            $payload['province_id'] = $this->nullableId($validated['provinceId']);
+            $payload['ward_id'] = $this->nullableId($validated['wardId']);
+        }
+
+        return $payload;
     }
 
     public function fillFrom(Lead $lead): void
@@ -181,6 +217,8 @@ final class LeadForm extends Form
         $this->jobTitle = $lead->job_title ?? '';
         $this->website = $lead->website ?? '';
         $this->address = $lead->address ?? '';
+        $this->provinceId = $lead->province_id === null ? null : (string) $lead->province_id;
+        $this->wardId = $lead->ward_id === null ? null : (string) $lead->ward_id;
         $this->city = $lead->city ?? '';
         $this->province = $lead->province ?? '';
         $this->country = $lead->country ?? '';
@@ -189,6 +227,7 @@ final class LeadForm extends Form
         $this->estimatedValue = $lead->estimated_value ?? '';
         $this->notes = $lead->notes ?? '';
         $this->tagIds = $lead->tags->modelKeys();
+        $this->administrativeUnitSelectionChanged = false;
     }
 
     private function normalize(): void

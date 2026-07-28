@@ -37,24 +37,24 @@
                 </div>
                 <div class="md:col-span-3">
                     <label class="mb-1.5 block text-xs font-medium text-slate-600 dark:text-slate-300" for="export-type">Loại dữ liệu</label>
-                    <flux:select id="export-type" wire:model.live="type">
+                    <x-forms.smart-select id="export-type" wire:model.live="type">
                         <option value="all">Tất cả loại xuất</option>
                         <option value="lead">Khách hàng tiềm năng (Lead)</option>
                         <option value="company">Doanh nghiệp (Company)</option>
                         <option value="contact">Người liên hệ (Contact)</option>
                         <option value="opportunity">Cơ hội bán hàng (Opportunity)</option>
                         <option value="revenue">Báo cáo doanh thu</option>
-                    </flux:select>
+                    </x-forms.smart-select>
                 </div>
                 <div class="md:col-span-4">
                     <label class="mb-1.5 block text-xs font-medium text-slate-600 dark:text-slate-300" for="export-status">Trạng thái</label>
-                    <flux:select id="export-status" wire:model.live="status">
+                    <x-forms.smart-select id="export-status" wire:model.live="status">
                         <option value="all">Tất cả trạng thái</option>
                         <option value="completed">Hoàn thành (Completed)</option>
                         <option value="processing">Đang xử lý (Processing)</option>
                         <option value="failed">Thất bại (Failed)</option>
                         <option value="pending">Chờ xử lý (Pending)</option>
-                    </flux:select>
+                    </x-forms.smart-select>
                 </div>
             </div>
         </div>

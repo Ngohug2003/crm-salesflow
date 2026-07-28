@@ -76,7 +76,7 @@ final readonly class EloquentContactRepository implements ContactRepository
     {
         /** @var Contact */
         return $this->visibleTo($actor)
-            ->with(['company', 'owner', 'department', 'createdBy', 'updatedBy'])
+            ->with(['company', 'owner', 'department', 'provinceUnit', 'ward', 'createdBy', 'updatedBy'])
             ->findOrFail($id);
     }
 

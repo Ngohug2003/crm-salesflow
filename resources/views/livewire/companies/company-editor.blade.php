@@ -94,19 +94,19 @@
                     placeholder="Ví dụ: 0312345678"
                 />
 
-                <flux:select wire:model="industry" label="Ngành nghề">
+                <x-forms.smart-select wire:model="industry" label="Ngành nghề">
                     <option value="">-- Chọn ngành nghề --</option>
                     @foreach ($this->industries as $ind)
                         <option value="{{ $ind }}">{{ $ind }}</option>
                     @endforeach
-                </flux:select>
+                </x-forms.smart-select>
 
-                <flux:select wire:model="companySize" label="Quy mô doanh nghiệp">
+                <x-forms.smart-select wire:model="companySize" label="Quy mô doanh nghiệp">
                     <option value="">-- Chọn quy mô --</option>
                     @foreach ($this->sizes as $s)
                         <option value="{{ $s }}">{{ $s }}</option>
                     @endforeach
-                </flux:select>
+                </x-forms.smart-select>
 
                 <flux:input
                     wire:model="annualRevenue"
@@ -151,11 +151,28 @@
                 <div class="md:col-span-2">
                     <flux:input
                         wire:model="address"
-                        label="Địa chỉ trụ sở"
-                        placeholder="Ví dụ: 123 Đường Nguyễn Huệ, Phường Bến Nghé, Quận 1"
+                        label="Địa chỉ chi tiết"
+                        placeholder="Ví dụ: 123 Đường Nguyễn Huệ, Tòa nhà A"
                     />
                 </div>
+
+                <x-forms.administrative-unit-select
+                    province-model="provinceId"
+                    ward-model="wardId"
+                    :province-options="$this->provinceOptions"
+                    :ward-options="$this->wardOptions"
+                    :province-id="$provinceId"
+                    :province-error="$errors->first('provinceId')"
+                    :ward-error="$errors->first('wardId')"
+                />
             </div>
+
+            @if ($companyId !== null && blank($provinceId) && ($province !== '' || $city !== ''))
+                <div class="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200">
+                    Địa chỉ cũ chưa được chuẩn hóa: {{ collect([$address, $city, $province])->filter()->implode(', ') }}.
+                    Hãy chọn lại Tỉnh/Thành phố và Phường/Xã khi cần cập nhật địa chỉ.
+                </div>
+            @endif
         </section>
 
         <!-- Phân công & Ghi chú -->
@@ -166,12 +183,12 @@
             </div>
 
             <div class="grid gap-5 md:grid-cols-2">
-                <flux:select wire:model="ownerId" label="Người phụ trách">
+                <x-forms.smart-select wire:model="ownerId" label="Người phụ trách">
                     <option value="">-- Tự động phân công hoặc Chọn người phụ trách --</option>
                     @foreach ($this->users as $u)
                         <option value="{{ $u->id }}">{{ $u->name }} ({{ $u->email }})</option>
                     @endforeach
-                </flux:select>
+                </x-forms.smart-select>
 
                 <div class="md:col-span-2">
                     <flux:textarea

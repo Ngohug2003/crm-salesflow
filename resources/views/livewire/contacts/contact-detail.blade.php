@@ -87,6 +87,14 @@
                         <dt class="font-medium text-slate-500">Địa chỉ</dt>
                         <dd class="mt-1 text-slate-900 dark:text-white">{{ $contact->address ?: '—' }}</dd>
                     </div>
+                    <div>
+                        <dt class="font-medium text-slate-500">Tỉnh/Thành phố</dt>
+                        <dd class="mt-1 text-slate-900 dark:text-white">{{ $contact->provinceUnit?->full_name ?? $contact->province ?? '—' }}</dd>
+                    </div>
+                    <div>
+                        <dt class="font-medium text-slate-500">Phường/Xã</dt>
+                        <dd class="mt-1 text-slate-900 dark:text-white">{{ $contact->ward?->full_name ?? $contact->city ?? '—' }}</dd>
+                    </div>
                     @if ($contact->notes)
                         <div class="sm:col-span-2">
                             <dt class="font-medium text-slate-500">Ghi chú nội bộ</dt>

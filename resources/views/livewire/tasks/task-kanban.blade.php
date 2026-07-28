@@ -38,22 +38,22 @@
             </div>
 
             <div class="w-full sm:w-44">
-                <flux:select wire:model.live="priority" placeholder="Độ ưu tiên">
+                <x-forms.smart-select wire:model.live="priority" placeholder="Độ ưu tiên">
                     <option value="">Tất cả độ ưu tiên</option>
                     <option value="low">Thấp</option>
                     <option value="medium">Trung bình</option>
                     <option value="high">Cao</option>
                     <option value="urgent">Khẩn cấp</option>
-                </flux:select>
+                </x-forms.smart-select>
             </div>
 
             <div class="w-full sm:w-48">
-                <flux:select wire:model.live="assignedTo" placeholder="Người thực hiện">
+                <x-forms.smart-select wire:model.live="assignedTo" placeholder="Người thực hiện">
                     <option value="">Tất cả thành viên</option>
                     @foreach ($this->users as $u)
                         <option value="{{ $u->id }}">{{ $u->name }}</option>
                     @endforeach
-                </flux:select>
+                </x-forms.smart-select>
             </div>
         </div>
     </div>

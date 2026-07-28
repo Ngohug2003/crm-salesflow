@@ -57,50 +57,50 @@
 
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
-                        <flux:select wire:model.live="subjectType" label="Loại đối tượng">
+                        <x-forms.smart-select wire:model.live="subjectType" label="Loại đối tượng">
                             <option value="">Không gắn (Công việc chung)</option>
                             <option value="App\Models\Opportunity">Cơ hội bán hàng (Deal)</option>
                             <option value="App\Models\Company">Doanh nghiệp (Company)</option>
                             <option value="App\Models\Lead">Khách hàng tiềm năng (Lead)</option>
                             <option value="App\Models\Contact">Người liên hệ (Contact)</option>
-                        </flux:select>
+                        </x-forms.smart-select>
                     </div>
 
                     @if ($subjectType === 'App\Models\Opportunity')
                         <div>
-                            <flux:select wire:model="subjectId" label="Chọn Cơ hội (Deal)">
+                            <x-forms.smart-select wire:model="subjectId" label="Chọn Cơ hội (Deal)">
                                 <option value="">Chọn Deal...</option>
                                 @foreach ($this->opportunities as $op)
                                     <option value="{{ $op->id }}">{{ $op->title }} ({{ $op->code }})</option>
                                 @endforeach
-                            </flux:select>
+                            </x-forms.smart-select>
                         </div>
                     @elseif ($subjectType === 'App\Models\Company')
                         <div>
-                            <flux:select wire:model="subjectId" label="Chọn Doanh nghiệp">
+                            <x-forms.smart-select wire:model="subjectId" label="Chọn Doanh nghiệp">
                                 <option value="">Chọn Doanh nghiệp...</option>
                                 @foreach ($this->companies as $c)
                                     <option value="{{ $c->id }}">{{ $c->name }}</option>
                                 @endforeach
-                            </flux:select>
+                            </x-forms.smart-select>
                         </div>
                     @elseif ($subjectType === 'App\Models\Lead')
                         <div>
-                            <flux:select wire:model="subjectId" label="Chọn Lead">
+                            <x-forms.smart-select wire:model="subjectId" label="Chọn Lead">
                                 <option value="">Chọn Lead...</option>
                                 @foreach ($this->leads as $l)
                                     <option value="{{ $l->id }}">{{ $l->full_name }}</option>
                                 @endforeach
-                            </flux:select>
+                            </x-forms.smart-select>
                         </div>
                     @elseif ($subjectType === 'App\Models\Contact')
                         <div>
-                            <flux:select wire:model="subjectId" label="Chọn Người liên hệ">
+                            <x-forms.smart-select wire:model="subjectId" label="Chọn Người liên hệ">
                                 <option value="">Chọn Contact...</option>
                                 @foreach ($this->contacts as $ct)
                                     <option value="{{ $ct->id }}">{{ $ct->full_name }}</option>
                                 @endforeach
-                            </flux:select>
+                            </x-forms.smart-select>
                         </div>
                     @endif
                 </div>
@@ -115,28 +115,28 @@
                 </h3>
 
                 <div class="space-y-4">
-                    <flux:select wire:model="taskStatus" label="Trạng thái">
+                    <x-forms.smart-select wire:model="taskStatus" label="Trạng thái">
                         <option value="todo">Cần làm</option>
                         <option value="in_progress">Đang làm</option>
                         <option value="completed">Hoàn thành</option>
                         <option value="cancelled">Đã hủy</option>
-                    </flux:select>
+                    </x-forms.smart-select>
 
-                    <flux:select wire:model="taskPriority" label="Độ ưu tiên">
+                    <x-forms.smart-select wire:model="taskPriority" label="Độ ưu tiên">
                         <option value="low">Thấp</option>
                         <option value="medium">Trung bình</option>
                         <option value="high">Cao</option>
                         <option value="urgent">Khẩn cấp</option>
-                    </flux:select>
+                    </x-forms.smart-select>
 
                     <div class="space-y-1">
                         <label class="text-xs font-semibold text-slate-700 dark:text-slate-300">Người thực hiện chính</label>
-                        <flux:select wire:model="assigneeId">
+                        <x-forms.smart-select wire:model="assigneeId">
                             <option value="">Chưa phân công</option>
                             @foreach ($this->users as $u)
                                 <option value="{{ $u->id }}">{{ $u->name }}</option>
                             @endforeach
-                        </flux:select>
+                        </x-forms.smart-select>
                     </div>
 
                     <!-- Multi-Assignee Checkboxes -->

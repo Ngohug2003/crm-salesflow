@@ -167,28 +167,28 @@
                     @endif
 
                     <div class="space-y-4">
-                        <flux:select wire:model.live="taskStatus" wire:change="updateTaskSettings" label="Trạng thái" :disabled="!$canEdit">
+                        <x-forms.smart-select wire:model.live="taskStatus" wire:change="updateTaskSettings" label="Trạng thái" :disabled="!$canEdit">
                             <option value="todo">Cần làm</option>
                             <option value="in_progress">Đang làm</option>
                             <option value="completed">Hoàn thành</option>
                             <option value="cancelled">Đã hủy</option>
-                        </flux:select>
+                        </x-forms.smart-select>
 
-                        <flux:select wire:model.live="taskPriority" wire:change="updateTaskSettings" label="Độ ưu tiên" :disabled="!$canEdit">
+                        <x-forms.smart-select wire:model.live="taskPriority" wire:change="updateTaskSettings" label="Độ ưu tiên" :disabled="!$canEdit">
                             <option value="low">Thấp</option>
                             <option value="medium">Trung bình</option>
                             <option value="high">Cao</option>
                             <option value="urgent">Khẩn cấp</option>
-                        </flux:select>
+                        </x-forms.smart-select>
 
                         <div class="space-y-1">
                             <label class="text-xs font-semibold text-slate-700 dark:text-slate-300">Người thực hiện chính</label>
-                            <flux:select wire:model.live="assigneeId" wire:change="updateTaskSettings" :disabled="!$canEdit">
+                            <x-forms.smart-select wire:model.live="assigneeId" :disabled="!$canEdit">
                                 <option value="">Chưa phân công</option>
                                 @foreach ($this->users as $u)
                                     <option value="{{ $u->id }}">{{ $u->name }}</option>
                                 @endforeach
-                            </flux:select>
+                            </x-forms.smart-select>
                         </div>
 
                         <!-- Multi-Assignees Display -->

@@ -51,22 +51,22 @@
 
         <div class="flex items-center gap-2">
             <span class="text-xs font-medium text-slate-500">Loại hồ sơ:</span>
-            <flux:select wire:model.live="subjectType" class="w-44">
+            <x-forms.smart-select wire:model.live="subjectType" class="w-44">
                 <option value="all">Tất cả loại</option>
                 <option value="lead">Lead (Tiềm năng)</option>
                 <option value="opportunity">Cơ hội bán hàng</option>
                 <option value="company">Doanh nghiệp</option>
-            </flux:select>
+            </x-forms.smart-select>
         </div>
 
         <div class="flex items-center gap-2">
             <span class="text-xs font-medium text-slate-500">Trạng thái SLA:</span>
-            <flux:select wire:model.live="slaStatus" class="w-44">
+            <x-forms.smart-select wire:model.live="slaStatus" class="w-44">
                 <option value="all">Tất cả trạng thái</option>
                 <option value="breached">Vi phạm SLA</option>
                 <option value="warning">Sắp quá hạn</option>
                 <option value="on_track">Đúng hạn</option>
-            </flux:select>
+            </x-forms.smart-select>
         </div>
     </div>
 

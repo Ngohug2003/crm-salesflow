@@ -13,6 +13,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @property int $id
+ * @property ?int $province_id
+ * @property ?int $ward_id
+ */
 final class Company extends Model
 {
     /** @use HasFactory<CompanyFactory> */
@@ -29,6 +34,8 @@ final class Company extends Model
         'company_size',
         'annual_revenue',
         'address',
+        'province_id',
+        'ward_id',
         'city',
         'province',
         'country',
@@ -60,6 +67,18 @@ final class Company extends Model
     public function department(): BelongsTo
     {
         return $this->belongsTo(Department::class, 'department_id');
+    }
+
+    /** @return BelongsTo<Province, $this> */
+    public function provinceUnit(): BelongsTo
+    {
+        return $this->belongsTo(Province::class, 'province_id');
+    }
+
+    /** @return BelongsTo<Ward, $this> */
+    public function ward(): BelongsTo
+    {
+        return $this->belongsTo(Ward::class, 'ward_id');
     }
 
     /** @return BelongsTo<User, $this> */

@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             DepartmentSeeder::class,
             RolePermissionSeeder::class,
             LeadTaxonomySeeder::class,
+            VietnamAdministrativeUnitSeeder::class,
         ]);
 
         $managementDepartment = Department::query()->where('code', 'MANAGEMENT')->firstOrFail();

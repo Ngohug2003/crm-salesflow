@@ -53,28 +53,28 @@
                 icon="magnifying-glass"
             />
 
-            <flux:select wire:model.live="status" label="Trạng thái">
+            <x-forms.smart-select wire:model.live="status" label="Trạng thái">
                 <option value="">Tất cả trạng thái</option>
                 <option value="todo">Cần làm</option>
                 <option value="in_progress">Đang làm</option>
                 <option value="completed">Hoàn thành</option>
                 <option value="cancelled">Đã hủy</option>
-            </flux:select>
+            </x-forms.smart-select>
 
-            <flux:select wire:model.live="priority" label="Độ ưu tiên">
+            <x-forms.smart-select wire:model.live="priority" label="Độ ưu tiên">
                 <option value="">Tất cả độ ưu tiên</option>
                 <option value="low">Thấp</option>
                 <option value="medium">Trung bình</option>
                 <option value="high">Cao</option>
                 <option value="urgent">Khẩn cấp</option>
-            </flux:select>
+            </x-forms.smart-select>
 
-            <flux:select wire:model.live="assignedTo" label="Người thực hiện">
+            <x-forms.smart-select wire:model.live="assignedTo" label="Người thực hiện">
                 <option value="">Tất cả thành viên</option>
                 @foreach ($this->users as $userOption)
                     <option value="{{ $userOption->id }}">{{ $userOption->name }}</option>
                 @endforeach
-            </flux:select>
+            </x-forms.smart-select>
         </div>
 
         <div class="data-list-content">
@@ -233,19 +233,19 @@
                 />
 
                 <div class="grid grid-cols-2 gap-4">
-                    <flux:select wire:model="taskStatus" label="Trạng thái">
+                    <x-forms.smart-select wire:model="taskStatus" label="Trạng thái">
                         <option value="todo">Cần làm</option>
                         <option value="in_progress">Đang làm</option>
                         <option value="completed">Hoàn thành</option>
                         <option value="cancelled">Đã hủy</option>
-                    </flux:select>
+                    </x-forms.smart-select>
 
-                    <flux:select wire:model="taskPriority" label="Độ ưu tiên">
+                    <x-forms.smart-select wire:model="taskPriority" label="Độ ưu tiên">
                         <option value="low">Thấp</option>
                         <option value="medium">Trung bình</option>
                         <option value="high">Cao</option>
                         <option value="urgent">Khẩn cấp</option>
-                    </flux:select>
+                    </x-forms.smart-select>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
@@ -255,12 +255,12 @@
                 </div>
 
                 <div class="w-full">
-                    <flux:select wire:model="assigneeId" label="Người thực hiện chính">
+                    <x-forms.smart-select wire:model="assigneeId" label="Người thực hiện chính">
                         <option value="">Chưa phân công</option>
                         @foreach ($this->users as $u)
                             <option value="{{ $u->id }}">{{ $u->name }}</option>
                         @endforeach
-                    </flux:select>
+                    </x-forms.smart-select>
                 </div>
 
                 <!-- Multi-Assignee Checkboxes -->

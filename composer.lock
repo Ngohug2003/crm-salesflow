@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "46e45f864f588283a7e3eec6b7dc533b",
+    "content-hash": "36f2923140a003e24c47fb7cb7b2ef08",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -9223,6 +9223,81 @@
                 "source": "https://github.com/webmozarts/assert/tree/2.4.1"
             },
             "time": "2026-06-15T15:31:57+00:00"
+        },
+        {
+            "name": "williamug/searchable-select",
+            "version": "v3.0.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Williamug/searchable-select.git",
+                "reference": "76c02d8ad9a733ba9355e578919d52b57d37cf8e"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Williamug/searchable-select/zipball/76c02d8ad9a733ba9355e578919d52b57d37cf8e",
+                "reference": "76c02d8ad9a733ba9355e578919d52b57d37cf8e",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/contracts": "^11.0||^12.0||^13.0",
+                "livewire/livewire": "^3.0||^4.0",
+                "php": "^8.2"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.14",
+                "nunomaduro/collision": "^8.8",
+                "orchestra/testbench": "^10.0.0||^9.0.0",
+                "pestphp/pest": "^4.0",
+                "pestphp/pest-plugin-arch": "^4.0",
+                "pestphp/pest-plugin-laravel": "^4.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Williamug\\SearchableSelect\\SearchableSelectServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Williamug\\SearchableSelect\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "William Asaba",
+                    "email": "asabawilliamdk@yahoo.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "A beautiful, searchable dropdown component for Laravel Livewire 3 & 4 applications. Built with Alpine.js and Tailwind CSS - no external dependencies required!",
+            "homepage": "https://github.com/williamug/searchable-select",
+            "keywords": [
+                "Williamug",
+                "dropdown",
+                "laravel",
+                "livewire",
+                "searchable-dropdown",
+                "searchable-select",
+                "select",
+                "select2"
+            ],
+            "support": {
+                "issues": "https://github.com/Williamug/searchable-select/issues",
+                "source": "https://github.com/Williamug/searchable-select/tree/v3.0.2"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/Williamug",
+                    "type": "github"
+                }
+            ],
+            "time": "2026-05-15T16:57:54+00:00"
         }
     ],
     "packages-dev": [

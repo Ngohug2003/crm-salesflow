@@ -50,12 +50,12 @@
                 </div>
 
                 <div>
-                    <flux:select wire:model="owner_id" label="Người phụ trách">
+                    <x-forms.smart-select wire:model="owner_id" label="Người phụ trách">
                         <option value="">Tự động gán</option>
                         @foreach ($this->users as $u)
                             <option value="{{ $u->id }}">{{ $u->name }} ({{ $u->email }})</option>
                         @endforeach
-                    </flux:select>
+                    </x-forms.smart-select>
                     @error('owner_id') <span class="mt-1 block text-xs text-rose-500">{{ $message }}</span> @enderror
                 </div>
             </div>
@@ -69,51 +69,51 @@
 
             <div class="grid gap-4 lg:grid-cols-2">
                 <div>
-                    <flux:select wire:model.live="pipeline_id" label="Quy trình bán hàng *">
+                    <x-forms.smart-select wire:model.live="pipeline_id" label="Quy trình bán hàng *">
                         <option value="">Chọn quy trình</option>
                         @foreach ($this->pipelines as $pipe)
                             <option value="{{ $pipe->id }}">{{ $pipe->name }}</option>
                         @endforeach
-                    </flux:select>
+                    </x-forms.smart-select>
                     @error('pipeline_id') <span class="mt-1 block text-xs text-rose-500">{{ $message }}</span> @enderror
                 </div>
 
                 <div>
-                    <flux:select wire:model="stage_id" label="Giai đoạn bán hàng *">
+                    <x-forms.smart-select wire:model="stage_id" label="Giai đoạn bán hàng *">
                         <option value="">Chọn giai đoạn</option>
                         @foreach ($this->stages as $stg)
                             <option value="{{ $stg->id }}">{{ $stg->name }} ({{ $stg->probability }}%)</option>
                         @endforeach
-                    </flux:select>
+                    </x-forms.smart-select>
                     @error('stage_id') <span class="mt-1 block text-xs text-rose-500">{{ $message }}</span> @enderror
                 </div>
 
                 <div>
-                    <flux:select wire:model="forecast_category" label="Danh mục dự báo (Forecast Category) *">
+                    <x-forms.smart-select wire:model="forecast_category" label="Danh mục dự báo (Forecast Category) *">
                         @foreach (\App\Enums\ForecastCategory::cases() as $fc)
                             <option value="{{ $fc->value }}">{{ $fc->label() }}</option>
                         @endforeach
-                    </flux:select>
+                    </x-forms.smart-select>
                     @error('forecast_category') <span class="mt-1 block text-xs text-rose-500">{{ $message }}</span> @enderror
                 </div>
 
                 <div>
-                    <flux:select wire:model.live="company_id" label="Doanh nghiệp liên quan">
+                    <x-forms.smart-select wire:model.live="company_id" label="Doanh nghiệp liên quan">
                         <option value="">Không chọn</option>
                         @foreach ($this->companies as $comp)
                             <option value="{{ $comp->id }}">{{ $comp->name }}</option>
                         @endforeach
-                    </flux:select>
+                    </x-forms.smart-select>
                     @error('company_id') <span class="mt-1 block text-xs text-rose-500">{{ $message }}</span> @enderror
                 </div>
 
                 <div>
-                    <flux:select wire:model="contact_id" label="Người liên hệ chính">
+                    <x-forms.smart-select wire:model="contact_id" label="Người liên hệ chính">
                         <option value="">Không chọn</option>
                         @foreach ($this->contacts as $cont)
                             <option value="{{ $cont->id }}">{{ $cont->full_name }} ({{ $cont->email ?: $cont->phone }})</option>
                         @endforeach
-                    </flux:select>
+                    </x-forms.smart-select>
                     @error('contact_id') <span class="mt-1 block text-xs text-rose-500">{{ $message }}</span> @enderror
                 </div>
             </div>

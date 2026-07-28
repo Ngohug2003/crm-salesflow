@@ -37,26 +37,26 @@
             </div>
 
             <div class="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-                <flux:select wire:model="form.sourceId" label="Nguồn Lead">
+                <x-forms.smart-select wire:model="form.sourceId" label="Nguồn Lead">
                     <option value="">Chưa xác định nguồn</option>
                     @foreach ($this->sourceOptions as $sourceOption)
                         <option value="{{ $sourceOption->id }}">{{ $sourceOption->name }}</option>
                     @endforeach
-                </flux:select>
+                </x-forms.smart-select>
 
-                <flux:select wire:model="form.priority" label="Mức ưu tiên" required>
+                <x-forms.smart-select wire:model="form.priority" label="Mức ưu tiên" required>
                     @foreach ($this->priorityOptions as $value => $label)
                         <option value="{{ $value }}">{{ $label }}</option>
                     @endforeach
-                </flux:select>
+                </x-forms.smart-select>
 
                 @if ($this->canAssign)
-                    <flux:select wire:model="form.ownerId" label="Người phụ trách">
+                    <x-forms.smart-select wire:model="form.ownerId" label="Người phụ trách">
                         <option value="">Chưa phân công</option>
                         @foreach ($this->ownerOptions as $ownerOption)
                             <option value="{{ $ownerOption->id }}">{{ $ownerOption->name }} — {{ $ownerOption->email }}</option>
                         @endforeach
-                    </flux:select>
+                    </x-forms.smart-select>
                 @else
                     <div class="rounded-xl border border-slate-200 px-4 py-3 dark:border-slate-800">
                         <p class="text-sm font-medium">Người phụ trách</p>
@@ -93,12 +93,28 @@
             </div>
 
             <div class="grid gap-5 md:grid-cols-2">
-                <flux:input wire:model.blur="form.address" label="Địa chỉ" />
-                <flux:input wire:model.blur="form.city" label="Thành phố" />
-                <flux:input wire:model.blur="form.province" label="Tỉnh / Thành" />
+                <div class="md:col-span-2">
+                    <flux:input wire:model.blur="form.address" label="Địa chỉ chi tiết" placeholder="Số nhà, tên đường, tòa nhà…" />
+                </div>
+                <x-forms.administrative-unit-select
+                    province-model="form.provinceId"
+                    ward-model="form.wardId"
+                    :province-options="$this->provinceOptions"
+                    :ward-options="$this->wardOptions"
+                    :province-id="$form->provinceId"
+                    :province-error="$errors->first('form.provinceId')"
+                    :ward-error="$errors->first('form.wardId')"
+                />
                 <flux:input wire:model.blur="form.country" label="Quốc gia" />
                 <flux:input wire:model.blur="form.estimatedValue" type="number" min="0" step="0.01" label="Giá trị dự kiến (VNĐ)" />
             </div>
+
+            @if ($leadId !== null && blank($form->provinceId) && ($form->province !== '' || $form->city !== ''))
+                <div class="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200">
+                    Địa chỉ cũ chưa được chuẩn hóa: {{ collect([$form->address, $form->city, $form->province])->filter()->implode(', ') }}.
+                    Hãy chọn lại Tỉnh/Thành phố và Phường/Xã khi cần cập nhật địa chỉ.
+                </div>
+            @endif
 
             <div class="mt-5">
                 <flux:textarea wire:model.blur="form.notes" label="Ghi chú" rows="5" placeholder="Thông tin nhu cầu, bối cảnh hoặc lưu ý khi liên hệ…" />

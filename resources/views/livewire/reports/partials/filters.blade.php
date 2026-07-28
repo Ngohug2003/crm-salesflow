@@ -52,37 +52,37 @@
     @endif
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <flux:select wire:model.live="datePreset" label="Khoảng thời gian">
+        <x-forms.smart-select wire:model.live="datePreset" label="Khoảng thời gian">
             <option value="today">Hôm nay</option>
             <option value="this_week">Tuần này</option>
             <option value="this_month">Tháng này</option>
             <option value="this_quarter">Quý này</option>
             <option value="this_year">Năm nay</option>
             <option value="custom">Khoảng ngày tùy chọn</option>
-        </flux:select>
+        </x-forms.smart-select>
 
-        <flux:select wire:model.live="departmentId" label="Phòng ban">
+        <x-forms.smart-select wire:model.live="departmentId" label="Phòng ban">
             <option value="">Tất cả phòng ban được phép xem</option>
             @foreach ($this->departments as $department)
                 <option value="{{ $department->id }}">{{ $department->name }}</option>
             @endforeach
-        </flux:select>
+        </x-forms.smart-select>
 
-        <flux:select wire:model.live="userId" label="Người phụ trách">
+        <x-forms.smart-select wire:model.live="userId" label="Người phụ trách">
             <option value="">Tất cả người dùng được phép xem</option>
             @foreach ($this->users as $user)
                 <option value="{{ $user->id }}">{{ $user->name }}</option>
             @endforeach
-        </flux:select>
+        </x-forms.smart-select>
 
-        <flux:select wire:model.live="pipelineId" label="Quy trình bán hàng">
+        <x-forms.smart-select wire:model.live="pipelineId" label="Quy trình bán hàng">
             @unless ($pipelineRequired)
                 <option value="">Tất cả quy trình được phép xem</option>
             @endunless
             @foreach ($this->pipelines as $pipeline)
                 <option value="{{ $pipeline->id }}">{{ $pipeline->name }}</option>
             @endforeach
-        </flux:select>
+        </x-forms.smart-select>
     </div>
 
     @if ($datePreset === 'custom')

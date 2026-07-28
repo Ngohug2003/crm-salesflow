@@ -84,26 +84,26 @@
                 icon="magnifying-glass"
             />
 
-            <flux:select wire:model.live="pipelineId" label="Quy trình">
+            <x-forms.smart-select wire:model.live="pipelineId" label="Quy trình">
                 <option value="">Tất cả quy trình</option>
                 @foreach ($this->pipelines as $pipelineOption)
                     <option value="{{ $pipelineOption->id }}">{{ $pipelineOption->name }}</option>
                 @endforeach
-            </flux:select>
+            </x-forms.smart-select>
 
-            <flux:select wire:model.live="status" label="Trạng thái">
+            <x-forms.smart-select wire:model.live="status" label="Trạng thái">
                 <option value="">Tất cả trạng thái</option>
                 <option value="open">Đang mở</option>
                 <option value="won">Thành công</option>
                 <option value="lost">Thất bại</option>
-            </flux:select>
+            </x-forms.smart-select>
 
-            <flux:select wire:model.live="forecastCategory" label="Dự báo (Forecast)">
+            <x-forms.smart-select wire:model.live="forecastCategory" label="Dự báo (Forecast)">
                 <option value="">Tất cả danh mục dự báo</option>
                 @foreach (\App\Enums\ForecastCategory::cases() as $fcOption)
                     <option value="{{ $fcOption->value }}">{{ $fcOption->label() }}</option>
                 @endforeach
-            </flux:select>
+            </x-forms.smart-select>
         </div>
 
         <div class="data-list-content">

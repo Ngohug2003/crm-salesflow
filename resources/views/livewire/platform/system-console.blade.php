@@ -260,27 +260,27 @@
                 />
             </div>
             <div class="xl:col-span-3">
-                <flux:select wire:model.live="level" label="Mức độ">
+                <x-forms.smart-select wire:model.live="level" label="Mức độ">
                     <option value="all">Tất cả mức độ</option>
                     @foreach (['debug', 'info', 'notice', 'warning', 'error', 'critical', 'alert', 'emergency'] as $levelOption)
                         <option value="{{ $levelOption }}">{{ strtoupper($levelOption) }}</option>
                     @endforeach
-                </flux:select>
+                </x-forms.smart-select>
             </div>
             <div class="xl:col-span-2">
-                <flux:select wire:model.live="module" label="Phân hệ">
+                <x-forms.smart-select wire:model.live="module" label="Phân hệ">
                     <option value="all">Tất cả phân hệ</option>
                     @foreach ($modules as $moduleOption)
                         <option value="{{ $moduleOption }}">{{ str($moduleOption)->headline() }}</option>
                     @endforeach
-                </flux:select>
+                </x-forms.smart-select>
             </div>
             <div class="xl:col-span-2">
-                <flux:select wire:model.live="limit" label="Số dòng">
+                <x-forms.smart-select wire:model.live="limit" label="Số dòng">
                     @foreach ([50, 100, 200] as $limitOption)
                         <option value="{{ $limitOption }}">{{ $limitOption }} dòng</option>
                     @endforeach
-                </flux:select>
+                </x-forms.smart-select>
             </div>
         </div>
 

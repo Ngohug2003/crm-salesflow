@@ -67,26 +67,26 @@
                     placeholder="Tên, email, điện thoại, công ty"
                 />
 
-                <flux:select wire:model.live="status" label="Trạng thái">
+                <x-forms.smart-select wire:model.live="status" label="Trạng thái">
                     <option value="all">Tất cả trạng thái</option>
                     @foreach ($this->statusOptions as $value => $label)
                         <option value="{{ $value }}">{{ $label }}</option>
                     @endforeach
-                </flux:select>
+                </x-forms.smart-select>
 
-                <flux:select wire:model.live="priority" label="Mức ưu tiên">
+                <x-forms.smart-select wire:model.live="priority" label="Mức ưu tiên">
                     <option value="all">Tất cả mức ưu tiên</option>
                     @foreach ($this->priorityOptions as $value => $label)
                         <option value="{{ $value }}">{{ $label }}</option>
                     @endforeach
-                </flux:select>
+                </x-forms.smart-select>
 
-                <flux:select wire:model.live="source" label="Nguồn Lead">
+                <x-forms.smart-select wire:model.live="source" label="Nguồn Lead">
                     <option value="all">Tất cả nguồn</option>
                     @foreach ($this->sourceOptions as $sourceOption)
                         <option value="{{ $sourceOption->id }}">{{ $sourceOption->name }}</option>
                     @endforeach
-                </flux:select>
+                </x-forms.smart-select>
             </div>
 
             <details class="group mt-4 rounded-xl border border-slate-200 bg-slate-50/70 dark:border-slate-800 dark:bg-slate-950/30" @if ($scoreLevel !== 'all' || $tag !== 'all' || $owner !== 'all' || $department !== 'all' || $dateFrom !== '' || $dateTo !== '' || $sort !== 'created_at' || $direction !== 'desc' || $perPage !== 15) open @endif>
@@ -95,53 +95,53 @@
                     <span class="text-slate-400 transition group-open:rotate-180">⌄</span>
                 </summary>
                 <div class="grid gap-3 border-t border-slate-200 p-4 md:grid-cols-2 xl:grid-cols-4 dark:border-slate-800">
-                    <flux:select wire:model.live="scoreLevel" label="Cấp độ Điểm Lead">
+                    <x-forms.smart-select wire:model.live="scoreLevel" label="Cấp độ Điểm Lead">
                         <option value="all">Tất cả điểm</option>
                         <option value="hot">Hot Lead (≥ 70đ)</option>
                         <option value="warm">Warm Lead (40-69đ)</option>
                         <option value="cold">Cold Lead (< 40đ)</option>
-                    </flux:select>
+                    </x-forms.smart-select>
 
-                    <flux:select wire:model.live="tag" label="Tag">
+                    <x-forms.smart-select wire:model.live="tag" label="Tag">
                         <option value="all">Tất cả tag</option>
                         @foreach ($this->tagOptions as $tagOption)
                             <option value="{{ $tagOption->id }}">{{ $tagOption->name }}</option>
                         @endforeach
-                    </flux:select>
+                    </x-forms.smart-select>
 
-                    <flux:select wire:model.live="owner" label="Người phụ trách">
+                    <x-forms.smart-select wire:model.live="owner" label="Người phụ trách">
                         <option value="all">Tất cả người phụ trách</option>
                         @foreach ($this->ownerOptions as $ownerOption)
                             <option value="{{ $ownerOption->id }}">{{ $ownerOption->name }}</option>
                         @endforeach
-                    </flux:select>
+                    </x-forms.smart-select>
 
-                    <flux:select wire:model.live="department" label="Phòng ban">
+                    <x-forms.smart-select wire:model.live="department" label="Phòng ban">
                         <option value="all">Tất cả phòng ban</option>
                         @foreach ($this->departmentOptions as $departmentOption)
                             <option value="{{ $departmentOption->id }}">{{ $departmentOption->name }} ({{ $departmentOption->code }})</option>
                         @endforeach
-                    </flux:select>
+                    </x-forms.smart-select>
 
-                    <flux:select wire:model.live="perPage" label="Số dòng mỗi trang">
+                    <x-forms.smart-select wire:model.live="perPage" label="Số dòng mỗi trang">
                         @foreach ([10, 15, 25, 50, 100] as $size)
                             <option value="{{ $size }}">{{ $size }} dòng</option>
                         @endforeach
-                    </flux:select>
+                    </x-forms.smart-select>
 
                     <flux:input wire:model.live="dateFrom" type="date" label="Tạo từ ngày" />
                     <flux:input wire:model.live="dateTo" type="date" label="Đến ngày" />
 
-                    <flux:select wire:model.live="sort" label="Sắp xếp theo">
+                    <x-forms.smart-select wire:model.live="sort" label="Sắp xếp theo">
                         @foreach ($this->sortOptions as $value => $label)
                             <option value="{{ $value }}">{{ $label }}</option>
                         @endforeach
-                    </flux:select>
+                    </x-forms.smart-select>
 
-                    <flux:select wire:model.live="direction" label="Thứ tự">
+                    <x-forms.smart-select wire:model.live="direction" label="Thứ tự">
                         <option value="desc">Giảm dần</option>
                         <option value="asc">Tăng dần</option>
-                    </flux:select>
+                    </x-forms.smart-select>
                 </div>
             </details>
         </div>
@@ -348,12 +348,12 @@
                     <flux:text class="mt-2">Đang chọn {{ count($selectedLeadIds) }} Lead. Phòng ban sẽ tự động đồng bộ theo NVKD phụ trách mới.</flux:text>
                 </div>
                 <div class="space-y-4">
-                    <flux:select wire:model="bulkOwnerId" label="Người phụ trách mới">
+                    <x-forms.smart-select wire:model="bulkOwnerId" label="Người phụ trách mới">
                         <option value="">Chưa phân công</option>
                         @foreach ($this->ownerOptions as $ownerOption)
                             <option value="{{ $ownerOption->id }}">{{ $ownerOption->name }} — {{ $ownerOption->email }}</option>
                         @endforeach
-                    </flux:select>
+                    </x-forms.smart-select>
                     <flux:textarea wire:model="bulkAssignReason" label="Lý do phân công" rows="3" maxlength="500" placeholder="Ví dụ: Phân bổ khách hàng khu vực Miền Bắc" />
                 </div>
                 <div class="flex justify-end gap-3">
@@ -373,12 +373,12 @@
                     <flux:text class="mt-2">Đang chọn {{ count($selectedLeadIds) }} Lead.</flux:text>
                 </div>
                 <div class="space-y-4">
-                    <flux:select wire:model="bulkStatus" label="Trạng thái mục tiêu *" required>
+                    <x-forms.smart-select wire:model="bulkStatus" label="Trạng thái mục tiêu *" required>
                         <option value="">Chọn trạng thái</option>
                         @foreach ($this->statusOptions as $value => $label)
                             <option value="{{ $value }}">{{ $label }}</option>
                         @endforeach
-                    </flux:select>
+                    </x-forms.smart-select>
                     <flux:textarea wire:model="bulkStatusReason" label="Lý do thay đổi" rows="3" maxlength="500" placeholder="Nhập lý do đổi trạng thái..." />
                 </div>
                 <div class="flex justify-end gap-3">
@@ -398,12 +398,12 @@
                     <flux:text class="mt-2">Chọn thẻ để đính kèm cho {{ count($selectedLeadIds) }} Lead đang chọn.</flux:text>
                 </div>
                 <div class="space-y-4">
-                    <flux:select wire:model="bulkTagId" label="Thẻ cần gán *" required>
+                    <x-forms.smart-select wire:model="bulkTagId" label="Thẻ cần gán *" required>
                         <option value="">Chọn thẻ</option>
                         @foreach ($this->tagOptions as $tagOption)
                             <option value="{{ $tagOption->id }}">{{ $tagOption->name }}</option>
                         @endforeach
-                    </flux:select>
+                    </x-forms.smart-select>
                 </div>
                 <div class="flex justify-end gap-3">
                     <flux:button variant="ghost" x-on:click="$flux.modal('bulk-tag-modal').close()">Hủy</flux:button>

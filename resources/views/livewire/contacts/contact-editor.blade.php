@@ -94,12 +94,12 @@
                 />
                 @error('firstName') <span class="mt-1 text-xs text-red-500">{{ $message }}</span> @enderror
 
-                <flux:select wire:model="companyId" label="Doanh nghiệp trực thuộc">
+                <x-forms.smart-select wire:model="companyId" label="Doanh nghiệp trực thuộc">
                     <option value="">-- Chọn doanh nghiệp (Hoặc cá nhân tự do) --</option>
                     @foreach ($this->companies as $c)
                         <option value="{{ $c->id }}">{{ $c->name }}</option>
                     @endforeach
-                </flux:select>
+                </x-forms.smart-select>
                 @error('companyId') <span class="mt-1 text-xs text-red-500">{{ $message }}</span> @enderror
 
                 <div class="flex items-center pt-6">
@@ -161,11 +161,28 @@
                 <div class="md:col-span-2">
                     <flux:input
                         wire:model="address"
-                        label="Địa chỉ"
-                        placeholder="Ví dụ: 45 Đường Lê Lợi, Quận 1"
+                        label="Địa chỉ chi tiết"
+                        placeholder="Ví dụ: 45 Đường Lê Lợi, Tòa nhà A"
                     />
                 </div>
+
+                <x-forms.administrative-unit-select
+                    province-model="provinceId"
+                    ward-model="wardId"
+                    :province-options="$this->provinceOptions"
+                    :ward-options="$this->wardOptions"
+                    :province-id="$provinceId"
+                    :province-error="$errors->first('provinceId')"
+                    :ward-error="$errors->first('wardId')"
+                />
             </div>
+
+            @if ($contactId !== null && blank($provinceId) && ($province !== '' || $city !== ''))
+                <div class="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200">
+                    Địa chỉ cũ chưa được chuẩn hóa: {{ collect([$address, $city, $province])->filter()->implode(', ') }}.
+                    Hãy chọn lại Tỉnh/Thành phố và Phường/Xã khi cần cập nhật địa chỉ.
+                </div>
+            @endif
         </section>
 
         <!-- Phân công & Ghi chú -->
@@ -176,12 +193,12 @@
             </div>
 
             <div class="grid gap-5 md:grid-cols-2">
-                <flux:select wire:model="ownerId" label="Người phụ trách">
+                <x-forms.smart-select wire:model="ownerId" label="Người phụ trách">
                     <option value="">-- Tự động phân công hoặc Chọn người phụ trách --</option>
                     @foreach ($this->users as $u)
                         <option value="{{ $u->id }}">{{ $u->name }} ({{ $u->email }})</option>
                     @endforeach
-                </flux:select>
+                </x-forms.smart-select>
 
                 <div class="md:col-span-2">
                     <flux:textarea

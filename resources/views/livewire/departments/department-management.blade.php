@@ -46,12 +46,12 @@
                     <div class="grid gap-5 md:grid-cols-2">
                         <flux:input wire:model.blur="form.name" label="Tên phòng ban" placeholder="Ví dụ: Phòng Kinh doanh" required />
                         <flux:input wire:model.blur="form.code" label="Mã phòng ban" placeholder="Ví dụ: SALES-HCM" required />
-                        <flux:select wire:model="form.parentId" label="Phòng ban cha" placeholder="Không có — phòng ban cấp gốc">
+                        <x-forms.smart-select wire:model="form.parentId" label="Phòng ban cha" placeholder="Không có — phòng ban cấp gốc">
                             <option value="">Không có — phòng ban cấp gốc</option>
                             @foreach ($this->parentOptions as $department)
                                 <option value="{{ $department->id }}">{{ $department->name }} ({{ $department->code }})</option>
                             @endforeach
-                        </flux:select>
+                        </x-forms.smart-select>
                         <flux:input wire:model="form.sortOrder" type="number" min="0" max="32767" label="Thứ tự hiển thị" required />
                     </div>
 
@@ -83,11 +83,11 @@
 
         <div class="mb-5 grid gap-3 md:grid-cols-2 xl:max-w-2xl">
             <flux:input wire:model.live.debounce.300ms="search" icon="magnifying-glass" label="Tìm kiếm" placeholder="Tìm theo tên hoặc mã" />
-            <flux:select wire:model.live="status" label="Trạng thái">
+            <x-forms.smart-select wire:model.live="status" label="Trạng thái">
                 <option value="all">Tất cả trạng thái</option>
                 <option value="active">Đang hoạt động</option>
                 <option value="inactive">Ngừng hoạt động</option>
-            </flux:select>
+            </x-forms.smart-select>
         </div>
 
         <div class="data-list-content">

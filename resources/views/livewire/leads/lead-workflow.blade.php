@@ -47,7 +47,7 @@
                             </div>
 
                             @if ($convertCompanyMode === 'existing')
-                                <flux:select wire:model="convertCompanyId" label="Chọn Công ty có sẵn">
+                                <x-forms.smart-select wire:model="convertCompanyId" label="Chọn Công ty có sẵn">
                                     <option value="">-- Chọn Công ty --</option>
                                     @if (! empty($conversionPreview['matchedCompanies']))
                                         <optgroup label="Gợi ý trùng khớp">
@@ -63,7 +63,7 @@
                                             @endforeach
                                         </optgroup>
                                     @endif
-                                </flux:select>
+                                </x-forms.smart-select>
                             @else
                                 <flux:input wire:model="convertCompanyName" label="Tên Doanh nghiệp mới *" required />
                             @endif
@@ -90,7 +90,7 @@
                             </div>
 
                             @if ($convertContactMode === 'existing')
-                                <flux:select wire:model="convertContactId" label="Chọn Người liên hệ có sẵn">
+                                <x-forms.smart-select wire:model="convertContactId" label="Chọn Người liên hệ có sẵn">
                                     <option value="">-- Chọn Contact --</option>
                                     @if (! empty($conversionPreview['matchedContacts']))
                                         <optgroup label="Gợi ý trùng email/SĐT">
@@ -106,7 +106,7 @@
                                             @endforeach
                                         </optgroup>
                                     @endif
-                                </flux:select>
+                                </x-forms.smart-select>
                             @endif
                         </div>
 
@@ -124,11 +124,11 @@
                                     </div>
                                     <flux:input wire:model="convertEstimatedValue" type="number" label="Giá trị dự kiến (VNĐ)" />
                                     @if (! empty($conversionPreview['pipelines']))
-                                        <flux:select wire:model.live="convertPipelineId" label="Quy trình bán hàng (Pipeline)">
+                                        <x-forms.smart-select wire:model.live="convertPipelineId" label="Quy trình bán hàng (Pipeline)">
                                             @foreach ($conversionPreview['pipelines'] as $pipe)
                                                 <option value="{{ $pipe->id }}">{{ $pipe->name }}</option>
                                             @endforeach
-                                        </flux:select>
+                                        </x-forms.smart-select>
                                     @endif
                                 </div>
                             @endif
@@ -175,12 +175,12 @@
                     </div>
 
                     <div class="space-y-4">
-                        <flux:select wire:model.live="ownerId" label="Người phụ trách mới">
+                        <x-forms.smart-select wire:model.live="ownerId" label="Người phụ trách mới">
                             <option value="">Chưa phân công</option>
                             @foreach ($this->ownerOptions as $ownerOption)
                                 <option value="{{ $ownerOption->id }}">{{ $ownerOption->name }} — {{ $ownerOption->email }}</option>
                             @endforeach
-                        </flux:select>
+                        </x-forms.smart-select>
                         <flux:textarea wire:model="assignmentReason" label="Lý do cho lần phân công mới" rows="3" maxlength="500" placeholder="Ví dụ: Phân bổ theo khu vực phụ trách" />
                         @if (! $this->hasAssignmentChange)
                             <p class="text-sm text-slate-500">Hãy chọn người phụ trách khác để tạo một lần phân công mới. Lý do của lịch sử cũ không thể chỉnh sửa.</p>
@@ -207,12 +207,12 @@
                     </div>
 
                     <div class="space-y-4">
-                        <flux:select wire:model="targetStatus" label="Trạng thái tiếp theo" required>
+                        <x-forms.smart-select wire:model="targetStatus" label="Trạng thái tiếp theo" required>
                             <option value="">Chọn trạng thái</option>
                             @foreach ($this->statusOptions as $value => $label)
                                 <option value="{{ $value }}">{{ $label }}</option>
                             @endforeach
-                        </flux:select>
+                        </x-forms.smart-select>
                         <flux:textarea wire:model="statusReason" label="Lý do thay đổi" rows="3" maxlength="500" placeholder="Bắt buộc khi chuyển sang Không đủ điều kiện hoặc Đã mất" />
                         @error('targetStatus')
                             <p class="mt-1.5 text-sm font-medium text-red-600 dark:text-red-400">{{ $message }}</p>

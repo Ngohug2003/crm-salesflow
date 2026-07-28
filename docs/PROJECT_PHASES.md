@@ -99,6 +99,7 @@ Tài liệu này là lộ trình và trạng thái checkpoint chính của dự 
 | TR-02 | Khôi phục và đồng bộ tài liệu | `docs/tr-02-requirements-sync` | ✅ Hoàn tất |
 | TR-03 | Tách và chuẩn hóa phase log | `docs/tr-03-phase-log-split` | ✅ Hoàn tất |
 | UI-T01 | Chuẩn hóa Data List và Data Table | `feature/p6-07-activity-task-checkpoint` | Hoàn tất triển khai — chờ kiểm thử thủ công |
+| UI-T02 | Chuẩn hóa Smart Select và chọn đơn vị hành chính | `develop` | Hoàn tất triển khai — chờ kiểm thử thủ công |
 
 ---
 
@@ -192,3 +193,23 @@ Tài liệu này là lộ trình và trạng thái checkpoint chính của dự 
 | P9-05 | CI workflow | `feature/p9-05-ci-workflow` | P9-04 | ⏳ Chưa bắt đầu |
 | P9-06 | Production image và deployment | `feature/p9-06-production-deployment` | P9-05 | ⏳ Chưa bắt đầu |
 | P9-07 | Backup, monitoring và final checkpoint | `feature/p9-07-final-checkpoint` | P9-06 | ⏳ Chưa bắt đầu |
+
+---
+
+### Giai đoạn 10 — Sales Automation và Revenue Governance
+- **Mục tiêu**: Chuẩn hóa dữ liệu nền và tự động hóa quy trình bán hàng B2B.
+- **Đặc tả lộ trình**: [docs/B2B_PRODUCT_AUTOMATION_ROADMAP_P10_P12.md](docs/B2B_PRODUCT_AUTOMATION_ROADMAP_P10_P12.md)
+
+| Mã | Feature | Branch | Phụ thuộc | Trạng thái |
+|---|---|---|---|---|
+| P10-00 | Danh mục đơn vị hành chính Việt Nam | `develop` | P4-07, P8-03 | Hoàn tất triển khai — chờ kiểm thử thủ công |
+| P10-01 | Smart Lead Auto-Routing & SLA Reassign | `feature/p10-01-lead-auto-routing` | P10-00, P3-10, P8-06, P9-03 | ⏳ Chưa bắt đầu |
+| P10-02 | PDF Quote Builder & Discount Approval | `feature/p10-02-pdf-quote-approval` | P5-X01, P5-X02, P8-06 | ⏳ Chưa bắt đầu |
+| P10-03 | Stage Automation & Sales Playbook | `feature/p10-03-stage-playbook` | P5-X03, P6-07, P8-06 | ⏳ Chưa bắt đầu |
+| P10-04 | At-Risk Deal Detection | `feature/p10-04-at-risk-deals` | P10-03, P7-X04 | ⏳ Chưa bắt đầu |
+| P10-05 | Public Quote Link & Customer Acceptance | `feature/p10-05-public-quote-acceptance` | P10-02, P9-02 | ⏳ Chưa bắt đầu |
+
+#### Checkpoint
+
+- [P10-00 — Danh mục đơn vị hành chính Việt Nam](docs/checkpoints/P10/P10-00_VIETNAM_ADMINISTRATIVE_UNITS.md)
+- [UI-T02 — Chuẩn hóa Smart Select](docs/checkpoints/technical/UI_T02_SMART_SELECT_STANDARDIZATION.md)

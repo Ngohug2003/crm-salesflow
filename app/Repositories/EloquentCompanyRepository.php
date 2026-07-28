@@ -75,7 +75,7 @@ final readonly class EloquentCompanyRepository implements CompanyRepository
     {
         /** @var Company */
         return $this->visibleTo($actor)
-            ->with(['owner', 'department', 'createdBy', 'updatedBy', 'contacts'])
+            ->with(['owner', 'department', 'provinceUnit', 'ward', 'createdBy', 'updatedBy', 'contacts'])
             ->findOrFail($id);
     }
 

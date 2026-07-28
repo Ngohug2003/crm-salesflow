@@ -9,9 +9,12 @@ use App\Exceptions\DuplicateLeadException;
 use App\Livewire\Forms\LeadForm;
 use App\Models\Lead;
 use App\Models\LeadSource;
+use App\Models\Province;
 use App\Models\Tag;
 use App\Models\User;
+use App\Models\Ward;
 use App\Repositories\Contracts\LeadRepository;
+use App\Services\AdministrativeUnitService;
 use App\Services\Authorization\DataScopeService;
 use App\Services\LeadDirectoryService;
 use App\Services\LeadManagementService;
@@ -92,6 +95,35 @@ final class LeadEditor extends Component
     public function priorityOptions(): array
     {
         return $this->directory()->priorityOptions();
+    }
+
+    /** @return Collection<int, Province> */
+    #[Computed]
+    public function provinceOptions(): Collection
+    {
+        return $this->administrativeUnits()->provinceOptions();
+    }
+
+    /** @return Collection<int, Ward> */
+    #[Computed]
+    public function wardOptions(): Collection
+    {
+        $provinceId = filled($this->form->provinceId) ? (int) $this->form->provinceId : null;
+
+        return $this->administrativeUnits()->wardOptions($provinceId);
+    }
+
+    public function updatedFormProvinceId(): void
+    {
+        $this->form->wardId = null;
+        $this->form->administrativeUnitSelectionChanged = true;
+        $this->form->resetValidation(['provinceId', 'wardId']);
+    }
+
+    public function updatedFormWardId(): void
+    {
+        $this->form->administrativeUnitSelectionChanged = true;
+        $this->form->resetValidation('wardId');
     }
 
     #[Computed]
@@ -182,6 +214,11 @@ final class LeadEditor extends Component
     private function directory(): LeadDirectoryService
     {
         return app(LeadDirectoryService::class);
+    }
+
+    private function administrativeUnits(): AdministrativeUnitService
+    {
+        return app(AdministrativeUnitService::class);
     }
 
     private function management(): LeadManagementService

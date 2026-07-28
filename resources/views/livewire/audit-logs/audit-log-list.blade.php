@@ -70,32 +70,32 @@
 
                 <div class="xl:col-span-3">
                     <label class="mb-1.5 block text-xs font-medium text-slate-600 dark:text-slate-300" for="audit-actor">Người thực hiện</label>
-                    <flux:select id="audit-actor" wire:model.live="actor">
+                    <x-forms.smart-select id="audit-actor" wire:model.live="actor">
                         <option value="all">Tất cả người thực hiện</option>
                         @foreach ($this->options['actors'] as $actorOption)
                             <option value="{{ $actorOption->id }}">{{ $actorOption->name }} — {{ $actorOption->email }}</option>
                         @endforeach
-                    </flux:select>
+                    </x-forms.smart-select>
                 </div>
 
                 <div class="xl:col-span-2">
                     <label class="mb-1.5 block text-xs font-medium text-slate-600 dark:text-slate-300" for="audit-module">Phân hệ</label>
-                    <flux:select id="audit-module" wire:model.live="module">
+                    <x-forms.smart-select id="audit-module" wire:model.live="module">
                         <option value="all">Tất cả phân hệ</option>
                         @foreach ($this->options['modules'] as $moduleOption)
                             <option value="{{ $moduleOption }}">{{ str($moduleOption)->headline() }}</option>
                         @endforeach
-                    </flux:select>
+                    </x-forms.smart-select>
                 </div>
 
                 <div class="xl:col-span-2">
                     <label class="mb-1.5 block text-xs font-medium text-slate-600 dark:text-slate-300" for="audit-event">Sự kiện</label>
-                    <flux:select id="audit-event" wire:model.live="event">
+                    <x-forms.smart-select id="audit-event" wire:model.live="event">
                         <option value="all">Tất cả sự kiện</option>
                         @foreach ($this->options['events'] as $eventOption)
                             <option value="{{ $eventOption }}">{{ str($eventOption)->headline() }}</option>
                         @endforeach
-                    </flux:select>
+                    </x-forms.smart-select>
                 </div>
 
                 <div class="xl:col-span-3">
