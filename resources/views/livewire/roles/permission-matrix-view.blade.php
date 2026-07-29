@@ -126,61 +126,100 @@
                 </div>
             </div>
         @else
-            <div class="space-y-5">
+            <div
+                wire:key="permission-accordion-{{ md5($search.'|'.$module) }}"
+                class="space-y-3"
+                x-data="{ openModule: @js($modules[0]['key'] ?? null) }"
+            >
                 @foreach ($modules as $permissionModule)
-                    <div wire:key="permission-module-{{ $permissionModule['key'] }}" class="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-800">
-                        <div class="border-b border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-900/70">
-                            <h3 class="text-sm font-semibold text-slate-900 dark:text-white">{{ $permissionModule['label'] }}</h3>
-                        </div>
+                    @php
+                        $modulePermissionNames = array_column($permissionModule['permissions'], 'name');
+                        $assignedPermissionCount = count(array_intersect($modulePermissionNames, $selectedPermissions));
+                    @endphp
+                    <section
+                        wire:key="permission-module-{{ $permissionModule['key'] }}"
+                        class="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-800"
+                    >
+                        <button
+                            type="button"
+                            id="permission-module-heading-{{ $permissionModule['key'] }}"
+                            class="flex w-full items-center justify-between gap-4 bg-slate-50 px-4 py-3 text-left transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500 dark:bg-slate-900/70 dark:hover:bg-slate-800"
+                            x-on:click="openModule = openModule === @js($permissionModule['key']) ? null : @js($permissionModule['key'])"
+                            x-bind:aria-expanded="openModule === @js($permissionModule['key'])"
+                            aria-controls="permission-module-panel-{{ $permissionModule['key'] }}"
+                        >
+                            <span class="min-w-0">
+                                <span class="block text-sm font-semibold text-slate-900 dark:text-white">
+                                    {{ $permissionModule['label'] }}
+                                </span>
+                                <span class="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">
+                                    Đã cấp {{ $assignedPermissionCount }}/{{ count($permissionModule['permissions']) }} quyền
+                                </span>
+                            </span>
+                            <flux:icon.chevron-down
+                                class="size-4 shrink-0 text-slate-500 transition-transform duration-200"
+                                x-bind:class="{ 'rotate-180': openModule === @js($permissionModule['key']) }"
+                                aria-hidden="true"
+                            />
+                        </button>
 
-                        <div class="divide-y divide-slate-200 dark:divide-slate-800">
-                            @foreach ($permissionModule['permissions'] as $permission)
-                                @php
-                                    $isAssigned = in_array($permission['name'], $selectedPermissions, true);
-                                    $isEditable = in_array($permission['name'], $editablePermissionNames, true);
-                                @endphp
-                                <div wire:key="permission-{{ $permission['name'] }}" class="grid gap-3 px-4 py-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
-                                    <div class="min-w-0">
-                                        <div class="flex flex-wrap items-center gap-2">
-                                            <code class="text-xs font-medium text-slate-900 dark:text-white">{{ $permission['name'] }}</code>
-                                            @if (! $isEditable && ($selectedRoleDefinition['editable'] ?? false))
-                                                <flux:badge color="amber" size="sm">Được bảo vệ</flux:badge>
-                                            @endif
+                        <div
+                            x-cloak
+                            x-show="openModule === @js($permissionModule['key'])"
+                            x-collapse.duration.200ms
+                            id="permission-module-panel-{{ $permissionModule['key'] }}"
+                            role="region"
+                            aria-labelledby="permission-module-heading-{{ $permissionModule['key'] }}"
+                        >
+                            <div class="divide-y divide-slate-200 border-t border-slate-200 dark:divide-slate-800 dark:border-slate-800">
+                                @foreach ($permissionModule['permissions'] as $permission)
+                                    @php
+                                        $isAssigned = in_array($permission['name'], $selectedPermissions, true);
+                                        $isEditable = in_array($permission['name'], $editablePermissionNames, true);
+                                    @endphp
+                                    <div wire:key="permission-{{ $permission['name'] }}" class="grid gap-3 px-4 py-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+                                        <div class="min-w-0">
+                                            <div class="flex flex-wrap items-center gap-2">
+                                                <code class="text-xs font-medium text-slate-900 dark:text-white">{{ $permission['name'] }}</code>
+                                                @if (! $isEditable && ($selectedRoleDefinition['editable'] ?? false))
+                                                    <flux:badge color="amber" size="sm">Được bảo vệ</flux:badge>
+                                                @endif
+                                            </div>
+                                            <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">{{ $permission['label'] }}</p>
                                         </div>
-                                        <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">{{ $permission['label'] }}</p>
-                                    </div>
 
-                                    <button
-                                        type="button"
-                                        role="switch"
-                                        aria-checked="{{ $isAssigned ? 'true' : 'false' }}"
-                                        aria-label="{{ $isAssigned ? 'Thu hồi' : 'Cấp' }} quyền {{ $permission['name'] }}"
-                                        @if ($isEditable)
-                                            wire:click="togglePermission('{{ $permission['name'] }}')"
-                                        @else
-                                            disabled
-                                        @endif
-                                        @class([
-                                            'relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2',
-                                            'cursor-pointer bg-blue-600' => $isAssigned && $isEditable,
-                                            'cursor-pointer bg-slate-300 dark:bg-slate-700' => ! $isAssigned && $isEditable,
-                                            'cursor-not-allowed bg-emerald-500/50' => $isAssigned && ! $isEditable,
-                                            'cursor-not-allowed bg-slate-200 dark:bg-slate-800' => ! $isAssigned && ! $isEditable,
-                                        ])
-                                    >
-                                        <span
-                                            aria-hidden="true"
+                                        <button
+                                            type="button"
+                                            role="switch"
+                                            aria-checked="{{ $isAssigned ? 'true' : 'false' }}"
+                                            aria-label="{{ $isAssigned ? 'Thu hồi' : 'Cấp' }} quyền {{ $permission['name'] }}"
+                                            @if ($isEditable)
+                                                wire:click="togglePermission('{{ $permission['name'] }}')"
+                                            @else
+                                                disabled
+                                            @endif
                                             @class([
-                                                'pointer-events-none inline-block size-5 rounded-full bg-white shadow-sm transition',
-                                                'translate-x-5' => $isAssigned,
-                                                'translate-x-0' => ! $isAssigned,
+                                                'relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2',
+                                                'cursor-pointer bg-blue-600' => $isAssigned && $isEditable,
+                                                'cursor-pointer bg-slate-300 dark:bg-slate-700' => ! $isAssigned && $isEditable,
+                                                'cursor-not-allowed bg-emerald-500/50' => $isAssigned && ! $isEditable,
+                                                'cursor-not-allowed bg-slate-200 dark:bg-slate-800' => ! $isAssigned && ! $isEditable,
                                             ])
-                                        ></span>
-                                    </button>
-                                </div>
-                            @endforeach
+                                        >
+                                            <span
+                                                aria-hidden="true"
+                                                @class([
+                                                    'pointer-events-none inline-block size-5 rounded-full bg-white shadow-sm transition',
+                                                    'translate-x-5' => $isAssigned,
+                                                    'translate-x-0' => ! $isAssigned,
+                                                ])
+                                            ></span>
+                                        </button>
+                                    </div>
+                                @endforeach
+                            </div>
                         </div>
-                    </div>
+                    </section>
                 @endforeach
             </div>
         @endif
