@@ -2,7 +2,7 @@
 
 ## 1. Trạng thái tài liệu
 
-- Phiên bản: `2.2`
+- Phiên bản: `2.3`
 - Hiệu lực từ: `30/07/2026`
 - Trạng thái: **nguồn yêu cầu chuẩn của dự án (canonical source of truth)**
 - Phạm vi áp dụng: mọi feature từ `P3-09` trở đi và mọi phần code cũ được chỉnh sửa lại.
@@ -35,6 +35,7 @@ Không tự chọn một yêu cầu thấp hơn khi phát hiện xung đột. Ph
 | DEC-009 | Form tạo/sửa Lead sử dụng full-page thay vì modal do form dài nhiều trường và cần URL riêng; các tác vụ phân công/chuyển trạng thái/xóa/khôi phục/xung đột trùng lặp sử dụng modal. |
 | DEC-010 | Không cài package ngoài bừa bãi để tránh phình mã nguồn, chỉ dùng các thư viện core và Flux UI Free đã được phê duyệt. |
 | DEC-011 | `config/crm.php` là catalog quyền duy nhất. Route, Policy/Gate, Livewire action và sidebar không được dùng tên quyền ngoài catalog; mọi route CRM xác thực phải có `can:` middleware hoặc một backend boundary được khai báo và kiểm thử. |
+| DEC-012 | Mã Permission và bộ quyền mặc định nằm trong `config/crm.php`; quan hệ Role–Permission đang có hiệu lực nằm trong database và có thể được quản trị qua UI. Seeder không được ghi đè role đã có customization marker. |
 
 ## 2. Mục tiêu sản phẩm
 
@@ -291,6 +292,16 @@ Table nghiệp vụ phải cân nhắc và triển khai theo phạm vi feature:
 - Sidebar chỉ hiển thị link khi cùng permission/Policy với route đích. Ẩn menu không thay thế việc trả `403` khi truy cập URL trực tiếp.
 - Mỗi lần thêm, đổi hoặc xóa route/menu/permission phải quét **toàn bộ** route CRM và sidebar, không chỉ route của feature đang làm; test phải phát hiện permission không tồn tại, route chưa phân loại và menu lệch quyền.
 - Các action Livewire có thể được gọi độc lập phải authorize lại theo quyền thao tác (`view`, `create`, `update`, `delete`, `assign`, `approve`...), không chỉ dựa vào kiểm tra lúc mở trang.
+
+### 6.5 Quản trị Role–Permission động — `REQ-RBAC-MANAGE`
+
+- UI chỉ được gán/thu hồi Permission đã tồn tại trong catalog `config/crm.php`; không tạo, đổi tên hoặc xóa mã Permission động.
+- `super-admin` dùng Gate bypass và không thể bị chỉnh quyền. Actor chỉ được sửa role có thứ bậc thấp hơn role cao nhất của chính actor.
+- Actor không phải Super Admin không được thay đổi nhóm quyền quản trị được bảo vệ và không được cấp Permission mà chính actor không có.
+- Cập nhật Role–Permission phải chạy trong transaction, xóa Spatie permission cache ngay sau commit và ghi audit old/new, added/removed permissions cùng Request ID.
+- Role đã chỉnh từ UI phải có customization marker. `RolePermissionSeeder` tiếp tục tạo Permission/Role còn thiếu nhưng không được ghi đè assignment của role có marker.
+- “Khôi phục mặc định” phải có xác nhận, đồng bộ lại bộ quyền mặc định trong config và gỡ customization marker.
+- Sidebar, route và Policy phải phản ánh quyền mới ngay sau lưu; phiên đang đăng nhập không cần restart Docker hoặc đăng nhập lại.
 
 ## 7. Yêu cầu chức năng
 

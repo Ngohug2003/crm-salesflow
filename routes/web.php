@@ -129,7 +129,7 @@ Route::middleware(['auth', 'request.context.authenticated', 'verified', 'account
     Route::get('/settings/departments', [DepartmentController::class, 'index'])
         ->middleware('can:viewAny,'.Department::class)
         ->name('departments.index');
-    Route::get('/settings/permission-matrix', PermissionMatrixView::class)->middleware('can:settings.manage')->name('roles.permission-matrix');
+    Route::get('/settings/permission-matrix', PermissionMatrixView::class)->middleware('can:roles.manage')->name('roles.permission-matrix');
     Route::get('/settings/audit-logs', [AuditLogController::class, 'index'])->middleware('can:audit-logs.view')->name('audit-logs.index');
     Route::get('/settings/system-console', SystemConsole::class)->middleware('can:system-console.view')->name('system-console.index');
     Route::get('/settings/system-console/health-api', SystemHealthCheckApiController::class)->middleware('can:system-console.view')->name('system-console.health-api');

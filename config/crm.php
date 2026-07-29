@@ -12,6 +12,12 @@ $permissionGroups = [
             'users.delete' => 'Xóa người dùng',
         ],
     ],
+    'roles' => [
+        'label' => 'Vai trò và phân quyền',
+        'permissions' => [
+            'roles.manage' => 'Cấu hình quyền được gán cho vai trò',
+        ],
+    ],
     'leads' => [
         'label' => 'Khách hàng tiềm năng',
         'permissions' => [
@@ -145,6 +151,16 @@ return [
         'super_admin_role' => 'super-admin',
         'administrator_roles' => ['super-admin', 'admin'],
         'data_scopes' => ['all', 'department', 'owned', 'read-only'],
+        'protected_role_permissions' => [
+            'roles.manage',
+            'settings.manage',
+            'system-console.view',
+            'audit-logs.view',
+            'users.create',
+            'users.update',
+            'users.delete',
+            'quotes.manage-settings',
+        ],
         'permission_groups' => $permissionGroups,
         /*
          * Routes without a direct `can:` middleware must be listed here with the

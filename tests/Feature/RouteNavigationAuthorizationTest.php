@@ -73,7 +73,7 @@ final class RouteNavigationAuthorizationTest extends TestCase
             'leads.routing-rules' => 'leads.assign',
             'quotes.approvals' => 'quotes.approve',
             'reports.funnel' => 'reports.view',
-            'roles.permission-matrix' => 'settings.manage',
+            'roles.permission-matrix' => 'roles.manage',
             'system-console.index' => 'system-console.view',
         ];
         $sidebar = File::get(resource_path('views/layouts/partials/_sidebar.blade.php'));

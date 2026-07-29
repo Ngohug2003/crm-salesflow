@@ -48,6 +48,7 @@ Khi bắt đầu một feature:
 | 23 | P5-X02 | Quote/proposal basic | `feature/p5-x02-quote-proposal-basic` | P5-X01 | REQ-PIPELINE, REQ-IO | ✅ Hoàn thành | Tạo báo giá cơ bản từ opportunity, có thể export/download. |
 | 24 | P5-X04 | Forecast category | `feature/p5-x04-forecast-category` | P5-X03, P7-X01 | REQ-PIPELINE, REQ-REPORT | ✅ Hoàn thành | Tăng độ chính xác forecast sau khi stage rule ổn. |
 | 25 | P8-X03 | Notification preferences | `feature/p8-x03-notification-preferences` | P8-06, P2-X03 | REQ-NOTIFY | ✅ Hoàn thành | User tự bật/tắt email/broadcast/database theo loại sự kiện. |
+| 26 | P2-X04 | Role & Permission management | `feature/p2-x04-role-permission-management` | P2-X01, P2-07-01 | REQ-RBAC-MANAGE, REQ-AUTH-NAV | Hoàn tất triển khai — chờ kiểm thử | Cho phép cấu hình quyền tại UI nhưng vẫn bảo vệ privilege escalation và seed defaults. |
 
 ## 4. Chi tiết theo giai đoạn
 
@@ -89,6 +90,13 @@ Khi bắt đầu một feature:
 - **Phạm vi**: Token mời, email, hết hạn, accept invitation, active state, audit.
 - **Không làm**: Multi-tenant invitation.
 - **Nghiệm thu**: Invite idempotent, token hết hạn, không lộ user tồn tại qua lỗi.
+
+#### P2-X04 — Role & Permission management
+
+- **Mục tiêu**: Cho phép quản trị cấu hình Permission của từng role ngay trên Ma trận phân quyền.
+- **Phạm vi**: Role hệ thống hiện có, thứ bậc chỉnh sửa, quyền nhạy cảm được bảo vệ, save/reset có xác nhận, audit và cache invalidation.
+- **Không làm**: Tạo Permission hoặc custom role từ UI; thay đổi data scope động.
+- **Nghiệm thu**: Bỏ `companies.update` khỏi Sales làm ẩn merge/edit và URL trực tiếp trả `403`; seeder không ghi đè cấu hình đã tùy chỉnh.
 
 ### P3 — Leads mở rộng
 

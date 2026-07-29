@@ -57,6 +57,7 @@ Tài liệu này là lộ trình và trạng thái checkpoint chính của dự 
 | P2-07-01 | Audit log toàn hệ thống | `feature/p2-07-user-role-assignment` | P2-07 | ✅ Hoàn tất |
 | P2-07-02 | Realtime Audit Log | `feature/p2-07-user-role-assignment` | P2-07-01 | ✅ Hoàn tất |
 | P2-08 | Authorization test và checkpoint | `feature/p2-08-authorization-checkpoint` | P2-02..P2-07-02 | ✅ Hoàn tất |
+| P2-X04 | Cấu hình quyền theo Role | `feature/p2-x04-role-permission-management` | P2-03, P2-X01, P2-07-01 | Hoàn tất triển khai — chờ kiểm thử thủ công |
 
 ---
 

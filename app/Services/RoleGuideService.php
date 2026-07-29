@@ -7,6 +7,8 @@ namespace App\Services;
 use App\Enums\DataScope;
 use App\Models\User;
 use App\Services\Authorization\DataScopeService;
+use Spatie\Permission\Models\Role;
+use Throwable;
 
 final readonly class RoleGuideService
 {
@@ -63,7 +65,7 @@ final readonly class RoleGuideService
             $isSuperAdmin = $name === $superAdminRole;
             $permissionNames = $isSuperAdmin
                 ? array_keys($this->permissionLabels())
-                : $definition['permissions'];
+                : $this->effectiveRolePermissions($name, $definition['permissions']);
             $permissionGroups = [];
 
             foreach ($groups as $group) {
@@ -135,5 +137,24 @@ final readonly class RoleGuideService
             DataScope::Owned => 'Dữ liệu do chính mình phụ trách',
             DataScope::ReadOnly => 'Chỉ đọc dữ liệu được cấp quyền',
         };
+    }
+
+    /**
+     * @param  list<string>  $defaults
+     * @return list<string>
+     */
+    private function effectiveRolePermissions(string $roleName, array $defaults): array
+    {
+        try {
+            /** @var list<string> $permissions */
+            $permissions = Role::findByName(
+                $roleName,
+                (string) config('crm.rbac.guard', 'web'),
+            )->permissions()->pluck('name')->all();
+
+            return $permissions;
+        } catch (Throwable) {
+            return $defaults;
+        }
     }
 }

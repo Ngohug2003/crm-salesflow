@@ -56,6 +56,7 @@ Before editing, verify:
 
 - Policy and data-scope boundary.
 - The complete route–sidebar–permission matrix, not only the active module: every authenticated CRM route must use a matching `can:` middleware or be documented in `crm.rbac.route_access_exceptions`; every sidebar condition must match the target route and every permission name must exist in `config/crm.php`.
+- For RBAC changes, preserve the split defined by `DEC-012`: permission identifiers/defaults are code-owned in `config/crm.php`, effective Role–Permission assignments are database-owned, and routine seeders must preserve roles carrying a customization marker.
 - Validation and normalization boundary.
 - Transaction, row locking, idempotency, and after-commit needs.
 - Audit, history, event, queue, realtime, and file-storage needs.
