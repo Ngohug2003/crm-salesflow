@@ -28,9 +28,15 @@
                 @can('viewAny', \App\Models\Lead::class)
                     <a href="{{ route('leads.index') }}" wire:navigate.hover
                        class="nav-link"
-                       :class="path.startsWith('/leads') && 'nav-link-active'">
+                       :class="path.startsWith('/leads') && !path.startsWith('/leads/routing-rules') && 'nav-link-active'">
                         <flux:icon.funnel class="nav-icon" />
                         <span x-show="sidebar">Khách hàng tiềm năng</span>
+                    </a>
+                    <a href="{{ route('leads.routing-rules') }}" wire:navigate.hover
+                       class="nav-link"
+                       :class="path.startsWith('/leads/routing-rules') && 'nav-link-active'">
+                        <flux:icon.arrow-path class="nav-icon" />
+                        <span x-show="sidebar">Phân bổ Lead</span>
                     </a>
                 @endcan
                 @can('viewAny', \App\Models\Company::class)
@@ -130,11 +136,17 @@
             <p x-show="sidebar" class="nav-group-label">Quản trị</p>
             <div class="mt-1 space-y-0.5">
                 @can('viewAny', \App\Models\User::class)
+                    <a href="{{ route('staff.index') }}" wire:navigate.hover
+                        class="nav-link"
+                       :class="path.startsWith('/settings/staff') && 'nav-link-active'">
+                        <flux:icon.user-group class="nav-icon" />
+                        <span x-show="sidebar">Hồ sơ nhân viên</span>
+                    </a>
                     <a href="{{ route('users.index') }}" wire:navigate.hover
-                       class="nav-link"
+                        class="nav-link"
                        :class="path.startsWith('/settings/users') && 'nav-link-active'">
                         <flux:icon.users class="nav-icon" />
-                        <span x-show="sidebar">Người dùng</span>
+                        <span x-show="sidebar">Tài khoản người dùng</span>
                     </a>
                 @endcan
                 @can('viewAny', \App\Models\Department::class)

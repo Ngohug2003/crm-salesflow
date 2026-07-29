@@ -97,6 +97,9 @@ final readonly class LeadManagementService
 
             if ($lead === null) {
                 $this->recordInitialWorkflow($actor, $savedLead);
+                if ($savedLead->owner_id === null) {
+                    app(LeadRoutingService::class)->routeLead($savedLead, $actor);
+                }
             }
 
             $newValues = $this->auditSnapshot($savedLead);

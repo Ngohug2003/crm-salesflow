@@ -48,7 +48,7 @@ Lộ trình P10–P12 đưa SalesFlow từ CRM quản lý dữ liệu thành n�
 | Thứ tự | Mã | Feature | Branch đề xuất | Phụ thuộc chính | Giá trị | Trạng thái |
 |---:|---|---|---|---|---|---|
 | 0 | P10-00 | Danh mục đơn vị hành chính Việt Nam | `develop` | P4-07, P8-03 | Chuẩn hóa địa bàn cho Lead, Company, Contact và routing | Chờ kiểm thử thủ công |
-| 1 | P10-01 | Smart Lead Auto-Routing & SLA Reassign | `feature/p10-01-lead-auto-routing` | P3-10, P8-06, P9-03 | Giảm chia Lead thủ công và Lead bị ngâm | Chờ duyệt |
+| 1 | P10-01 | Smart Lead Auto-Routing & SLA Reassign | `feature/p10-01-lead-auto-routing` | P3-10, P8-06, P9-03 | Giảm chia Lead thủ công và Lead bị ngâm | Chờ kiểm thử thủ công |
 | 2 | P10-02 | PDF Quote Builder & Discount Approval | `feature/p10-02-pdf-quote-approval` | P5-X01, P5-X02, P8-06 | Chuẩn hóa báo giá và kiểm soát chiết khấu | Chờ duyệt |
 | 3 | P10-03 | Stage Automation & Sales Playbook | `feature/p10-03-stage-playbook` | P5-X03, P6-07, P8-06 | Sale luôn biết bước tiếp theo | Chờ duyệt |
 | 4 | P10-04 | At-Risk Deal Detection | `feature/p10-04-at-risk-deals` | P10-03, P7-X04 | Phát hiện thương vụ có nguy cơ sớm | Chờ duyệt |

@@ -25,6 +25,7 @@ use App\Livewire\Dashboard\DashboardOverview;
 use App\Livewire\ImportExport\ExportHistoryIndex;
 use App\Livewire\ImportExport\ImportHistoryIndex;
 use App\Livewire\Imports\LeadImportWizard;
+use App\Livewire\Leads\LeadRoutingRules;
 use App\Livewire\Notifications\NotificationCenter;
 use App\Livewire\Notifications\NotificationPreferences;
 use App\Livewire\Opportunities\OpportunityDetail;
@@ -41,6 +42,7 @@ use App\Livewire\Reports\RevenueReport;
 use App\Livewire\Reports\SalesPerformanceReport;
 use App\Livewire\Roles\PermissionMatrixView;
 use App\Livewire\Settings\SessionManager;
+use App\Livewire\Staff\StaffList;
 use App\Livewire\Tasks\TaskCalendar;
 use App\Livewire\Tasks\TaskCreate;
 use App\Livewire\Tasks\TaskKanban;
@@ -57,6 +59,7 @@ Route::middleware(['auth', 'request.context.authenticated', 'verified', 'account
     Route::get('/leads', [LeadController::class, 'index'])->name('leads.index');
     Route::get('/leads/create', [LeadController::class, 'create'])->name('leads.create');
     Route::get('/leads/trash', [LeadController::class, 'trash'])->name('leads.trash');
+    Route::get('/leads/routing-rules', LeadRoutingRules::class)->name('leads.routing-rules');
     Route::get('/leads/{leadId}', [LeadController::class, 'show'])->whereNumber('leadId')->name('leads.show');
     Route::get('/leads/{leadId}/edit', [LeadController::class, 'edit'])->whereNumber('leadId')->name('leads.edit');
 
@@ -104,6 +107,7 @@ Route::middleware(['auth', 'request.context.authenticated', 'verified', 'account
     Route::get('/reports/data-quality', DataQualityDashboard::class)->name('reports.data-quality');
 
     Route::get('/settings/users', [UserController::class, 'index'])->name('users.index');
+    Route::get('/settings/staff', StaffList::class)->name('staff.index');
     Route::get('/settings/departments', [DepartmentController::class, 'index'])->name('departments.index');
     Route::get('/settings/permission-matrix', PermissionMatrixView::class)->name('roles.permission-matrix');
     Route::get('/settings/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
