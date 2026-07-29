@@ -16,6 +16,7 @@ Mục tiêu: hoàn thiện tổ chức người dùng và ranh giới phân quy�
 | P2-07-01 | ✅ Audit log toàn hệ thống | `feature/p2-07-user-role-assignment` | P2-07 | Audit dùng chung, màn hình bảng/log, lọc và giới hạn truy cập cho Super Admin/Admin IT |
 | P2-07-02 | ✅ Realtime Audit Log | `feature/p2-07-user-role-assignment` | P2-07-01 | Private Reverb channel, Echo client và Livewire tự cập nhật log mới |
 | P2-08 | ✅ Authorization test và checkpoint | `feature/p2-08-authorization-checkpoint` | P2-02..P2-07-02 | Test đủ 5 role, navigation theo quyền, seed demo và checklist nghiệm thu |
+| P2-X04 | ✅ Cấu hình quyền theo Role | `feature/p2-x04-role-permission-management` | P2-03, P2-X01, P2-07-01 | Chỉnh Role–Permission trên UI, chống privilege escalation, audit và bảo toàn customization khi seed |
 
 ### Nhật ký feature P2-01 — Department schema và domain
 

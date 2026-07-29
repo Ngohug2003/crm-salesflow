@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use LogicException;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -28,7 +30,15 @@ final class RolePermissionSeeder extends Seeder
         }
 
         foreach ($roles as $name => $definition) {
-            Role::findOrCreate($name, $guard)->syncPermissions($definition['permissions']);
+            $role = Role::findOrCreate($name, $guard);
+            $isCustomized = Schema::hasTable('role_permission_customizations')
+                && DB::table('role_permission_customizations')
+                    ->where('role_id', $role->getKey())
+                    ->exists();
+
+            if (! $isCustomized) {
+                $role->syncPermissions($definition['permissions']);
+            }
         }
 
         $registrar->forgetCachedPermissions();
@@ -71,6 +81,14 @@ final class RolePermissionSeeder extends Seeder
 
         if (! array_key_exists($superAdminRole, $roles)) {
             throw new LogicException('The configured super-admin role is missing from the CRM role catalog.');
+        }
+
+        /** @var list<string> $protectedPermissions */
+        $protectedPermissions = config('crm.rbac.protected_role_permissions', []);
+        $unknownProtectedPermissions = array_diff($protectedPermissions, $permissions);
+
+        if ($unknownProtectedPermissions !== []) {
+            throw new LogicException('Protected role permissions reference unknown permissions: '.implode(', ', $unknownProtectedPermissions));
         }
 
         /** @var list<string> $dataScopes */

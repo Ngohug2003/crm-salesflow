@@ -171,7 +171,7 @@
                         <span x-show="sidebar">Phòng ban</span>
                     </a>
                 @endcan
-                @can('settings.manage')
+                @can('roles.manage')
                     <a href="{{ route('roles.permission-matrix') }}" wire:navigate.hover
                        class="nav-link"
                        :class="path.startsWith('/settings/permission-matrix') && 'nav-link-active'">

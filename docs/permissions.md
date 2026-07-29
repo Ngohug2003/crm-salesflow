@@ -1,14 +1,14 @@
 # Permission matrix
 
-The executable RBAC catalog lives in `config/crm.php`. It contains 45 permissions grouped by module and five immutable default role keys.
+The executable Permission catalog lives in `config/crm.php`. It currently contains 59 Permission keys grouped by module and five immutable default role keys. The effective Role–Permission assignments live in the Spatie Permission database tables and can be changed through P2-X04.
 
 | Role | Data scope | Direct permissions | Purpose |
 |---|---|---:|---|
 | `super-admin` | `all` | 0 | Bypasses Laravel Gate checks; reserved for the platform owner |
-| `admin` | `all` | 45 | Manages users, settings and all CRM records |
-| `sales-manager` | `department` | 39 | Manages sales records within the user's department |
-| `sales` | `owned` | 30 | Manages records owned by the user |
-| `viewer` | `read-only` | 8 | Reads allowed CRM modules without mutation permissions |
+| `admin` | `all` | 59 | Manages users, settings and all CRM records |
+| `sales-manager` | `department` | 47 | Manages sales records within the user's department |
+| `sales` | `owned` | 36 | Manages records owned by the user |
+| `viewer` | `read-only` | 10 | Reads allowed CRM modules without mutation permissions |
 
 Legend: **A** all records/manage, **D** department records, **O** owned records, **R** read-only, **—** denied.
 
@@ -25,11 +25,21 @@ Legend: **A** all records/manage, **D** department records, **O** owned records,
 | Reports | A | A | D | R | R |
 | Audit logs | A | A (IT only) | — | — | — |
 
-`RolePermissionSeeder` uses `findOrCreate` and `syncPermissions`, so rerunning it repairs the configured matrix without creating duplicates. It intentionally does not delete additional permissions that may be introduced by later modules.
+`RolePermissionSeeder` creates missing Permission/Role records and syncs defaults only when a role has no row in `role_permission_customizations`. A role changed through the UI receives this marker, so routine deploy/seed commands do not overwrite the business configuration. “Khôi phục mặc định” syncs the config defaults and removes the marker.
 
 Super Admin is implemented with `Gate::before`. Application code and policies must use `$user->can(...)`, `Gate`, middleware or authorization helpers for the bypass to apply; direct calls to `hasPermissionTo()` do not invoke Laravel Gate.
 
 Role permissions answer **what** a user may do. The data scope answers **which records** the user may access. Policies and repository scopes implemented in P2-04 remain the authoritative backend boundary; hiding an action in Blade is never sufficient authorization.
+
+## Dynamic Role–Permission management
+
+- Route and sidebar use `roles.manage`.
+- `super-admin` remains immutable and receives permissions through `Gate::before`.
+- An actor may edit only a role below the actor's highest configured role rank.
+- Non-Super Admin actors cannot toggle protected administration permissions or grant a permission they do not possess.
+- Permission keys cannot be created, renamed or deleted from the UI.
+- Save/reset runs through `RolePermissionManagementService`, invalidates Spatie cache and writes immutable audit old/new plus added/removed Permission keys and Request ID.
+- The role guide and Permission Matrix read effective database assignments, while labels, grouping and defaults remain code-owned in `config/crm.php`.
 
 ## Backend data-scope enforcement
 
