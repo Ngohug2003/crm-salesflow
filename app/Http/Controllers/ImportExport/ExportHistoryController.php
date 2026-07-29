@@ -19,7 +19,7 @@ final class ExportHistoryController extends Controller
         $user = Auth::user();
 
         $superAdminRole = (string) config('crm.rbac.super_admin_role', 'super-admin');
-        if ($batch->user_id !== $user->id && ! $user->hasRole($superAdminRole) && ! $user->hasRole('admin') && ! $user->can('users.manage')) {
+        if ($batch->user_id !== $user->id && ! $user->hasRole($superAdminRole) && ! $user->hasRole('admin') && ! $user->can('users.update')) {
             abort(403, 'Bạn không có quyền tải xuống tệp xuất này.');
         }
 

@@ -49,7 +49,7 @@ final class PermissionMatrixTest extends TestCase
         $this->assertArrayHasKey('roles', $matrix);
         $this->assertArrayHasKey('modules', $matrix);
         $this->assertCount(5, $matrix['roles']);
-        $this->assertCount(7, $matrix['modules']);
+        $this->assertCount(count(config('crm.rbac.permission_groups', [])), $matrix['modules']);
 
         $roleNames = array_column($matrix['roles'], 'name');
         $this->assertContains('super-admin', $roleNames);
@@ -91,8 +91,8 @@ final class PermissionMatrixTest extends TestCase
             ->assertSee('Sales Manager')
             ->assertSee('leads.view')
             ->assertSee('opportunities.create')
-            ->set('module', 'customers')
-            ->assertSee('1. Khách hàng')
+            ->set('module', 'leads')
+            ->assertSee('Khách hàng tiềm năng')
             ->set('search', 'leads.export')
             ->assertSee('leads.export')
             ->call('clearFilters')

@@ -91,6 +91,9 @@ For dashboard/report screens, verify:
 
 Verify:
 
+- Scan the complete sidebar and complete authenticated route list whenever any navigation or permission rule changes; do not limit the review to the active feature.
+- Every sidebar link uses the same permission or Policy ability as its target route, and every referenced permission exists in the canonical `config/crm.php` catalog.
+- Direct URL access returns `403` when the actor cannot use a hidden menu item; personal routes are owner-scoped and record routes authorize through Policy.
 - Sidebar active state is correct after navigation.
 - Menu labels are consistent with module names in Vietnamese.
 - Breadcrumb and page title match the current screen.

@@ -11,6 +11,7 @@ use App\Models\Ward;
 use App\Services\StaffService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -66,6 +67,11 @@ final class StaffList extends Component
 
     public string $inviteRole = 'sales';
 
+    public function mount(): void
+    {
+        Gate::authorize('users.view');
+    }
+
     public function updatedProvinceId(): void
     {
         $this->wardId = null;
@@ -78,6 +84,8 @@ final class StaffList extends Component
 
     public function openCreate(StaffService $staffService): void
     {
+        Gate::authorize('users.create');
+
         $this->resetForm();
         $this->staffCode = $staffService->generateStaffCode($this->departmentId);
         $this->showForm = true;
@@ -85,6 +93,8 @@ final class StaffList extends Component
 
     public function editStaff(int $staffId): void
     {
+        Gate::authorize('users.update');
+
         $staff = Staff::query()->findOrFail($staffId);
         $this->editingStaffId = $staff->id;
         $this->staffCode = $staff->staff_code;
@@ -106,6 +116,8 @@ final class StaffList extends Component
 
     public function saveStaff(StaffService $staffService): void
     {
+        Gate::authorize($this->editingStaffId === null ? 'users.create' : 'users.update');
+
         $this->validate([
             'fullName' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255'],
@@ -143,6 +155,8 @@ final class StaffList extends Component
 
     public function openInviteModal(): void
     {
+        Gate::authorize('users.create');
+
         $this->inviteName = '';
         $this->inviteEmail = '';
         $this->inviteDepartmentId = null;
@@ -152,6 +166,8 @@ final class StaffList extends Component
 
     public function sendInvitation(StaffService $staffService): void
     {
+        Gate::authorize('users.create');
+
         $this->validate([
             'inviteName' => ['required', 'string', 'max:255'],
             'inviteEmail' => ['required', 'email', 'max:255'],
@@ -176,12 +192,16 @@ final class StaffList extends Component
 
     public function deleteStaff(int $staffId): void
     {
+        Gate::authorize('users.delete');
+
         Staff::query()->where('id', $staffId)->delete();
         session()->flash('success', 'Đã xóa hồ sơ Nhân viên.');
     }
 
     public function render(): View
     {
+        Gate::authorize('users.view');
+
         $query = Staff::query()
             ->with(['department', 'provinceUnit', 'ward', 'user'])
             ->orderBy('created_at', 'desc');

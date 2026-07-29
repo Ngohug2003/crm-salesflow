@@ -21,8 +21,7 @@ final class ImportHistoryService
     {
         $query = ImportBatch::query()->with('user')->orderByDesc('created_at');
 
-        $superAdminRole = (string) config('crm.rbac.super_admin_role', 'super-admin');
-        if (! $user->hasRole($superAdminRole) && ! $user->hasRole('admin') && ! $user->can('users.manage')) {
+        if (! $this->canInspectAllBatches($user)) {
             $query->where('user_id', $user->getKey());
         }
 
@@ -53,6 +52,17 @@ final class ImportHistoryService
         return $result;
     }
 
+    public function findVisibleBatch(User $user, int $batchId): ?ImportBatch
+    {
+        $query = ImportBatch::query()->whereKey($batchId);
+
+        if (! $this->canInspectAllBatches($user)) {
+            $query->where('user_id', $user->getKey());
+        }
+
+        return $query->first();
+    }
+
     /**
      * Get summary stats for import batches.
      *
@@ -67,8 +77,7 @@ final class ImportHistoryService
     {
         $query = ImportBatch::query();
 
-        $superAdminRole = (string) config('crm.rbac.super_admin_role', 'super-admin');
-        if (! $user->hasRole($superAdminRole) && ! $user->hasRole('admin') && ! $user->can('users.manage')) {
+        if (! $this->canInspectAllBatches($user)) {
             $query->where('user_id', $user->getKey());
         }
 
@@ -115,5 +124,14 @@ final class ImportHistoryService
         }, $filename, [
             'Content-Type' => 'text/csv; charset=UTF-8',
         ]);
+    }
+
+    private function canInspectAllBatches(User $user): bool
+    {
+        $superAdminRole = (string) config('crm.rbac.super_admin_role', 'super-admin');
+
+        return $user->hasRole($superAdminRole)
+            || $user->hasRole('admin')
+            || $user->can('users.update');
     }
 }

@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Services\Auth\UserSessionHistoryService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -22,6 +23,7 @@ final class UserSessionHistory extends Component
     public function mount(?int $userId = null): void
     {
         $this->userId = $userId ?? Auth::id();
+        $this->authorizeTarget();
     }
 
     public function revokeSession(string $sessionId): void
@@ -59,6 +61,7 @@ final class UserSessionHistory extends Component
         $actor = Auth::user();
         /** @var User $targetUser */
         $targetUser = User::findOrFail($this->userId ?? Auth::id());
+        $this->authorizeTarget($targetUser);
 
         $currentSessionId = Session::getId();
         $sessions = $service->getSessionsForUser($targetUser, $currentSessionId);
@@ -68,5 +71,18 @@ final class UserSessionHistory extends Component
             'isSelf' => $actor->getKey() === $targetUser->getKey(),
             'sessions' => $sessions,
         ]);
+    }
+
+    private function authorizeTarget(?User $targetUser = null): void
+    {
+        /** @var User $actor */
+        $actor = Auth::user();
+        $targetUser ??= User::findOrFail($this->userId ?? $actor->getKey());
+
+        if ($actor->is($targetUser)) {
+            return;
+        }
+
+        Gate::forUser($actor)->authorize('view', $targetUser);
     }
 }

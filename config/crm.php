@@ -57,6 +57,20 @@ $permissionGroups = [
             'opportunities.close' => 'Đóng cơ hội',
         ],
     ],
+    'quotes' => [
+        'label' => 'Báo giá',
+        'permissions' => [
+            'quotes.view' => 'Xem báo giá',
+            'quotes.create' => 'Tạo báo giá',
+            'quotes.update' => 'Chỉnh sửa báo giá nháp',
+            'quotes.submit' => 'Gửi báo giá phê duyệt',
+            'quotes.approve' => 'Phê duyệt hoặc từ chối báo giá',
+            'quotes.issue' => 'Phát hành báo giá',
+            'quotes.download' => 'Tải tài liệu báo giá',
+            'quotes.void' => 'Hủy hiệu lực báo giá',
+            'quotes.manage-settings' => 'Cấu hình báo giá và ngưỡng duyệt',
+        ],
+    ],
     'pipelines' => [
         'label' => 'Pipeline',
         'permissions' => [
@@ -106,6 +120,12 @@ $permissionGroups = [
             'audit-logs.view' => 'Xem nhật ký kiểm toán',
         ],
     ],
+    'system-console' => [
+        'label' => 'Vận hành hệ thống',
+        'permissions' => [
+            'system-console.view' => 'Xem console và tình trạng vận hành hệ thống',
+        ],
+    ],
 ];
 
 $allPermissions = array_merge(...array_values(array_map(
@@ -115,6 +135,7 @@ $allPermissions = array_merge(...array_values(array_map(
 
 return [
     'display_timezone' => env('CRM_DISPLAY_TIMEZONE', 'Asia/Ho_Chi_Minh'),
+    'quote_document_disk' => env('QUOTE_DOCUMENT_DISK', 'local'),
 
     // Only rendered by the login page when APP_ENV=local.
     'local_login_password' => env('CRM_LOCAL_LOGIN_PASSWORD', 'SalesFlow@123'),
@@ -125,6 +146,42 @@ return [
         'administrator_roles' => ['super-admin', 'admin'],
         'data_scopes' => ['all', 'department', 'owned', 'read-only'],
         'permission_groups' => $permissionGroups,
+        /*
+         * Routes without a direct `can:` middleware must be listed here with the
+         * backend boundary that protects them. The navigation authorization test
+         * fails when a new authenticated route is left unclassified.
+         */
+        'route_access_exceptions' => [
+            'record_policy' => [
+                'leads.show' => 'LeadPolicy@view',
+                'leads.edit' => 'LeadPolicy@update',
+                'exports.download' => 'ExportDownloadController owner/admin boundary and signed URL',
+                'companies.show' => 'CompanyPolicy@view',
+                'companies.edit' => 'CompanyPolicy@update',
+                'companies.360' => 'Customer360Service and CompanyPolicy@view',
+                'contacts.show' => 'ContactPolicy@view',
+                'contacts.edit' => 'ContactPolicy@update',
+                'opportunities.show' => 'OpportunityPolicy@view',
+                'opportunities.edit' => 'OpportunityPolicy@update',
+                'quotes.show' => 'QuoteController and QuotePolicy@view',
+                'quotes.documents.download' => 'QuoteController and QuotePolicy@download with signed URL',
+                'pipelines.show' => 'PipelinePolicy@view',
+                'pipelines.edit' => 'PipelinePolicy@update',
+                'tasks.show' => 'TaskPolicy@view',
+                'imports.history.download-errors' => 'ImportHistoryController owner/admin boundary',
+                'exports.history.download' => 'ExportHistoryController owner/admin boundary',
+            ],
+            'personal' => [
+                'notifications.index' => 'Only the authenticated user notification feed',
+                'notifications.settings' => 'Only the authenticated user preferences',
+                'sessions.index' => 'Only the authenticated user active sessions',
+                'imports.history' => 'Owner-scoped import history; administrators may inspect all',
+                'exports.history' => 'Owner-scoped export history; administrators may inspect all',
+                'users.session-history' => 'Self by default; UserPolicy protects another account',
+                'help.guide' => 'Authenticated product help',
+                'help.roles' => 'Authenticated role and permission help',
+            ],
+        ],
         'roles' => [
             'super-admin' => [
                 'label' => 'Super Admin',
@@ -150,6 +207,8 @@ return [
                     'contacts.view', 'contacts.create', 'contacts.update', 'contacts.delete',
                     'opportunities.view', 'opportunities.view-all', 'opportunities.create',
                     'opportunities.update', 'opportunities.delete', 'opportunities.change-stage', 'opportunities.close',
+                    'quotes.view', 'quotes.create', 'quotes.update', 'quotes.submit', 'quotes.approve',
+                    'quotes.issue', 'quotes.download', 'quotes.void',
                     'pipelines.view',
                     'activities.view', 'activities.create', 'activities.update', 'activities.delete',
                     'tasks.view', 'tasks.view-all', 'tasks.create', 'tasks.update', 'tasks.delete', 'tasks.assign',
@@ -166,6 +225,7 @@ return [
                     'contacts.view', 'contacts.create', 'contacts.update', 'contacts.delete',
                     'opportunities.view', 'opportunities.create', 'opportunities.update',
                     'opportunities.delete', 'opportunities.change-stage', 'opportunities.close',
+                    'quotes.view', 'quotes.create', 'quotes.update', 'quotes.submit', 'quotes.issue', 'quotes.download',
                     'pipelines.view',
                     'activities.view', 'activities.create', 'activities.update', 'activities.delete',
                     'tasks.view', 'tasks.create', 'tasks.update', 'tasks.delete',
@@ -181,6 +241,7 @@ return [
                     'companies.view',
                     'contacts.view',
                     'opportunities.view',
+                    'quotes.view', 'quotes.download',
                     'pipelines.view',
                     'activities.view',
                     'tasks.view',

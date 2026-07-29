@@ -55,7 +55,7 @@ final class LeadTimelineService
     private function authorizeNoteModification(User $user, LeadNote $note): void
     {
         $superAdminRole = (string) config('crm.rbac.super_admin_role', 'super-admin');
-        if ($note->user_id === $user->id || $user->hasRole($superAdminRole) || $user->hasRole('admin') || $user->can('users.manage')) {
+        if ($note->user_id === $user->id || $user->hasRole($superAdminRole) || $user->hasRole('admin') || $user->can('users.update')) {
             return;
         }
 

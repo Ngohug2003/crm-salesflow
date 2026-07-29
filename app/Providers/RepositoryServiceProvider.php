@@ -16,6 +16,7 @@ use App\Repositories\Contracts\LeadWorkflowRepository;
 use App\Repositories\Contracts\MetricsRepository;
 use App\Repositories\Contracts\OpportunityRepository;
 use App\Repositories\Contracts\PipelineRepository;
+use App\Repositories\Contracts\QuoteRepository;
 use App\Repositories\Contracts\SessionRepository;
 use App\Repositories\Contracts\TagRepository;
 use App\Repositories\Contracts\TaskRepository;
@@ -32,6 +33,7 @@ use App\Repositories\EloquentLeadWorkflowRepository;
 use App\Repositories\EloquentMetricsRepository;
 use App\Repositories\EloquentOpportunityRepository;
 use App\Repositories\EloquentPipelineRepository;
+use App\Repositories\EloquentQuoteRepository;
 use App\Repositories\EloquentSessionRepository;
 use App\Repositories\EloquentTagRepository;
 use App\Repositories\EloquentTaskRepository;
@@ -57,6 +59,7 @@ final class RepositoryServiceProvider extends ServiceProvider
         MetricsRepository::class => EloquentMetricsRepository::class,
         OpportunityRepository::class => EloquentOpportunityRepository::class,
         PipelineRepository::class => EloquentPipelineRepository::class,
+        QuoteRepository::class => EloquentQuoteRepository::class,
         SessionRepository::class => EloquentSessionRepository::class,
         TagRepository::class => EloquentTagRepository::class,
         TaskRepository::class => EloquentTaskRepository::class,

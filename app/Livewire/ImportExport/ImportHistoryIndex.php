@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Livewire\ImportExport;
 
-use App\Models\ImportBatch;
 use App\Models\User;
 use App\Services\ImportExport\ImportHistoryService;
 use Illuminate\Contracts\View\View;
@@ -66,7 +65,9 @@ final class ImportHistoryIndex extends Component
 
         $stats = $service->getImportSummaryStats($user);
 
-        $selectedBatch = $this->selectedBatchId !== null ? ImportBatch::find($this->selectedBatchId) : null;
+        $selectedBatch = $this->selectedBatchId !== null
+            ? $service->findVisibleBatch($user, $this->selectedBatchId)
+            : null;
 
         return view('livewire.import-export.import-history-index', [
             'batches' => $batches,

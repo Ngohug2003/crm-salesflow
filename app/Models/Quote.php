@@ -24,7 +24,9 @@ use Illuminate\Support\Carbon;
  * @property string $tax_percent
  * @property string $tax_amount
  * @property string $discount_amount
+ * @property string $discount_percent
  * @property string $total_amount
+ * @property int $version
  * @property string|null $notes
  * @property int|null $created_by
  * @property int|null $updated_by
@@ -52,7 +54,15 @@ final class Quote extends Model
         'tax_percent',
         'tax_amount',
         'discount_amount',
+        'discount_percent',
         'total_amount',
+        'version',
+        'submitted_at',
+        'approved_at',
+        'issued_at',
+        'sent_at',
+        'rejection_reason',
+        'issued_snapshot',
         'notes',
         'created_by',
         'updated_by',
@@ -68,7 +78,14 @@ final class Quote extends Model
             'tax_percent' => 'decimal:2',
             'tax_amount' => 'decimal:2',
             'discount_amount' => 'decimal:2',
+            'discount_percent' => 'decimal:2',
             'total_amount' => 'decimal:2',
+            'version' => 'integer',
+            'submitted_at' => 'datetime',
+            'approved_at' => 'datetime',
+            'issued_at' => 'datetime',
+            'sent_at' => 'datetime',
+            'issued_snapshot' => 'array',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
             'deleted_at' => 'datetime',
@@ -103,5 +120,23 @@ final class Quote extends Model
     public function items(): HasMany
     {
         return $this->hasMany(QuoteItem::class, 'quote_id');
+    }
+
+    /** @return HasMany<QuoteApprovalRequest, $this> */
+    public function approvalRequests(): HasMany
+    {
+        return $this->hasMany(QuoteApprovalRequest::class);
+    }
+
+    /** @return HasMany<QuoteVersion, $this> */
+    public function versions(): HasMany
+    {
+        return $this->hasMany(QuoteVersion::class);
+    }
+
+    /** @return HasMany<QuoteDocument, $this> */
+    public function documents(): HasMany
+    {
+        return $this->hasMany(QuoteDocument::class);
     }
 }
