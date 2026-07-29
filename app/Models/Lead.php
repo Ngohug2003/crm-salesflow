@@ -75,6 +75,10 @@ final class Lead extends Model
         'score',
         'notes',
         'converted_at',
+        'sla_first_touch_due_at',
+        'sla_satisfied_at',
+        'is_sla_overdue',
+        'sla_reminder_sent_at',
         'created_by',
         'updated_by',
     ];
@@ -197,6 +201,12 @@ final class Lead extends Model
         return $this->morphMany(Task::class, 'subject');
     }
 
+    /** @return HasMany<LeadRoutingExecution, $this> */
+    public function routingExecutions(): HasMany
+    {
+        return $this->hasMany(LeadRoutingExecution::class);
+    }
+
     /** @return array<string, string> */
     protected function casts(): array
     {
@@ -206,6 +216,10 @@ final class Lead extends Model
             'estimated_value' => 'decimal:2',
             'score' => 'integer',
             'converted_at' => 'datetime',
+            'sla_first_touch_due_at' => 'datetime',
+            'sla_satisfied_at' => 'datetime',
+            'is_sla_overdue' => 'boolean',
+            'sla_reminder_sent_at' => 'datetime',
         ];
     }
 }

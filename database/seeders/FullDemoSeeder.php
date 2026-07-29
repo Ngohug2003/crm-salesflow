@@ -14,14 +14,18 @@ use App\Enums\TaskStatus;
 use App\Models\Activity;
 use App\Models\Company;
 use App\Models\Contact;
+use App\Models\Department;
 use App\Models\Lead;
 use App\Models\LeadNote;
+use App\Models\LeadRoutingRule;
+use App\Models\LeadRoutingRuleCondition;
 use App\Models\LeadSource;
 use App\Models\Opportunity;
 use App\Models\OpportunityItem;
 use App\Models\OpportunityStageHistory;
 use App\Models\Pipeline;
 use App\Models\PipelineStage;
+use App\Models\Province;
 use App\Models\Quote;
 use App\Models\QuoteItem;
 use App\Models\Tag;
@@ -76,9 +80,43 @@ final class FullDemoSeeder extends Seeder
             $this->seedQuotes($opportunities, $contacts);
             $this->seedActivities($leads, $opportunities, $contacts, $companies);
             $this->seedTasks($opportunities, $leads);
+            $this->seedRoutingRules();
         });
 
         $this->command->info('✓ FullDemoSeeder: dữ liệu demo đầy đủ và liên kết đã được tạo thành công.');
+    }
+
+    private function seedRoutingRules(): void
+    {
+        $salesDept = Department::query()->where('code', 'SALES')->first();
+
+        $rule1 = LeadRoutingRule::query()->firstOrCreate(
+            ['name' => 'Quy tắc Phân bổ Lead Khối Miền Bắc'],
+            [
+                'strategy' => 'round_robin',
+                'priority' => 1,
+                'is_active' => true,
+                'department_id' => $salesDept?->id,
+            ]
+        );
+
+        $hanoi = Province::query()->where('code_name', 'ha_noi')->first();
+        if ($hanoi !== null) {
+            LeadRoutingRuleCondition::query()->firstOrCreate([
+                'rule_id' => $rule1->id,
+                'province_id' => $hanoi->id,
+            ]);
+        }
+
+        LeadRoutingRule::query()->firstOrCreate(
+            ['name' => 'Quy tắc Phân bổ Xoay vòng Mặc định'],
+            [
+                'strategy' => 'round_robin',
+                'priority' => 999,
+                'is_active' => true,
+                'department_id' => $salesDept?->id,
+            ]
+        );
     }
 
     // ─────────────────────────────────────────────────────────────────

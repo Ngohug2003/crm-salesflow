@@ -175,12 +175,17 @@
                     </div>
 
                     <div class="space-y-4">
-                        <x-forms.smart-select wire:model.live="ownerId" label="Người phụ trách mới">
-                            <option value="">Chưa phân công</option>
-                            @foreach ($this->ownerOptions as $ownerOption)
-                                <option value="{{ $ownerOption->id }}">{{ $ownerOption->name }} — {{ $ownerOption->email }}</option>
-                            @endforeach
-                        </x-forms.smart-select>
+                        <flux:field>
+                            <flux:label>Người phụ trách mới</flux:label>
+                            <x-forms.modal-searchable-select
+                                wire:model.live="ownerId"
+                                :options="collect($this->ownerOptions)->map(fn($u) => ['id' => $u->id, 'name' => $u->name . ' — ' . $u->email])->all()"
+                                option-value="id"
+                                option-label="name"
+                                placeholder="Chưa phân công"
+                                search-placeholder="Tìm người phụ trách…"
+                            />
+                        </flux:field>
                         <flux:textarea wire:model="assignmentReason" label="Lý do cho lần phân công mới" rows="3" maxlength="500" placeholder="Ví dụ: Phân bổ theo khu vực phụ trách" />
                         @if (! $this->hasAssignmentChange)
                             <p class="text-sm text-slate-500">Hãy chọn người phụ trách khác để tạo một lần phân công mới. Lý do của lịch sử cũ không thể chỉnh sửa.</p>

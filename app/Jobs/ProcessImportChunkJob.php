@@ -8,6 +8,7 @@ use App\Models\ImportBatch;
 use App\Models\Lead;
 use App\Models\User;
 use App\Notifications\ImportCompletedNotification;
+use App\Services\LeadRoutingService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\SerializesModels;
@@ -118,8 +119,8 @@ final class ProcessImportChunkJob implements ShouldQueue
                     }
                 }
 
-                // Create new lead
-                Lead::query()->create([
+                // Create new lead and trigger auto-routing
+                $importedLead = Lead::query()->create([
                     'full_name' => $fullName,
                     'email' => $email,
                     'phone' => $phone,
@@ -127,11 +128,13 @@ final class ProcessImportChunkJob implements ShouldQueue
                     'job_title' => $jobTitle,
                     'notes' => $notes,
                     'status' => in_array($status, ['new', 'contacted', 'qualified', 'unqualified', 'converted'], true) ? $status : 'new',
-                    'owner_id' => $user->id,
+                    'owner_id' => null,
                     'department_id' => $user->department_id,
                     'created_by' => $user->id,
                     'updated_by' => $user->id,
                 ]);
+
+                app(LeadRoutingService::class)->routeLead($importedLead, $user);
 
                 $successCount++;
             } catch (\Throwable $e) {

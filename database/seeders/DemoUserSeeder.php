@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace Database\Seeders;
 
 use App\Models\Department;
+use App\Models\Province;
+use App\Models\Staff;
 use App\Models\User;
+use App\Models\Ward;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -22,6 +25,15 @@ final class DemoUserSeeder extends Seeder
 
         $password = Hash::make('SalesFlow@123');
 
+        $hanoi = Province::query()->where('code_name', 'ha_noi')->first();
+        $hanoiWard = $hanoi ? Ward::query()->where('province_id', $hanoi->id)->first() : null;
+
+        $hcm = Province::query()->where('code_name', 'thanh_pho_ho_chi_minh')->first();
+        $hcmWard = $hcm ? Ward::query()->where('province_id', $hcm->id)->first() : null;
+
+        $danang = Province::query()->where('code_name', 'da_nang')->first();
+        $danangWard = $danang ? Ward::query()->where('province_id', $danang->id)->first() : null;
+
         foreach ($this->users() as $index => $definition) {
             $user = User::query()->updateOrCreate(
                 ['email' => sprintf('demo%02d@salesflow.test', $index + 1)],
@@ -35,6 +47,47 @@ final class DemoUserSeeder extends Seeder
             );
 
             $user->syncRoles($definition['role']);
+
+            $assignedProvince = match ($index % 3) {
+                0 => $hanoi,
+                1 => $hcm,
+                default => $danang,
+            };
+
+            $assignedWard = match ($index % 3) {
+                0 => $hanoiWard,
+                1 => $hcmWard,
+                default => $danangWard,
+            };
+
+            $deptCode = match ($definition['department']) {
+                'MANAGEMENT' => 'MGT',
+                'SALES' => 'SALES',
+                'MARKETING' => 'MKT',
+                default => 'GEN',
+            };
+
+            Staff::query()->updateOrCreate(
+                ['email' => $user->email],
+                [
+                    'user_id' => $user->id,
+                    'staff_code' => sprintf('NV-%s-%04d', $deptCode, $index + 1),
+                    'full_name' => $user->name,
+                    'phone' => sprintf('09%08d', 80000000 + $index * 1234),
+                    'birthday' => '1995-05-15',
+                    'province_id' => $assignedProvince?->id,
+                    'ward_id' => $assignedWard?->id,
+                    'department_id' => $user->department_id,
+                    'position' => match ($definition['role']) {
+                        'admin' => 'Trưởng ban Quản trị',
+                        'sales-manager' => 'Trưởng phòng Bán hàng',
+                        'sales' => 'Chuyên viên Bán hàng (Sales Rep)',
+                        default => 'Nhân viên',
+                    },
+                    'join_date' => '2024-01-15',
+                    'is_active' => $definition['active'],
+                ]
+            );
         }
     }
 

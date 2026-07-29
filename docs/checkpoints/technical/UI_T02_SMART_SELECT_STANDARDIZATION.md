@@ -22,6 +22,8 @@ Hoàn tất triển khai — chờ chủ dự án kiểm thử thủ công.
 - Tạo `x-forms.administrative-unit-select` cho cặp Tỉnh/Thành phố → Phường/Xã phụ thuộc.
 - Dùng component địa bàn chung tại form Lead, Company và Contact.
 - Đồng bộ việc lưu nhanh người thực hiện trên màn chi tiết công việc sau khi select dài chuyển sang component tìm kiếm.
+- Bổ sung `x-forms.modal-searchable-select` cho Flux Modal dùng native `<dialog>`; dropdown được giữ trong browser top-layer thay vì teleport ra `body`.
+- Form tạo/chỉnh sửa Hồ sơ Nhân viên dùng component modal riêng cho Phòng ban, Tỉnh/Thành phố, Phường/Xã và Địa bàn làm việc.
 
 ## Quy tắc sử dụng
 
@@ -56,6 +58,7 @@ Theo quy ước của chủ dự án, chỉ chạy file test mới của task:
 
 ```bash
 docker compose exec app php artisan test tests/Feature/SmartSelectComponentTest.php
+docker compose exec app php artisan test tests/Feature/SearchableSelectModalTest.php
 ```
 
 Test xác nhận:
@@ -64,6 +67,7 @@ Test xác nhận:
 - Đúng 5 lựa chọn thực tế chuyển sang searchable select.
 - Component địa bàn dùng chung render đúng hai trường phụ thuộc.
 - Các nhóm lựa chọn được giữ khi chuyển sang searchable select.
+- Searchable select trong Flux Modal mở/đóng được và dropdown nằm đúng bên trong `<dialog>`.
 
 ## Checklist kiểm thử thủ công
 
