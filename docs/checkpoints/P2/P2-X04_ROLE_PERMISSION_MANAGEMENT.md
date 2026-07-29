@@ -23,6 +23,8 @@ Hoàn tất triển khai trên branch `feature/p2-x04-role-permission-management
 - Khôi phục mặc định đồng bộ lại config và xóa customization marker.
 - Route/sidebar/Policy phản ánh thay đổi ngay, không cần restart Docker.
 - Trang hướng dẫn **Vai trò & quyền** đọc assignment thực tế trong DB, không hiển thị lại bộ mặc định đã lỗi thời.
+- Thêm integration mẫu **Sản phẩm** với `products.view/create/update/delete`, sidebar và luồng list/detail/create/edit/delete mô phỏng; chưa tạo schema, Product Model, Service hoặc Repository nghiệp vụ.
+- Nhóm Permission theo phân hệ bằng accordion một-mục-mở, có số quyền đã cấp/tổng số quyền và hiệu ứng thu gọn để giảm chiều dài màn hình.
 
 ## Schema
 
@@ -43,6 +45,9 @@ Hoàn tất triển khai trên branch `feature/p2-x04-role-permission-management
 - `database/migrations/2026_08_12_000001_create_role_permission_customizations_table.php`
 - `database/seeders/RolePermissionSeeder.php`
 - `tests/Feature/P2X04RolePermissionManagementTest.php`
+- `tests/Feature/ProductSidebarPermissionTest.php`
+- `app/Http/Controllers/ProductDemoController.php`
+- `resources/views/products/*.blade.php`
 
 ## Commands và kết quả
 
@@ -57,13 +62,22 @@ docker compose exec app php artisan test tests/Feature/P2X04RolePermissionManage
 # 6 tests đạt, 29 assertions.
 
 docker compose exec app php artisan test tests/Feature/RouteNavigationAuthorizationTest.php
-# 5 tests đạt, 59 assertions.
+# 5 tests đạt, 62 assertions.
+
+docker compose exec app php artisan test tests/Feature/ProductSidebarPermissionTest.php
+# 3 tests đạt, 34 assertions.
 
 docker compose exec app ./vendor/bin/phpstan analyse --no-progress <các file P2-X04>
 # Không có lỗi.
 
 docker compose exec app php artisan view:cache
 # Blade compile thành công.
+
+docker compose exec app ./vendor/bin/pint --test app/Livewire/Roles/PermissionMatrixView.php tests/Feature/P2X04RolePermissionManagementTest.php
+# 2 file đạt chuẩn.
+
+git diff --check
+# Không có lỗi whitespace.
 ```
 
 ## Kiểm thử thủ công
@@ -79,9 +93,13 @@ docker compose exec app php artisan view:cache
 9. Chạy RolePermissionSeeder; role đang customized không bị ghi đè.
 10. Kiểm tra Audit Log có actor, role, old/new, added/removed permissions và Request ID.
 11. Kiểm tra desktop/mobile, dark mode, keyboard focus và loading state.
+12. Kiểm tra mặc định: Sales Manager được xem/tạo/sửa; Sales được xem/chi tiết; Admin/Super Admin có cả xóa; Viewer bị chặn.
+13. Thu hồi `products.view` khỏi Sales và kiểm tra menu **Sản phẩm** biến mất, URL trực tiếp trả `403`.
+14. Mở/đóng từng phân hệ Permission; xác nhận chỉ một phân hệ mở tại một thời điểm, số quyền đã cấp cập nhật đúng và thao tác được bằng bàn phím.
 
 ## Ngoài phạm vi
 
 - Tạo/xóa/đổi tên Permission từ UI.
 - Tạo custom role và cấu hình data scope động.
 - Approval workflow nhiều người cho thay đổi quyền.
+- Product Catalog có persistence; các thao tác hiện chỉ validate, redirect và báo kết quả mô phỏng, không lưu dữ liệu.

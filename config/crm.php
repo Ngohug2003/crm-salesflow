@@ -51,6 +51,15 @@ $permissionGroups = [
             'contacts.delete' => 'Xóa người liên hệ',
         ],
     ],
+    'products' => [
+        'label' => 'Sản phẩm',
+        'permissions' => [
+            'products.view' => 'Xem danh sách và chi tiết sản phẩm',
+            'products.create' => 'Tạo sản phẩm',
+            'products.update' => 'Chỉnh sửa sản phẩm',
+            'products.delete' => 'Xóa sản phẩm',
+        ],
+    ],
     'opportunities' => [
         'label' => 'Cơ hội bán hàng',
         'permissions' => [
@@ -220,6 +229,7 @@ return [
                     'leads.view', 'leads.view-all', 'leads.create', 'leads.update', 'leads.update-all',
                     'leads.delete', 'leads.assign', 'leads.convert', 'leads.import', 'leads.export',
                     'companies.view', 'companies.create', 'companies.update', 'companies.delete',
+                    'products.view', 'products.create', 'products.update',
                     'contacts.view', 'contacts.create', 'contacts.update', 'contacts.delete',
                     'opportunities.view', 'opportunities.view-all', 'opportunities.create',
                     'opportunities.update', 'opportunities.delete', 'opportunities.change-stage', 'opportunities.close',
@@ -238,6 +248,7 @@ return [
                 'permissions' => [
                     'leads.view', 'leads.create', 'leads.update', 'leads.delete', 'leads.convert', 'leads.export',
                     'companies.view', 'companies.create', 'companies.update', 'companies.delete',
+                    'products.view',
                     'contacts.view', 'contacts.create', 'contacts.update', 'contacts.delete',
                     'opportunities.view', 'opportunities.create', 'opportunities.update',
                     'opportunities.delete', 'opportunities.change-stage', 'opportunities.close',

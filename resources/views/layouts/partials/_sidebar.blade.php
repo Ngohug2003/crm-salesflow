@@ -61,6 +61,14 @@
                         <span x-show="sidebar">Người liên hệ</span>
                     </a>
                 @endcan
+                @can('products.view')
+                    <a href="{{ route('products.index') }}" wire:navigate.hover
+                       class="nav-link"
+                       :class="path.startsWith('/products') && 'nav-link-active'">
+                        <flux:icon.cube class="nav-icon" />
+                        <span x-show="sidebar">Sản phẩm</span>
+                    </a>
+                @endcan
                 @can('companies.update')
                     <a href="{{ route('customers.merge') }}" wire:navigate.hover
                        class="nav-link"
