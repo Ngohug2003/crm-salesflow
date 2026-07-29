@@ -2,8 +2,8 @@
 
 ## 1. Trạng thái tài liệu
 
-- Phiên bản: `2.1`
-- Hiệu lực từ: `23/07/2026`
+- Phiên bản: `2.2`
+- Hiệu lực từ: `30/07/2026`
 - Trạng thái: **nguồn yêu cầu chuẩn của dự án (canonical source of truth)**
 - Phạm vi áp dụng: mọi feature từ `P3-09` trở đi và mọi phần code cũ được chỉnh sửa lại.
 - Nguồn tổng hợp: `SalesFlow CRM Design.pdf`, các quyết định kiến trúc đã triển khai và yêu cầu trực tiếp của chủ dự án.
@@ -34,6 +34,7 @@ Không tự chọn một yêu cầu thấp hơn khi phát hiện xung đột. Ph
 | DEC-008 | Giữ cây thư mục hiện tại theo technical layer; không bắt buộc chuyển domain code vào `app/Modules/<Module>`. |
 | DEC-009 | Form tạo/sửa Lead sử dụng full-page thay vì modal do form dài nhiều trường và cần URL riêng; các tác vụ phân công/chuyển trạng thái/xóa/khôi phục/xung đột trùng lặp sử dụng modal. |
 | DEC-010 | Không cài package ngoài bừa bãi để tránh phình mã nguồn, chỉ dùng các thư viện core và Flux UI Free đã được phê duyệt. |
+| DEC-011 | `config/crm.php` là catalog quyền duy nhất. Route, Policy/Gate, Livewire action và sidebar không được dùng tên quyền ngoài catalog; mọi route CRM xác thực phải có `can:` middleware hoặc một backend boundary được khai báo và kiểm thử. |
 
 ## 2. Mục tiêu sản phẩm
 
@@ -281,6 +282,16 @@ Table nghiệp vụ phải cân nhắc và triển khai theo phạm vi feature:
 - Mutation phải kiểm tra cả permission và visibility của record.
 - Không trả metadata của record ngoài scope qua duplicate detection hoặc error message.
 
+### 6.4 Route, sidebar và permission catalog — `REQ-AUTH-NAV`
+
+- `config/crm.php` là nguồn chuẩn duy nhất cho tên permission và role mapping; không tạo catalog quyền hard-code thứ hai trong Service, Blade hoặc test.
+- Route list/create/report/settings và entry point toàn cục phải có `can:` middleware tương ứng, kể cả khi Livewire/Controller kiểm tra lại bên trong.
+- Route theo một record phải authorize bằng Policy tại Controller/Livewire/Service trước khi đọc hoặc mutate dữ liệu. Route cá nhân như notification, phiên đăng nhập và trợ giúp phải giới hạn theo chính người đang đăng nhập.
+- Route không dùng `can:` middleware phải được khai báo tại `crm.rbac.route_access_exceptions` kèm backend boundary cụ thể; route mới không được để ở trạng thái chưa phân loại.
+- Sidebar chỉ hiển thị link khi cùng permission/Policy với route đích. Ẩn menu không thay thế việc trả `403` khi truy cập URL trực tiếp.
+- Mỗi lần thêm, đổi hoặc xóa route/menu/permission phải quét **toàn bộ** route CRM và sidebar, không chỉ route của feature đang làm; test phải phát hiện permission không tồn tại, route chưa phân loại và menu lệch quyền.
+- Các action Livewire có thể được gọi độc lập phải authorize lại theo quyền thao tác (`view`, `create`, `update`, `delete`, `assign`, `approve`...), không chỉ dựa vào kiểm tra lúc mở trang.
+
 ## 7. Yêu cầu chức năng
 
 ### 7.1 Leads — `REQ-LEAD`
@@ -422,6 +433,7 @@ Upload → MIME/size check → Preview → Column mapping → Validate
 - Livewire: render, validation, URL state, filter/page, modal, authorization và feedback.
 - Queue/realtime: dispatch-after-commit, retry/failure, notification và channel authorization.
 - File: upload validation, private download authorization và delete.
+- Navigation/RBAC: mọi route xác thực có middleware hoặc boundary đã khai báo; permission route/sidebar tồn tại trong catalog; URL trực tiếp bị từ chối khi thiếu quyền.
 
 Không chạy theo coverage hình thức; mọi happy path, validation path, permission denial và critical edge case phải được test.
 
@@ -493,6 +505,7 @@ Chỉ triển khai sau khi chủ dự án trả lời xác nhận như “OK, l�
 ### 14.3 Bước 3 — Xác minh và checkpoint
 
 - Chạy targeted tests và các quality gate liên quan.
+- Khi feature thay route, sidebar, Policy/Gate hoặc permission: chạy test đối chiếu toàn hệ thống route–sidebar–RBAC và cập nhật `crm.rbac.route_access_exceptions` nếu có boundary hợp lệ không dùng `can:`.
 - Kiểm tra Docker logs nếu thay runtime/queue/realtime.
 - Cập nhật `PROJECT_PHASES.md`: file, migration, command, test, manual checklist và quyết định.
 - Dừng để chủ dự án kiểm thử; không tự sang feature tiếp theo.
@@ -513,6 +526,7 @@ Một feature chỉ hoàn tất khi:
 - Đúng phạm vi và requirement ID.
 - Business logic nằm đúng technical layer hiện tại.
 - Authorization và data scope được cưỡng chế ở backend.
+- Route, sidebar và permission catalog đã đồng bộ theo `REQ-AUTH-NAV`; không còn quyền chết hoặc route chưa phân loại.
 - Validation và transaction đúng; không có duplicate submit.
 - UI có state cần thiết, responsive, dark mode và keyboard cơ bản.
 - Audit/event/queue/realtime được áp dụng nếu use case yêu cầu.

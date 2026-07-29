@@ -7,7 +7,6 @@ namespace App\Http\Controllers;
 use App\Models\ExportBatch;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -25,8 +24,12 @@ final class ExportDownloadController extends Controller
             throw new AuthorizationException('Bạn chưa đăng nhập.');
         }
 
-        // Check ownership or super admin / manager permission
-        if ($batch->user_id !== $actor->id && ! Gate::allows('leads.view')) {
+        $superAdminRole = (string) config('crm.rbac.super_admin_role', 'super-admin');
+        $canInspectOtherUsers = $actor->hasRole($superAdminRole)
+            || $actor->hasRole('admin')
+            || $actor->can('users.update');
+
+        if ($batch->user_id !== $actor->id && ! $canInspectOtherUsers) {
             throw new AuthorizationException('Bạn không có quyền tải xuống tệp dữ liệu này.');
         }
 

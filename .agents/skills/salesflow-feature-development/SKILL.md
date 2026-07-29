@@ -55,6 +55,7 @@ Preserve the current tree: put Models in `app/Models`, Services in `app/Services
 Before editing, verify:
 
 - Policy and data-scope boundary.
+- The complete route–sidebar–permission matrix, not only the active module: every authenticated CRM route must use a matching `can:` middleware or be documented in `crm.rbac.route_access_exceptions`; every sidebar condition must match the target route and every permission name must exist in `config/crm.php`.
 - Validation and normalization boundary.
 - Transaction, row locking, idempotency, and after-commit needs.
 - Audit, history, event, queue, realtime, and file-storage needs.
@@ -70,10 +71,11 @@ Do not install a package, create an interface, or add a shared abstraction witho
 2. Add only migrations, domain/application code, UI, routes, tests, and docs required by the feature.
 3. Keep business logic out of Livewire, controllers, Blade, repositories, and large model methods.
 4. Enforce authorization on the backend; UI visibility is only a convenience.
-5. Apply data scope before search, filters, aggregates, exports, duplicate lookup, and realtime payloads.
-6. Use Flux UI Free first; build missing UI with Blade, Alpine, and Tailwind when necessary.
-7. Use Vietnamese labels/messages and clear English identifiers.
-8. Add tests for success, validation, denied permission/data scope, and critical edge cases.
+5. When routes, navigation, Gate/Policy, roles, or permissions change, scan the **entire application route list and entire sidebar**. Remove dead permission names, keep `config/crm.php` as the single catalog, authorize Livewire actions independently, and update the route-access exception inventory only for a real record-policy/personal boundary.
+6. Apply data scope before search, filters, aggregates, exports, duplicate lookup, and realtime payloads.
+7. Use Flux UI Free first; build missing UI with Blade, Alpine, and Tailwind when necessary.
+8. Use Vietnamese labels/messages and clear English identifiers.
+9. Add tests for success, validation, denied permission/data scope, and critical edge cases.
 
 Do not begin the next feature in the same turn.
 
@@ -89,6 +91,8 @@ docker compose exec vite npm run build
 ```
 
 For schema changes, test migration/backfill/rollback as appropriate. For runtime, queue, or realtime changes, inspect affected Docker services and logs. Never claim a gate passed when it did not run; report a proven environment blocker separately from a code failure.
+
+For any route/sidebar/RBAC change, also run the repository navigation authorization test. It must prove that all authenticated CRM routes are classified, direct URL access is denied without permission, sidebar abilities match target routes, and no referenced permission is missing from `config/crm.php`.
 
 ## Close the feature checkpoint
 

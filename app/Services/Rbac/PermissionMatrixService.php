@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Services\Rbac;
 
-use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Throwable;
 
@@ -74,38 +73,25 @@ final class PermissionMatrixService
      */
     public function getRolesDefinition(): array
     {
-        return [
-            [
-                'name' => 'super-admin',
-                'label' => 'Super Admin',
-                'description' => 'Quản trị viên tối cao có toàn quyền trên toàn hệ thống.',
-                'data_scope' => 'Toàn bộ dữ liệu (All)',
-            ],
-            [
-                'name' => 'admin',
-                'label' => 'Admin / IT Admin',
-                'description' => 'Quản trị viên vận hành hệ thống, quản lý người dùng và cấu hình.',
-                'data_scope' => 'Toàn bộ dữ liệu (All)',
-            ],
-            [
-                'name' => 'sales-manager',
-                'label' => 'Sales Manager',
-                'description' => 'Trưởng phòng kinh doanh quản lý công việc và báo cáo phân hệ.',
-                'data_scope' => 'Cây phòng ban (Department Tree)',
-            ],
-            [
-                'name' => 'sales',
-                'label' => 'NVKD (Sales)',
-                'description' => 'Nhân viên kinh doanh trực tiếp xử lý Lead, Khách hàng & Cơ hội.',
-                'data_scope' => 'Dữ liệu cá nhân (Own Only)',
-            ],
-            [
-                'name' => 'viewer',
-                'label' => 'Người xem (Viewer)',
-                'description' => 'Tài khoản chỉ đọc dữ liệu theo phạm vi phòng ban.',
-                'data_scope' => 'Phòng ban nội bộ (Department Only)',
-            ],
+        /** @var array<string, array{label: string, description: string, data_scope: string}> $definitions */
+        $definitions = config('crm.rbac.roles', []);
+        $scopeLabels = [
+            'all' => 'Toàn bộ dữ liệu (All)',
+            'department' => 'Phạm vi phòng ban (Department)',
+            'owned' => 'Dữ liệu sở hữu (Owned)',
+            'read-only' => 'Chỉ đọc trong phạm vi được cấp (Read-only)',
         ];
+
+        return array_map(
+            static fn (array $definition, string $name): array => [
+                'name' => $name,
+                'label' => $definition['label'],
+                'description' => $definition['description'],
+                'data_scope' => $scopeLabels[$definition['data_scope']] ?? $definition['data_scope'],
+            ],
+            $definitions,
+            array_keys($definitions),
+        );
     }
 
     /**
@@ -115,88 +101,26 @@ final class PermissionMatrixService
      */
     public function getModulesDefinition(): array
     {
-        return [
-            [
-                'key' => 'customers',
-                'label' => '1. Khách hàng (Leads, Companies & Contacts)',
-                'permissions' => [
-                    ['name' => 'leads.view', 'label' => 'Xem danh sách & chi tiết Lead', 'roles' => []],
-                    ['name' => 'leads.create', 'label' => 'Tạo mới Lead', 'roles' => []],
-                    ['name' => 'leads.update', 'label' => 'Cập nhật thông tin Lead', 'roles' => []],
-                    ['name' => 'leads.delete', 'label' => 'Xóa / Thùng rác Lead', 'roles' => []],
-                    ['name' => 'leads.export', 'label' => 'Xuất danh sách Lead', 'roles' => []],
-                    ['name' => 'leads.import', 'label' => 'Import danh sách Lead', 'roles' => []],
-                    ['name' => 'companies.view', 'label' => 'Xem danh sách Doanh nghiệp', 'roles' => []],
-                    ['name' => 'companies.create', 'label' => 'Tạo Doanh nghiệp mới', 'roles' => []],
-                    ['name' => 'companies.update', 'label' => 'Cập nhật Doanh nghiệp', 'roles' => []],
-                    ['name' => 'companies.delete', 'label' => 'Xóa Doanh nghiệp', 'roles' => []],
-                    ['name' => 'contacts.view', 'label' => 'Xem danh sách Người liên hệ', 'roles' => []],
-                    ['name' => 'contacts.create', 'label' => 'Tạo Người liên hệ mới', 'roles' => []],
-                    ['name' => 'contacts.update', 'label' => 'Cập nhật Người liên hệ', 'roles' => []],
-                    ['name' => 'contacts.delete', 'label' => 'Xóa Người liên hệ', 'roles' => []],
-                ],
+        /** @var array<string, array{label: string, permissions: array<string, string>}> $groups */
+        $groups = config('crm.rbac.permission_groups', []);
+
+        return array_map(
+            static fn (array $group, string $key): array => [
+                'key' => $key,
+                'label' => $group['label'],
+                'permissions' => array_map(
+                    static fn (string $label, string $name): array => [
+                        'name' => $name,
+                        'label' => $label,
+                        'roles' => [],
+                    ],
+                    $group['permissions'],
+                    array_keys($group['permissions']),
+                ),
             ],
-            [
-                'key' => 'sales',
-                'label' => '2. Quy trình & Cơ hội bán hàng (Pipelines & Opportunities)',
-                'permissions' => [
-                    ['name' => 'pipelines.view', 'label' => 'Xem quy trình bán hàng', 'roles' => []],
-                    ['name' => 'pipelines.manage', 'label' => 'Quản lý / Cấu hình Quy trình & Giai đoạn', 'roles' => []],
-                    ['name' => 'opportunities.view', 'label' => 'Xem danh sách & Kanban Cơ hội', 'roles' => []],
-                    ['name' => 'opportunities.create', 'label' => 'Tạo Cơ hội mới', 'roles' => []],
-                    ['name' => 'opportunities.update', 'label' => 'Cập nhật stage / thông tin Cơ hội', 'roles' => []],
-                    ['name' => 'opportunities.delete', 'label' => 'Xóa Cơ hội bán hàng', 'roles' => []],
-                ],
-            ],
-            [
-                'key' => 'tasks',
-                'label' => '3. Hoạt động & Công việc (Activities & Tasks)',
-                'permissions' => [
-                    ['name' => 'activities.view', 'label' => 'Xem nhật ký hoạt động', 'roles' => []],
-                    ['name' => 'activities.create', 'label' => 'Ghi nhận cuộc gọi / email / cuộc họp', 'roles' => []],
-                    ['name' => 'tasks.view', 'label' => 'Xem danh sách công việc', 'roles' => []],
-                    ['name' => 'tasks.create', 'label' => 'Tạo mới công việc', 'roles' => []],
-                    ['name' => 'tasks.update', 'label' => 'Cập nhật trạng thái / tiến độ công việc', 'roles' => []],
-                    ['name' => 'tasks.delete', 'label' => 'Xóa công việc', 'roles' => []],
-                ],
-            ],
-            [
-                'key' => 'reports',
-                'label' => '4. Báo cáo & Phân tích (Reports & Analytics)',
-                'permissions' => [
-                    ['name' => 'reports.view', 'label' => 'Xem Báo cáo Funnel, Doanh thu & Hiệu suất', 'roles' => []],
-                    ['name' => 'reports.export', 'label' => 'Xuất file dữ liệu báo cáo', 'roles' => []],
-                ],
-            ],
-            [
-                'key' => 'io',
-                'label' => '5. Nhập / Xuất dữ liệu (Import & Export)',
-                'permissions' => [
-                    ['name' => 'imports.manage', 'label' => 'Quản lý & thực thi Batch Import', 'roles' => []],
-                    ['name' => 'exports.create', 'label' => 'Yêu cầu xuất file dữ liệu hệ thống', 'roles' => []],
-                ],
-            ],
-            [
-                'key' => 'administration',
-                'label' => '6. Quản trị & Tổ chức (Users, Roles & Departments)',
-                'permissions' => [
-                    ['name' => 'users.view', 'label' => 'Xem danh sách tài khoản người dùng', 'roles' => []],
-                    ['name' => 'users.manage', 'label' => 'Tạo, sửa, khóa tài khoản người dùng', 'roles' => []],
-                    ['name' => 'departments.view', 'label' => 'Xem cây sơ đồ phòng ban', 'roles' => []],
-                    ['name' => 'departments.manage', 'label' => 'Quản lý phòng ban & tổ chức', 'roles' => []],
-                    ['name' => 'roles.view', 'label' => 'Xem vai trò & ma trận phân quyền', 'roles' => []],
-                    ['name' => 'roles.assign', 'label' => 'Phân gán vai trò người dùng', 'roles' => []],
-                ],
-            ],
-            [
-                'key' => 'system',
-                'label' => '7. Hệ thống & Kiểm toán (System Console & Audit Logs)',
-                'permissions' => [
-                    ['name' => 'system-console.view', 'label' => 'Truy cập System Console & Health Check', 'roles' => []],
-                    ['name' => 'audit-logs.view', 'label' => 'Xem nhật ký kiểm toán hệ thống (Audit Logs)', 'roles' => []],
-                ],
-            ],
-        ];
+            $groups,
+            array_keys($groups),
+        );
     }
 
     /**
@@ -204,29 +128,9 @@ final class PermissionMatrixService
      */
     private function defaultPermissionCheck(string $role, string $permission): bool
     {
-        if ($role === 'admin') {
-            return true;
-        }
+        /** @var array{permissions?: list<string>} $definition */
+        $definition = config("crm.rbac.roles.{$role}", []);
 
-        if ($role === 'sales-manager') {
-            return ! str_contains($permission, 'system-console') && ! str_contains($permission, 'users.manage') && ! str_contains($permission, 'departments.manage');
-        }
-
-        if ($role === 'sales') {
-            return in_array($permission, [
-                'leads.view', 'leads.create', 'leads.update', 'leads.export',
-                'companies.view', 'companies.create', 'companies.update',
-                'contacts.view', 'contacts.create', 'contacts.update',
-                'pipelines.view', 'opportunities.view', 'opportunities.create', 'opportunities.update',
-                'activities.view', 'activities.create', 'tasks.view', 'tasks.create', 'tasks.update',
-                'reports.view', 'exports.create',
-            ], true);
-        }
-
-        if ($role === 'viewer') {
-            return str_contains($permission, '.view');
-        }
-
-        return false;
+        return in_array($permission, $definition['permissions'] ?? [], true);
     }
 }

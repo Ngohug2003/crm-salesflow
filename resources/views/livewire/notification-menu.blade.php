@@ -1,4 +1,9 @@
-<div class="relative" x-data="{ open: @entangle('open') }" wire:poll.5000ms>
+<div
+    class="relative"
+    x-data="{ open: @entangle('open') }"
+    x-init="window.Echo?.private('App.Models.User.{{ auth()->id() }}').notification(() => $wire.$refresh())"
+    wire:poll.15s
+>
     <!-- Bell Button with Unread Badge -->
     <button
         type="button"

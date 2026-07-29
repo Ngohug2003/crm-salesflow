@@ -6,6 +6,7 @@ namespace App\Services\Auth;
 
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Session;
 use Throwable;
 
@@ -131,12 +132,7 @@ final class UserSessionHistoryService
             abort(403, 'Bạn không thể thu hồi phiên đăng nhập của Quản trị viên tối cao.');
         }
 
-        // Admin or users with users.manage / audit-logs.view can revoke other sessions
-        if ($actor->hasRole($superAdminRole) || $actor->hasRole('admin') || $actor->can('users.manage')) {
-            return;
-        }
-
-        abort(403, 'Bạn không có quyền thu hồi phiên đăng nhập của người dùng này.');
+        Gate::forUser($actor)->authorize('update', $targetUser);
     }
 
     /**

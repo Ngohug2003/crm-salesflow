@@ -23,7 +23,7 @@ final class ExportHistoryService
         $query = ExportBatch::query()->with('user')->orderByDesc('created_at');
 
         $superAdminRole = (string) config('crm.rbac.super_admin_role', 'super-admin');
-        if (! $user->hasRole($superAdminRole) && ! $user->hasRole('admin') && ! $user->can('users.manage')) {
+        if (! $user->hasRole($superAdminRole) && ! $user->hasRole('admin') && ! $user->can('users.update')) {
             $query->where('user_id', $user->getKey());
         }
 
@@ -69,7 +69,7 @@ final class ExportHistoryService
         $query = ExportBatch::query();
 
         $superAdminRole = (string) config('crm.rbac.super_admin_role', 'super-admin');
-        if (! $user->hasRole($superAdminRole) && ! $user->hasRole('admin') && ! $user->can('users.manage')) {
+        if (! $user->hasRole($superAdminRole) && ! $user->hasRole('admin') && ! $user->can('users.update')) {
             $query->where('user_id', $user->getKey());
         }
 

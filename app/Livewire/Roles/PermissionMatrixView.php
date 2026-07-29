@@ -77,7 +77,7 @@ final class PermissionMatrixView extends Component
         /** @var User|null $user */
         $user = auth()->user();
 
-        if ($user !== null && ($user->hasRole((string) config('crm.rbac.super_admin_role', 'super-admin')) || $user->hasRole('admin') || $user->can('roles.view') || $user->can('roles.assign') || $user->can('users.manage'))) {
+        if ($user !== null && $user->can('settings.manage')) {
             return;
         }
 

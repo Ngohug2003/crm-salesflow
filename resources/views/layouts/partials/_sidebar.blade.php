@@ -5,10 +5,12 @@
      @popstate.window="path = window.location.pathname"
      x-init="document.addEventListener('livewire:navigated', () => { path = window.location.pathname })">
     <div class="flex items-center justify-between gap-3 px-2 py-2">
+        @can('reports.view')
         <a href="{{ route('dashboard') }}" wire:navigate.hover class="flex min-w-0 items-center gap-3">
             <!-- <span class="grid size-10 shrink-0 place-items-center rounded-xl bg-emerald-500 font-black text-white">SF</span> -->
             <span x-show="sidebar" x-cloak class="truncate font-semibold">SalesFlow CRM</span>
         </a>
+        @endcan
         <button class="lg:hidden" @click="mobileNav=false" aria-label="Đóng menu">
             <flux:icon.x-mark class="size-5" />
         </button>
@@ -19,12 +21,14 @@
         <div>
             <p x-show="sidebar" class="nav-group-label">CRM</p>
             <div class="mt-1 space-y-0.5">
-                <a href="{{ route('dashboard') }}" wire:navigate.hover
+                @can('reports.view')
+                    <a href="{{ route('dashboard') }}" wire:navigate.hover
                    class="nav-link"
                    :class="path === '/dashboard' && 'nav-link-active'">
                     <flux:icon.home class="nav-icon" />
                     <span x-show="sidebar">Dashboard</span>
-                </a>
+                    </a>
+                @endcan
                 @can('viewAny', \App\Models\Lead::class)
                     <a href="{{ route('leads.index') }}" wire:navigate.hover
                        class="nav-link"
@@ -32,12 +36,14 @@
                         <flux:icon.funnel class="nav-icon" />
                         <span x-show="sidebar">Khách hàng tiềm năng</span>
                     </a>
+                    @can('leads.assign')
                     <a href="{{ route('leads.routing-rules') }}" wire:navigate.hover
                        class="nav-link"
                        :class="path.startsWith('/leads/routing-rules') && 'nav-link-active'">
                         <flux:icon.arrow-path class="nav-icon" />
                         <span x-show="sidebar">Phân bổ Lead</span>
                     </a>
+                    @endcan
                 @endcan
                 @can('viewAny', \App\Models\Company::class)
                     <a href="{{ route('companies.index') }}" wire:navigate.hover
@@ -55,7 +61,7 @@
                         <span x-show="sidebar">Người liên hệ</span>
                     </a>
                 @endcan
-                @can('update', \App\Models\Company::class)
+                @can('companies.update')
                     <a href="{{ route('customers.merge') }}" wire:navigate.hover
                        class="nav-link"
                        :class="path.startsWith('/customers/merge') && 'nav-link-active'">
@@ -77,6 +83,14 @@
                        :class="path.startsWith('/opportunities') && 'nav-link-active'">
                         <flux:icon.briefcase class="nav-icon" />
                         <span x-show="sidebar">Cơ hội bán hàng</span>
+                    </a>
+                @endcan
+                @can('quotes.approve')
+                    <a href="{{ route('quotes.approvals') }}" wire:navigate.hover
+                       class="nav-link"
+                       :class="path.startsWith('/quotes/approvals') && 'nav-link-active'">
+                        <flux:icon.document-check class="nav-icon" />
+                        <span x-show="sidebar">Duyệt báo giá</span>
                     </a>
                 @endcan
                 @can('viewAny', \App\Models\Pipeline::class)
@@ -157,14 +171,14 @@
                         <span x-show="sidebar">Phòng ban</span>
                     </a>
                 @endcan
-                @if (auth()->user()?->can('roles.view') || auth()->user()?->can('roles.assign') || auth()->user()?->can('users.manage'))
+                @can('settings.manage')
                     <a href="{{ route('roles.permission-matrix') }}" wire:navigate.hover
                        class="nav-link"
                        :class="path.startsWith('/settings/permission-matrix') && 'nav-link-active'">
                         <flux:icon.shield-check class="nav-icon" />
                         <span x-show="sidebar">Ma trận phân quyền</span>
                     </a>
-                @endif
+                @endcan
                 @can('viewAny', \Spatie\Activitylog\Models\Activity::class)
                     <a href="{{ route('audit-logs.index') }}" wire:navigate.hover
                        class="nav-link"
@@ -191,6 +205,14 @@
                        :class="path.startsWith('/settings/system-console') && 'nav-link-active'">
                         <flux:icon.command-line class="nav-icon" />
                         <span x-show="sidebar">System Console</span>
+                    </a>
+                @endcan
+                @can('manageSettings', \App\Models\Quote::class)
+                    <a href="{{ route('quotes.settings') }}" wire:navigate.hover
+                       class="nav-link"
+                       :class="path.startsWith('/settings/quotes') && 'nav-link-active'">
+                        <flux:icon.document-text class="nav-icon" />
+                        <span x-show="sidebar">Cấu hình báo giá</span>
                     </a>
                 @endcan
             </div>
