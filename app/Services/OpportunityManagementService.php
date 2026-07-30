@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Data\OpportunityFilterData;
 use App\Enums\ForecastCategory;
+use App\Jobs\ActivateOpportunityPlaybookJob;
 use App\Models\Opportunity;
 use App\Models\PipelineStage;
 use App\Models\User;
@@ -13,12 +14,14 @@ use App\Repositories\Contracts\OpportunityRepository;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\ValidationException;
 
 final readonly class OpportunityManagementService
 {
     public function __construct(
         private OpportunityRepository $opportunities,
         private SystemAuditService $audit,
+        private OpportunityPlaybookService $playbooks,
     ) {}
 
     /** @return LengthAwarePaginator<int, Opportunity> */
@@ -69,6 +72,7 @@ final readonly class OpportunityManagementService
 
             $stageId = (int) $data['stage_id'];
             $stage = PipelineStage::query()->findOrFail($stageId);
+            $this->playbooks->ensureCanEnterStage($actor, $stageId);
 
             $forecastCategory = $data['forecast_category'] ?? ($stage->is_won || $stage->is_lost ? ForecastCategory::Closed : ForecastCategory::Pipeline);
 
@@ -94,6 +98,8 @@ final readonly class OpportunityManagementService
                 $this->snapshot($opportunity),
             );
 
+            ActivateOpportunityPlaybookJob::dispatch($actor->id, $opportunity->id, $stageId, 0)->afterCommit();
+
             return $opportunity;
         });
     }
@@ -116,6 +122,11 @@ final readonly class OpportunityManagementService
             }
 
             $stageId = isset($data['stage_id']) ? (int) $data['stage_id'] : $opportunity->stage_id;
+            if ($stageId !== $opportunity->stage_id) {
+                throw ValidationException::withMessages([
+                    'stage_id' => 'Hãy chuyển giai đoạn tại thanh tiến trình hoặc Kanban để hệ thống kiểm tra playbook và lưu lịch sử.',
+                ]);
+            }
             $stage = PipelineStage::query()->findOrFail($stageId);
 
             $payload = array_merge($data, [

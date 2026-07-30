@@ -149,6 +149,21 @@
                                 </div>
                             @endif
 
+                            @can('sales-playbook.view')
+                                @if ($opp->getAttribute('playbook_progress'))
+                                    @php($playbookProgress = $opp->getAttribute('playbook_progress'))
+                                    <div class="space-y-1">
+                                        <div class="flex justify-between text-[10px] text-slate-500">
+                                            <span>Playbook</span>
+                                            <span>{{ $playbookProgress['completed'] }}/{{ $playbookProgress['total'] }}</span>
+                                        </div>
+                                        <div class="h-1.5 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
+                                            <div class="h-full rounded-full bg-blue-600" style="width: {{ $playbookProgress['percent'] }}%"></div>
+                                        </div>
+                                    </div>
+                                @endif
+                            @endcan
+
                             <div class="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
                                 <div>
                                     <p class="font-bold text-slate-900 dark:text-white">{{ number_format((float) $opp->amount) }} đ</p>

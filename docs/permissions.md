@@ -1,14 +1,14 @@
 # Permission matrix
 
-The executable Permission catalog lives in `config/crm.php`. It currently contains 59 Permission keys grouped by module and five immutable default role keys. The effective Role–Permission assignments live in the Spatie Permission database tables and can be changed through P2-X04.
+The executable Permission catalog lives in `config/crm.php`. It currently contains 61 Permission keys grouped by module and five immutable default role keys. The effective Role–Permission assignments live in the Spatie Permission database tables and can be changed through P2-X04.
 
 | Role | Data scope | Direct permissions | Purpose |
 |---|---|---:|---|
 | `super-admin` | `all` | 0 | Bypasses Laravel Gate checks; reserved for the platform owner |
-| `admin` | `all` | 59 | Manages users, settings and all CRM records |
-| `sales-manager` | `department` | 47 | Manages sales records within the user's department |
-| `sales` | `owned` | 36 | Manages records owned by the user |
-| `viewer` | `read-only` | 10 | Reads allowed CRM modules without mutation permissions |
+| `admin` | `all` | 61 | Manages users, settings and all CRM records |
+| `sales-manager` | `department` | 49 | Manages sales records within the user's department |
+| `sales` | `owned` | 37 | Manages records owned by the user |
+| `viewer` | `read-only` | 11 | Reads allowed CRM modules without mutation permissions |
 
 Legend: **A** all records/manage, **D** department records, **O** owned records, **R** read-only, **—** denied.
 
@@ -21,6 +21,7 @@ Legend: **A** all records/manage, **D** department records, **O** owned records,
 | Opportunities | A | A | D | O | R |
 | Change/close stage | A | A | D | O | — |
 | Pipelines manage | A | A | R | — | — |
+| Sales Playbook | A | A | D (manage) | O (execute) | R |
 | Activities / tasks | A | A | D | O | R |
 | Reports | A | A | D | R | R |
 | Audit logs | A | A (IT only) | — | — | — |

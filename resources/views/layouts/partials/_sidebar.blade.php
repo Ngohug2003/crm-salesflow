@@ -179,6 +179,14 @@
                         <span x-show="sidebar">Ma trận phân quyền</span>
                     </a>
                 @endcan
+                @can('sales-playbook.manage')
+                    <a href="{{ route('sales-playbooks.index') }}" wire:navigate.hover
+                       class="nav-link"
+                       :class="path.startsWith('/settings/sales-playbooks') && 'nav-link-active'">
+                        <flux:icon.list-bullet class="nav-icon" />
+                        <span x-show="sidebar">Sales Playbook</span>
+                    </a>
+                @endcan
                 @can('viewAny', \Spatie\Activitylog\Models\Activity::class)
                     <a href="{{ route('audit-logs.index') }}" wire:navigate.hover
                        class="nav-link"
