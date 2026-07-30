@@ -159,6 +159,27 @@ final class P1002QuoteApprovalTest extends TestCase
         self::assertSame(QuoteStatus::Issued, $quote->refresh()->status);
     }
 
+    public function test_issued_quote_pdf_can_be_regenerated_from_its_existing_version(): void
+    {
+        Storage::fake('local');
+        Queue::fake();
+
+        $quote = $this->createQuote('0');
+        app(QuoteApprovalService::class)->submit($this->sales, $quote->id);
+        $document = app(QuoteDocumentService::class)->issue($this->sales, $quote->id);
+        Storage::disk('local')->put($document->path, '%PDF-old');
+        $document->update(['status' => 'ready', 'size' => 8]);
+
+        $regenerated = app(QuoteDocumentService::class)->regenerate($this->sales, $quote->id);
+
+        self::assertSame($document->id, $regenerated->id);
+        self::assertSame('processing', $regenerated->status);
+        Queue::assertPushed(RenderQuotePdfJob::class, static fn (RenderQuotePdfJob $job): bool => $job->documentId === $document->id && $job->force);
+
+        (new RenderQuotePdfJob($document->id, true))->handle(app(VietnameseMoneyService::class));
+        self::assertSame('ready', $document->refresh()->status);
+    }
+
     public function test_rejected_quote_can_be_resubmitted_as_a_new_version(): void
     {
         $quote = $this->createQuote('15000000.00');

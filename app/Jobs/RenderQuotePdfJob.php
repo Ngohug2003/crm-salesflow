@@ -24,8 +24,10 @@ final class RenderQuotePdfJob implements ShouldQueue
     /** @var list<int> */
     public array $backoff = [10, 30, 60];
 
-    public function __construct(public readonly int $documentId)
-    {
+    public function __construct(
+        public readonly int $documentId,
+        public readonly bool $force = false,
+    ) {
         $this->onQueue('default');
     }
 
@@ -36,7 +38,7 @@ final class RenderQuotePdfJob implements ShouldQueue
             ->findOrFail($this->documentId);
         $disk = Storage::disk($document->disk);
 
-        if ($document->status === 'ready' && $disk->exists($document->path)) {
+        if (! $this->force && $document->status === 'ready' && $disk->exists($document->path)) {
             return;
         }
 

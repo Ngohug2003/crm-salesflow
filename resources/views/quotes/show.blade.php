@@ -19,17 +19,45 @@
 </head>
 <body class="bg-slate-100 font-sans text-slate-800 antialiased p-4 md:p-8">
     <!-- Top Action Bar (hidden on print) -->
-    <div class="no-print mx-auto max-w-4xl mb-6 flex items-center justify-between">
+    <div class="no-print mx-auto mb-6 flex max-w-4xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div class="flex items-center gap-2">
             <span class="text-xs text-slate-500">SalesFlow CRM / Báo giá / #{{ $quote->quote_number }}</span>
             <flux:badge :color="$quote->status->color()" size="sm">{{ $quote->status->label() }}</flux:badge>
         </div>
 
-        <div class="flex items-center gap-2">
+        <div class="flex flex-wrap items-center gap-2 sm:justify-end">
+            @can('issue', $quote)
+                @if ($quote->issued_snapshot && in_array($quote->status->value, ['issued', 'sent'], true))
+                    <form action="{{ route('quotes.public-link.store', $quote->id) }}" method="POST" class="flex items-center gap-1.5">
+                        @csrf
+                        <label class="sr-only" for="access_code">Mã bảo vệ link (không bắt buộc)</label>
+                        <input id="access_code" name="access_code" type="password" minlength="6" maxlength="100" placeholder="Mã bảo vệ (tuỳ chọn)" class="h-8 w-36 rounded-md border border-slate-300 bg-white px-2.5 text-xs text-slate-800 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none" />
+                        <button
+                            type="submit"
+                            class="inline-flex h-8 items-center gap-1.5 rounded-md bg-emerald-600 px-3 text-xs font-semibold text-white hover:bg-emerald-500"
+                        >
+                            <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
+                            </svg>
+                            <span>Tạo link công khai</span>
+                        </button>
+                    </form>
+                @endif
+            @endcan
+
             @if ($downloadUrl)
+            @can('issue', $quote)
+                <form action="{{ route('quotes.documents.regenerate', $quote->id) }}" method="POST" onsubmit="return confirm('Tạo lại PDF theo mẫu hiện tại? File PDF cũ sẽ được thay thế.');">
+                    @csrf
+                    <button type="submit" class="inline-flex h-8 items-center gap-1.5 rounded-md border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50">
+                        <flux:icon.arrow-path class="size-3.5" />
+                        <span>Tạo lại PDF</span>
+                    </button>
+                </form>
+            @endcan
             <a
                 href="{{ $downloadUrl }}"
-                class="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-indigo-500"
+                class="inline-flex h-8 items-center gap-1.5 rounded-md bg-indigo-600 px-3 text-xs font-semibold text-white hover:bg-indigo-500"
             >
                 <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0 1 10.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0 .229 2.523a1.125 1.125 0 0 1-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0 0 21 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.08 48.08 0 0 0-1.913-.247M6.34 18H5.25A2.25 2.25 0 0 1 3 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 0 1 1.913-.247m10.5 0a48.536 48.536 0 0 0-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.656" />
@@ -48,6 +76,21 @@
             </button>
         </div>
     </div>
+
+    @if (session()->has('generated_public_url'))
+        <div class="no-print mx-auto max-w-4xl mb-6 rounded-xl border border-emerald-300 bg-emerald-50 p-4 text-xs">
+            <div class="font-bold text-emerald-900">Đã phát hành Link xem báo giá công khai cho Khách hàng:</div>
+            <div class="mt-2 flex items-center gap-2">
+                <input type="text" readonly value="{{ session('generated_public_url') }}" class="w-full rounded border border-emerald-300 bg-white p-2 font-mono text-xs text-slate-800" />
+                <button type="button" onclick="navigator.clipboard.writeText('{{ session('generated_public_url') }}'); alert('Đã sao chép đường dẫn!');" class="rounded bg-emerald-700 px-3 py-2 text-white hover:bg-emerald-800 font-semibold shrink-0">
+                    Sao chép URL
+                </button>
+            </div>
+            @if (session('public_link_access_protected'))
+                <p class="mt-2 text-emerald-800">Link này đã được bảo vệ bằng mã truy cập. Hãy gửi mã đó qua kênh riêng cho khách hàng.</p>
+            @endif
+        </div>
+    @endif
 
     <!-- Printable Quote Document Card -->
     <div class="print-container relative mx-auto max-w-4xl overflow-hidden rounded-2xl border border-slate-200 bg-white p-8 shadow-sm md:p-12">

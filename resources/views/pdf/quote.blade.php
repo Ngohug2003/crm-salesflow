@@ -100,5 +100,22 @@
             <p><strong>Thông tin chuyển khoản:</strong><br>{!! nl2br(e(data_get($snapshot, 'branding.bank_information'))) !!}</p>
         @endif
     </div>
+
+    <table class="section signatures" style="margin-top: 30px; border: 0;">
+        <tr>
+            <td style="width: 50%; text-align: center; border: 0; vertical-align: top;">
+                <strong>ĐẠI DIỆN KHÁCH HÀNG</strong><br>
+                <span class="muted" style="font-style: italic; font-size: 8px;">(Ký, ghi rõ họ tên và đóng dấu)</span>
+                <div style="height: 50px;"></div>
+                <strong>{{ data_get($snapshot, 'contact.name', '—') }}</strong>
+            </td>
+            <td style="width: 50%; text-align: center; border: 0; vertical-align: top;">
+                <strong>ĐẠI DIỆN SALESFLOW CRM</strong><br>
+                <span class="muted" style="font-style: italic; font-size: 8px;">(Ký, ghi rõ họ tên và đóng dấu)</span>
+                <div style="height: 50px;"></div>
+                <strong>{{ data_get($snapshot, 'creator.name', 'SalesFlow Admin') }}</strong>
+            </td>
+        </tr>
+    </table>
 </body>
 </html>

@@ -49,7 +49,12 @@ final readonly class QuoteApprovalService
                 throw new QuoteWorkflowException('Chưa có quy tắc phê duyệt phù hợp. Vui lòng liên hệ quản trị viên.');
             }
 
-            $autoApproved = $rule->auto_approve;
+            $superAdminRole = (string) config('crm.rbac.super_admin_role', 'super-admin');
+            $isAuthorizedApprover = Gate::forUser($actor)->allows('approve', $quote)
+                || $actor->hasRole($superAdminRole)
+                || $actor->hasRole('admin');
+
+            $autoApproved = $rule->auto_approve || $isAuthorizedApprover;
             $status = $autoApproved ? QuoteApprovalStatus::Approved : QuoteApprovalStatus::Pending;
             $now = now();
 
@@ -64,7 +69,9 @@ final readonly class QuoteApprovalService
                 'discount_percent' => $quote->discount_percent,
                 'total_amount' => $quote->total_amount,
                 'request_note' => $note,
-                'decision_reason' => $autoApproved ? 'Tự động duyệt theo hạn mức được cấu hình.' : null,
+                'decision_reason' => $autoApproved
+                    ? ($isAuthorizedApprover ? 'Tự động duyệt cho cấp có thẩm quyền phê duyệt.' : 'Tự động duyệt theo hạn mức được cấu hình.')
+                    : null,
                 'submitted_at' => $now,
                 'resolved_at' => $autoApproved ? $now : null,
             ]);

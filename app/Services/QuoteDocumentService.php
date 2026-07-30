@@ -10,6 +10,7 @@ use App\Jobs\RenderQuotePdfJob;
 use App\Models\Quote;
 use App\Models\QuoteBrandingSetting;
 use App\Models\QuoteDocument;
+use App\Models\QuotePublicLink;
 use App\Models\QuoteVersion;
 use App\Models\User;
 use App\Repositories\Contracts\QuoteRepository;
@@ -29,8 +30,8 @@ final readonly class QuoteDocumentService
             $quote = $this->quotes->findForUpdate($quoteId);
             Gate::forUser($actor)->authorize('issue', $quote);
 
-            if ($quote->status !== QuoteStatus::Approved) {
-                throw new QuoteWorkflowException('Chỉ báo giá đã phê duyệt mới được phát hành.');
+            if (! in_array($quote->status, [QuoteStatus::Approved, QuoteStatus::Issued, QuoteStatus::Sent, QuoteStatus::Accepted], true)) {
+                throw new QuoteWorkflowException('Chỉ báo giá đã phê duyệt hoặc đã chấp thuận mới được phát hành PDF.');
             }
 
             $snapshot = $this->snapshot($quote);
@@ -49,12 +50,27 @@ final readonly class QuoteDocumentService
                 ],
             );
 
+            $newStatus = match ($quote->status) {
+                QuoteStatus::Accepted => QuoteStatus::Accepted,
+                QuoteStatus::Sent => QuoteStatus::Sent,
+                QuoteStatus::Issued => QuoteStatus::Issued,
+                default => QuoteStatus::Issued,
+            };
+
             $quote->update([
-                'status' => QuoteStatus::Issued,
-                'issued_at' => now(),
+                'status' => $newStatus,
+                'issued_at' => $quote->issued_at ?? now(),
                 'issued_snapshot' => $snapshot,
                 'updated_by' => $actor->id,
             ]);
+
+            // A public token must only ever represent the issued version it captured.
+            // Reissuing a newer version invalidates every older public link immediately.
+            QuotePublicLink::query()
+                ->where('quote_id', $quote->id)
+                ->where('version_issued', '<>', $quote->version)
+                ->whereNull('revoked_at')
+                ->update(['revoked_at' => now()]);
 
             $this->audit->record(
                 $actor,
@@ -92,8 +108,42 @@ final readonly class QuoteDocumentService
         });
     }
 
+    public function regenerate(User $actor, int $quoteId): QuoteDocument
+    {
+        return DB::transaction(function () use ($actor, $quoteId): QuoteDocument {
+            $quote = $this->quotes->findForUpdate($quoteId);
+            Gate::forUser($actor)->authorize('issue', $quote);
+
+            /** @var QuoteDocument $document */
+            $document = QuoteDocument::query()
+                ->where('quote_id', $quote->id)
+                ->whereHas('version', fn ($query) => $query->where('version', $quote->version))
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $document->update([
+                'status' => 'processing',
+                'failure_reason' => null,
+            ]);
+
+            $this->audit->record(
+                $actor,
+                $quote,
+                'pdf_regenerated',
+                "Yêu cầu tạo lại PDF báo giá {$quote->quote_number} phiên bản {$quote->version}",
+                ['document_id' => $document->id, 'status' => 'ready'],
+                ['document_id' => $document->id, 'status' => 'processing'],
+                ['module' => 'quotes', 'quote_version' => $quote->version],
+            );
+
+            DB::afterCommit(fn () => RenderQuotePdfJob::dispatch($document->id, force: true));
+
+            return $document;
+        });
+    }
+
     /** @return array<string, mixed> */
-    private function snapshot(Quote $quote): array
+    public function snapshot(Quote $quote): array
     {
         $branding = QuoteBrandingSetting::query()->first();
 
@@ -127,6 +177,10 @@ final readonly class QuoteDocumentService
                 'name' => $quote->contact?->full_name,
                 'email' => $quote->contact?->email,
                 'phone' => $quote->contact?->phone,
+            ],
+            'creator' => [
+                'name' => $quote->creator?->name,
+                'email' => $quote->creator?->email,
             ],
             'items' => $quote->items->map(static fn ($item): array => [
                 'product_name' => $item->product_name,

@@ -88,7 +88,7 @@ final readonly class QuotePolicy
 
     public function issue(User $user, Quote $quote): bool
     {
-        return $quote->status === QuoteStatus::Approved
+        return in_array($quote->status, [QuoteStatus::Approved, QuoteStatus::Issued, QuoteStatus::Sent, QuoteStatus::Accepted], true)
             && $this->hasPermission($user, 'quotes.issue')
             && $this->dataScope->allows($user, $quote->opportunity->owner_id, $quote->opportunity->department_id);
     }
