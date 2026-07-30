@@ -80,9 +80,15 @@
                 @can('viewAny', \App\Models\Opportunity::class)
                     <a href="{{ route('opportunities.index') }}" wire:navigate.hover
                        class="nav-link"
-                       :class="path.startsWith('/opportunities') && 'nav-link-active'">
+                       :class="path.startsWith('/opportunities') && !path.startsWith('/opportunities/at-risk') && 'nav-link-active'">
                         <flux:icon.briefcase class="nav-icon" />
                         <span x-show="sidebar">Cơ hội bán hàng</span>
+                    </a>
+                    <a href="{{ route('opportunities.risk-dashboard') }}" wire:navigate.hover
+                       class="nav-link"
+                       :class="path.startsWith('/opportunities/at-risk') && 'nav-link-active'">
+                        <flux:icon.exclamation-triangle class="nav-icon" />
+                        <span x-show="sidebar">Cảnh báo Deal Rủi ro</span>
                     </a>
                 @endcan
                 @can('quotes.approve')
