@@ -32,6 +32,7 @@ use App\Livewire\Opportunities\OpportunityDetail;
 use App\Livewire\Opportunities\OpportunityEditor;
 use App\Livewire\Opportunities\OpportunityKanban;
 use App\Livewire\Opportunities\OpportunityList;
+use App\Livewire\Opportunities\OpportunityRiskDashboard;
 use App\Livewire\Pipelines\PipelineDetail;
 use App\Livewire\Pipelines\PipelineEditor;
 use App\Livewire\Pipelines\PipelineList;
@@ -97,6 +98,7 @@ Route::middleware(['auth', 'request.context.authenticated', 'verified', 'account
 
     Route::get('/opportunities', OpportunityList::class)->middleware('can:viewAny,'.Opportunity::class)->name('opportunities.index');
     Route::get('/opportunities/kanban', OpportunityKanban::class)->middleware('can:viewAny,'.Opportunity::class)->name('opportunities.kanban');
+    Route::get('/opportunities/at-risk', OpportunityRiskDashboard::class)->middleware('can:viewAny,'.Opportunity::class)->name('opportunities.risk-dashboard');
     Route::get('/opportunities/create', OpportunityEditor::class)->middleware('can:create,'.Opportunity::class)->name('opportunities.create');
     Route::get('/opportunities/{opportunityId}', OpportunityDetail::class)->whereNumber('opportunityId')->name('opportunities.show');
     Route::get('/opportunities/{opportunityId}/edit', OpportunityEditor::class)->whereNumber('opportunityId')->name('opportunities.edit');

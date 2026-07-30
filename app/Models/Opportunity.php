@@ -11,6 +11,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -24,6 +27,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property ForecastCategory $forecast_category
  * @property bool $is_won
  * @property bool $is_lost
+ * @property-read OpportunityRiskSnapshot|null $currentRiskSnapshot
+ * @property-read OpportunityRiskAcknowledgement|null $latestRiskAcknowledgement
  */
 final class Opportunity extends Model
 {
@@ -160,6 +165,28 @@ final class Opportunity extends Model
         return $this->morphMany(Activity::class, 'subject');
     }
 
+    /** @return HasManyThrough<OpportunityRiskAcknowledgement, OpportunityRiskSnapshot, $this> */
+    public function riskAcknowledgements(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            OpportunityRiskAcknowledgement::class,
+            OpportunityRiskSnapshot::class,
+            'opportunity_id',
+            'opportunity_risk_snapshot_id'
+        );
+    }
+
+    /** @return HasOneThrough<OpportunityRiskAcknowledgement, OpportunityRiskSnapshot, $this> */
+    public function latestRiskAcknowledgement(): HasOneThrough
+    {
+        return $this->hasOneThrough(
+            OpportunityRiskAcknowledgement::class,
+            OpportunityRiskSnapshot::class,
+            'opportunity_id',
+            'opportunity_risk_snapshot_id'
+        )->latestOfMany('acted_at');
+    }
+
     /** @return MorphMany<Task, $this> */
     public function tasks(): MorphMany
     {
@@ -170,6 +197,18 @@ final class Opportunity extends Model
     public function playbookRuns(): HasMany
     {
         return $this->hasMany(OpportunityPlaybookRun::class);
+    }
+
+    /** @return HasMany<OpportunityRiskSnapshot, $this> */
+    public function riskSnapshots(): HasMany
+    {
+        return $this->hasMany(OpportunityRiskSnapshot::class)->latest('evaluated_at');
+    }
+
+    /** @return HasOne<OpportunityRiskSnapshot, $this> */
+    public function currentRiskSnapshot(): HasOne
+    {
+        return $this->hasOne(OpportunityRiskSnapshot::class)->where('is_current', true)->latestOfMany('evaluated_at');
     }
 
     /**
