@@ -32,8 +32,22 @@ Chart.register(
 
 window.salesflow = {
     toggleTheme() {
-        const dark = document.documentElement.classList.toggle('dark');
-        localStorage.setItem('salesflow-theme', dark ? 'dark' : 'light');
+        const appearance = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
+
+        if (window.Flux?.appearance !== undefined) {
+            window.Flux.appearance = appearance;
+
+            return;
+        }
+
+        if (typeof window.Flux?.applyAppearance === 'function') {
+            window.Flux.applyAppearance(appearance);
+
+            return;
+        }
+
+        document.documentElement.classList.toggle('dark', appearance === 'dark');
+        localStorage.setItem('flux.appearance', appearance);
     },
 };
 

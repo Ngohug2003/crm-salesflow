@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
@@ -120,6 +121,35 @@ final class Quote extends Model
     public function items(): HasMany
     {
         return $this->hasMany(QuoteItem::class, 'quote_id');
+    }
+
+    /** @return HasMany<QuotePublicLink, $this> */
+    public function publicLinks(): HasMany
+    {
+        return $this->hasMany(QuotePublicLink::class, 'quote_id')->orderBy('created_at', 'desc');
+    }
+
+    /** @return HasOne<QuotePublicLink, $this> */
+    public function activePublicLink(): HasOne
+    {
+        return $this->hasOne(QuotePublicLink::class, 'quote_id')
+            ->whereNull('revoked_at')
+            ->where(function ($query): void {
+                $query->whereNull('expires_at')->orWhere('expires_at', '>', now());
+            })
+            ->latestOfMany();
+    }
+
+    /** @return HasMany<QuoteCustomerResponse, $this> */
+    public function customerResponses(): HasMany
+    {
+        return $this->hasMany(QuoteCustomerResponse::class, 'quote_id')->orderBy('acted_at', 'desc');
+    }
+
+    /** @return HasOne<QuoteCustomerResponse, $this> */
+    public function latestCustomerResponse(): HasOne
+    {
+        return $this->hasOne(QuoteCustomerResponse::class, 'quote_id')->latestOfMany('acted_at');
     }
 
     /** @return HasMany<QuoteApprovalRequest, $this> */

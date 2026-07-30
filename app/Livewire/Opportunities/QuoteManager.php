@@ -14,6 +14,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
@@ -81,7 +82,7 @@ final class QuoteManager extends Component
         $this->showCreateModal = true;
     }
 
-    public function createQuote(QuoteService $service): void
+    public function createQuote(QuoteService $service, QuoteApprovalService $approvalService): void
     {
         $this->validate([
             'validUntil' => ['required', 'date', 'after_or_equal:today'],
@@ -97,7 +98,17 @@ final class QuoteManager extends Component
             'notes' => $this->notes,
         ]);
 
-        $this->feedbackMessage = "Đã tạo báo giá {$quote->quote_number}.";
+        $user = $this->user();
+        $isAuthorizedApprover = $this->administrator() || Gate::forUser($user)->allows('approve', $quote);
+
+        if ($isAuthorizedApprover) {
+            $approvalService->submit($user, $quote->id, 'Tự động duyệt do Quản trị viên / Cấp duyệt tạo trực tiếp.');
+            $quote->refresh();
+            $this->feedbackMessage = "Đã tạo và tự động phê duyệt báo giá {$quote->quote_number}.";
+        } else {
+            $this->feedbackMessage = "Đã tạo báo giá {$quote->quote_number}.";
+        }
+
         $this->showCreateModal = false;
     }
 

@@ -37,6 +37,7 @@ use App\Livewire\Pipelines\PipelineDetail;
 use App\Livewire\Pipelines\PipelineEditor;
 use App\Livewire\Pipelines\PipelineList;
 use App\Livewire\Platform\SystemConsole;
+use App\Livewire\Public\PublicQuoteViewer;
 use App\Livewire\Quotes\ApprovalInbox;
 use App\Livewire\Quotes\QuoteSettings;
 use App\Livewire\Reports\DataQualityDashboard;
@@ -66,6 +67,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/dashboard');
 Route::get('/register/invitation/{token}', AcceptInvitation::class)->name('invitations.accept');
+Route::get('/q/{token}', PublicQuoteViewer::class)->middleware('throttle:public-quote')->name('quotes.public-show');
+Route::get('/q/{token}/pdf', [QuoteController::class, 'downloadPublicPdf'])->middleware('throttle:public-quote')->name('quotes.public-pdf');
 
 Route::middleware(['auth', 'request.context.authenticated', 'verified', 'account.active'])->group(function (): void {
     Route::get('/dashboard', DashboardOverview::class)->middleware('can:reports.view')->name('dashboard');
@@ -106,6 +109,8 @@ Route::middleware(['auth', 'request.context.authenticated', 'verified', 'account
         ->middleware('can:quotes.approve')
         ->name('quotes.approvals');
     Route::get('/quotes/{quoteId}', [QuoteController::class, 'show'])->whereNumber('quoteId')->name('quotes.show');
+    Route::post('/quotes/{quoteId}/public-link', [QuoteController::class, 'generatePublicLink'])->whereNumber('quoteId')->name('quotes.public-link.store');
+    Route::post('/quotes/{quoteId}/documents/regenerate', [QuoteController::class, 'regeneratePdf'])->whereNumber('quoteId')->name('quotes.documents.regenerate');
     Route::get('/quotes/{quoteId}/documents/{documentId}', [QuoteController::class, 'download'])
         ->whereNumber(['quoteId', 'documentId'])
         ->middleware('signed')

@@ -7,6 +7,7 @@ namespace App\Notifications;
 use App\Models\Quote;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\BroadcastMessage;
+use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 final class QuoteWorkflowNotification extends Notification
@@ -23,7 +24,7 @@ final class QuoteWorkflowNotification extends Notification
     /** @return list<string> */
     public function via(object $notifiable): array
     {
-        return ['database', 'broadcast'];
+        return ['database', 'broadcast', 'mail'];
     }
 
     /** @return array<string, mixed> */
@@ -41,5 +42,13 @@ final class QuoteWorkflowNotification extends Notification
     public function toBroadcast(object $notifiable): BroadcastMessage
     {
         return new BroadcastMessage($this->toArray($notifiable));
+    }
+
+    public function toMail(object $notifiable): MailMessage
+    {
+        return (new MailMessage)
+            ->subject($this->title)
+            ->line($this->message)
+            ->action('Mở cơ hội bán hàng', route('opportunities.show', $this->quote->opportunity_id));
     }
 }

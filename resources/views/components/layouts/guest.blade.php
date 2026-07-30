@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <script>if (localStorage.getItem('salesflow-theme') === 'dark' || (!localStorage.getItem('salesflow-theme') && matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.classList.add('dark')</script>
+    <script>const appearance = localStorage.getItem('flux.appearance') || 'system'; if (appearance === 'dark' || (appearance === 'system' && matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.classList.add('dark')</script>
     <title>{{ $title ?? 'SalesFlow CRM' }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @fluxAppearance
