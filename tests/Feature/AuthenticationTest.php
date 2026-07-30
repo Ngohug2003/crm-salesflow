@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -12,6 +13,23 @@ it('uses the isolated test environment', function (): void {
 
 it('redirects guests to the login screen', function (): void {
     $this->get('/dashboard')->assertRedirect('/login');
+});
+
+it('prefills the demo password on the local login screen', function (): void {
+    $this->app->detectEnvironment(fn (): string => 'local');
+    config(['crm.local_login_password' => 'local-demo-password']);
+
+    $this->get('/login')
+        ->assertOk()
+        ->assertSee('value="local-demo-password"', false);
+});
+
+it('does not expose the demo password outside the local environment', function (): void {
+    config(['crm.local_login_password' => 'local-demo-password']);
+
+    $this->get('/login')
+        ->assertOk()
+        ->assertDontSee('local-demo-password');
 });
 
 it('authenticates an active user', function (): void {
@@ -44,16 +62,18 @@ it('does not authenticate a locked user', function (): void {
 });
 
 it('renders the dashboard for a verified active user', function (): void {
+    $this->seed(RolePermissionSeeder::class);
     $user = User::factory()->create([
         'email_verified_at' => now(),
         'is_active' => true,
     ]);
+    $user->assignRole('sales');
 
     $this->actingAs($user)
         ->get('/dashboard')
         ->assertOk()
         ->assertSee('SalesFlow CRM')
-        ->assertSee('Nền tảng SalesFlow đã sẵn sàng');
+        ->assertSee('Tổng quan bán hàng');
 });
 
 it('requires email verification', function (): void {

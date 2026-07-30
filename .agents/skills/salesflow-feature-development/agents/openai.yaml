@@ -1,0 +1,4 @@
+interface:
+  display_name: "SalesFlow Feature Delivery"
+  short_description: "Triển khai feature theo chuẩn SalesFlow CRM"
+  default_prompt: "Use $salesflow-feature-development to implement the next SalesFlow CRM feature against the canonical requirements."

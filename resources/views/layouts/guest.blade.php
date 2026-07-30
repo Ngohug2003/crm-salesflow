@@ -1,32 +1,49 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="vi" class="h-full bg-slate-50 dark:bg-slate-950">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <script>if (localStorage.getItem('salesflow-theme') === 'dark' || (!localStorage.getItem('salesflow-theme') && matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.classList.add('dark')</script>
-    <title>{{ $title ?? 'SalesFlow CRM' }}</title>
+
+    <title>{{ $title ?? 'Public Quote — SalesFlow CRM' }}</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet" />
+
+    <!-- Scripts and Styles -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @fluxAppearance
+    @fluxStyles
 </head>
-<body class="min-h-screen bg-slate-50 text-slate-950 antialiased dark:bg-slate-950 dark:text-slate-100">
-    <main class="grid min-h-screen lg:grid-cols-2">
-        <section class="hidden bg-slate-950 p-12 text-white lg:flex lg:flex-col lg:justify-between">
-            <a href="/" class="flex items-center gap-3 font-semibold">
-                <span class="grid size-10 place-items-center rounded-xl bg-emerald-400 font-black text-slate-950">SF</span>
-                SalesFlow CRM
-            </a>
-            <div class="max-w-xl">
-                <p class="mb-5 text-sm font-semibold uppercase tracking-[.3em] text-emerald-300">Sell with clarity</p>
-                <h1 class="text-5xl font-semibold leading-tight">Một workspace gọn gàng cho toàn bộ hành trình bán hàng.</h1>
-                <p class="mt-6 text-lg leading-8 text-slate-300">Theo dõi lead, pipeline, công việc và doanh thu trong một trải nghiệm nhanh, rõ và nhất quán.</p>
+<body class="h-full font-sans antialiased text-slate-900 dark:text-slate-100 bg-slate-50 dark:bg-slate-950">
+    <div class="min-h-screen flex flex-col justify-between py-6 px-4 sm:px-6 lg:px-8">
+        {{-- Guest Header Logo --}}
+        <header class="max-w-4xl mx-auto w-full flex items-center justify-between py-4 border-b border-slate-200 dark:border-slate-800">
+            <div class="flex items-center gap-3">
+                <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-600 font-bold text-white shadow-sm">
+                    SF
+                </div>
+                <div>
+                    <span class="text-lg font-bold tracking-tight text-slate-900 dark:text-white">SalesFlow CRM</span>
+                    <p class="text-xs text-slate-500">Cổng xác nhận báo giá công khai</p>
+                </div>
             </div>
-            <p class="text-sm text-slate-500">© {{ date('Y') }} SalesFlow CRM</p>
-        </section>
-        <section class="flex items-center justify-center p-6 sm:p-10">
-            <div class="w-full max-w-md">{{ $slot }}</div>
-        </section>
-    </main>
+            <div class="text-xs text-slate-400">
+                Bảo mật SSL 256-bit
+            </div>
+        </header>
+
+        {{-- Main Guest Page Slot --}}
+        <main class="max-w-4xl mx-auto w-full my-8">
+            {{ $slot }}
+        </main>
+
+        {{-- Guest Footer --}}
+        <footer class="max-w-4xl mx-auto w-full py-4 border-t border-slate-200 dark:border-slate-800 text-center text-xs text-slate-500">
+            <p>© {{ date('Y') }} SalesFlow CRM Platform. Tất cả quyền được bảo lưu.</p>
+        </footer>
+    </div>
+
     @fluxScripts
 </body>
 </html>

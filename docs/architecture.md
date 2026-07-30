@@ -66,6 +66,20 @@ erDiagram
 
 Application domain keys use auto-incrementing `BIGINT` values, foreign keys are indexed, customer-facing records use soft deletes, and monetary fields use fixed precision decimals. `activities`, `tasks`, and `attachments` use polymorphic subjects.
 
+Lead taxonomy is delivered in dependency order: P3-01 creates `lead_sources` and `tags`; P3-02 creates `leads` and the `lead_tag` many-to-many pivot so every foreign key references an existing table during a clean migration.
+
+The Lead aggregate uses nullable `owner_id` and `department_id` for unassigned intake while preserving compatibility with backend data scopes. Status and priority are typed backed enums, contact duplicates remain allowed until the P3-08 review workflow, and Soft Delete preserves tag membership for restoration. Conversion target foreign keys remain deferred until Company and Contact schemas exist.
+
+P3-03 adds the reusable Lead read path: UI/service consumers construct a typed `LeadFilterData`, then `LeadRepository` applies `DataScopeService` before search, filters, allowlisted sorting and pagination. Relationship eager loading is owned by the repository. This query boundary prevents consumers from accidentally omitting owner/department scope. P3-04 adds `LeadPolicy` as a separate permission boundary for view, create, update, delete, restore, assign and convert; permanent deletion remains Super Admin-only through the global Gate bypass.
+
+P3-05 connects this read path to the web UI without moving query logic into Livewire. `LeadController` enforces the route boundary, `LeadList` owns URL and presentation state, `LeadDirectoryService` converts untrusted strings into typed filter data, and `LeadRepository` remains responsible for scoped querying. Current-page selection is revalidated against the scoped paginator before being retained, so later bulk actions start from an actor-visible identifier set.
+
+P3-06 adds the Lead write path: `LeadForm` normalizes and validates server-side input, `LeadEditor` owns presentation state, and `LeadManagementService` re-authorizes the operation, resolves assignment scope and controls a transaction around repository persistence, tag synchronization and system audit. Department assignment is derived from the selected owner instead of trusting a separate client field. Sales creation is automatically self-owned; department-scoped creation stays in the actor's department. Status is deliberately excluded from this general editor so P3-07 can introduce an explicit transition service and history without a bypass path.
+
+P3-07 makes assignment and status explicit workflow boundaries. Both `LeadAssignmentService` and `LeadStatusTransitionService` acquire a scoped row lock, authorize the mutation, update the Lead, append immutable domain history and write system audit inside one transaction. `LeadAssigned` and `LeadStatusChanged` implement `ShouldDispatchAfterCommit`, preventing consumers from observing rolled-back state. The general Lead editor now rejects owner changes; status remains writable only through the transition matrix. A typed `LeadTimelineEntry` keeps the Livewire timeline independent from persistence-model details.
+
+P3-08 adds contact identity and retention boundaries. `LeadContactNormalizer` runs from the model saving event, keeping normalized email/phone columns correct for every write path. `DuplicateLeadService` queries candidates only after `DataScopeService` and binds user confirmation to a contact signature, preventing a stale warning acknowledgement from authorizing changed input. `LeadLifecycleService` owns row-locked Soft Delete/restore transactions and system audit; tags and workflow history survive deletion. Restoring a Lead whose owner is inactive appends a new unassignment history instead of silently bypassing P3-07.
+
 ## 4. Delivery plan and estimate
 
 | Phase | Deliverable | Estimate |
