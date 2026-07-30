@@ -108,13 +108,7 @@
                     @endforeach
                 </x-forms.smart-select>
 
-                <flux:input
-                    wire:model="annualRevenue"
-                    type="number"
-                    step="0.01"
-                    label="Doanh thu hàng năm (VNĐ)"
-                    placeholder="Ví dụ: 5000000000"
-                />
+                <x-forms.money-input model="annualRevenue" label="Doanh thu hàng năm" placeholder="5,000,000,000" />
             </div>
         </section>
 

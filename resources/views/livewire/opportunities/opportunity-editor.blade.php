@@ -40,8 +40,7 @@
                 </div>
 
                 <div>
-                    <flux:input type="number" wire:model="amount" label="Giá trị hợp đồng (VNĐ) *" placeholder="0" min="0" step="1000000" />
-                    @error('amount') <span class="mt-1 block text-xs text-rose-500">{{ $message }}</span> @enderror
+                    <x-forms.money-input model="amount" label="Giá trị hợp đồng" required />
                 </div>
 
                 <div>

@@ -38,6 +38,9 @@ use App\Livewire\Pipelines\PipelineEditor;
 use App\Livewire\Pipelines\PipelineList;
 use App\Livewire\Platform\SystemConsole;
 use App\Livewire\Public\PublicQuoteViewer;
+use App\Livewire\Products\ProductList;
+use App\Livewire\PriceBooks\PriceBookList;
+use App\Livewire\PriceBooks\PriceBookDetail;
 use App\Livewire\Quotes\ApprovalInbox;
 use App\Livewire\Quotes\QuoteSettings;
 use App\Livewire\Reports\DataQualityDashboard;
@@ -60,6 +63,8 @@ use App\Models\Department;
 use App\Models\Lead;
 use App\Models\Opportunity;
 use App\Models\Pipeline;
+use App\Models\Product;
+use App\Models\PriceBook;
 use App\Models\Quote;
 use App\Models\Task;
 use App\Models\User;
@@ -115,6 +120,9 @@ Route::middleware(['auth', 'request.context.authenticated', 'verified', 'account
         ->whereNumber(['quoteId', 'documentId'])
         ->middleware('signed')
         ->name('quotes.documents.download');
+    Route::get('/products', ProductList::class)->middleware('can:viewAny,'.Product::class)->name('products.index');
+    Route::get('/price-books', PriceBookList::class)->middleware('can:viewAny,'.PriceBook::class)->name('price-books.index');
+    Route::get('/price-books/{priceBookId}', PriceBookDetail::class)->whereNumber('priceBookId')->name('price-books.show');
 
     Route::get('/pipelines', PipelineList::class)->middleware('can:viewAny,'.Pipeline::class)->name('pipelines.index');
     Route::get('/pipelines/create', PipelineEditor::class)->middleware('can:create,'.Pipeline::class)->name('pipelines.create');

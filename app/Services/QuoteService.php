@@ -133,10 +133,13 @@ final readonly class QuoteService
         if ($provided !== []) {
             return array_map(static fn (array $item): array => [
                 'product_name' => trim($item['product_name']),
+                'product_id' => $item['product_id'] ?? null,
+                'price_book_entry_id' => $item['price_book_entry_id'] ?? null,
                 'sku' => $item['sku'] ?? null,
                 'quantity' => max(1, $item['quantity']),
                 'unit_price' => (string) $item['unit_price'],
                 'discount_percent' => (string) ($item['discount_percent'] ?? 0),
+                'vat_percent' => (string) ($item['vat_percent'] ?? 0),
                 'notes' => $item['notes'] ?? null,
             ], $provided);
         }
@@ -144,20 +147,26 @@ final readonly class QuoteService
         if ($opportunity->items->isNotEmpty()) {
             return $opportunity->items->map(static fn ($item): array => [
                 'product_name' => $item->product_name,
+                'product_id' => $item->product_id,
+                'price_book_entry_id' => $item->price_book_entry_id,
                 'sku' => $item->sku,
                 'quantity' => $item->quantity,
                 'unit_price' => $item->unit_price,
                 'discount_percent' => $item->discount_percent,
+                'vat_percent' => $item->vat_percent,
                 'notes' => $item->notes,
             ])->values()->all();
         }
 
         return [[
             'product_name' => "Gói dịch vụ / Sản phẩm: {$opportunity->title}",
+            'product_id' => null,
+            'price_book_entry_id' => null,
             'sku' => null,
             'quantity' => 1,
             'unit_price' => (string) $opportunity->amount,
             'discount_percent' => '0',
+            'vat_percent' => '0',
             'notes' => null,
         ]];
     }

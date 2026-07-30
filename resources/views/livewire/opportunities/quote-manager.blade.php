@@ -116,7 +116,7 @@
                 <flux:input wire:model="validUntil" type="date" label="Hiệu lực đến" required />
                 <flux:input wire:model="taxPercent" type="number" step="0.01" min="0" max="100" label="Thuế VAT (%)" required />
             </div>
-            <flux:input wire:model="discountAmount" type="number" step="1000" min="0" label="Chiết khấu toàn báo giá (VNĐ)" required />
+            <x-forms.money-input model="discountAmount" label="Chiết khấu toàn báo giá" required />
             <flux:textarea wire:model="notes" label="Điều khoản / Ghi chú" rows="4" />
             <div class="flex justify-end gap-2">
                 <flux:button type="button" variant="ghost" wire:click="$set('showCreateModal', false)">Hủy</flux:button>

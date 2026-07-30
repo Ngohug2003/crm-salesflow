@@ -15,11 +15,14 @@ final class OpportunityItem extends Model
     /** @var list<string> */
     protected $fillable = [
         'opportunity_id',
+        'product_id',
+        'price_book_entry_id',
         'product_name',
         'sku',
         'unit_price',
         'quantity',
         'discount_percent',
+        'vat_percent',
         'total_price',
         'notes',
     ];
@@ -31,6 +34,7 @@ final class OpportunityItem extends Model
             'unit_price' => 'decimal:2',
             'quantity' => 'integer',
             'discount_percent' => 'decimal:2',
+            'vat_percent' => 'decimal:2',
             'total_price' => 'decimal:2',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
@@ -41,5 +45,17 @@ final class OpportunityItem extends Model
     public function opportunity(): BelongsTo
     {
         return $this->belongsTo(Opportunity::class, 'opportunity_id');
+    }
+
+    /** @return BelongsTo<Product, $this> */
+    public function product(): BelongsTo
+    {
+        return $this->belongsTo(Product::class);
+    }
+
+    /** @return BelongsTo<PriceBookEntry, $this> */
+    public function priceBookEntry(): BelongsTo
+    {
+        return $this->belongsTo(PriceBookEntry::class);
     }
 }

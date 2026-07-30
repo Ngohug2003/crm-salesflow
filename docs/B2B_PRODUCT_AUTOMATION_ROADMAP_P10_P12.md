@@ -53,7 +53,7 @@ Lộ trình P10–P12 đưa SalesFlow từ CRM quản lý dữ liệu thành n�
 | 3 | P10-03 | Stage Automation & Sales Playbook | `feature/p10-03-stage-playbook` | P5-X03, P6-07, P8-06 | Sale luôn biết bước tiếp theo | Chờ kiểm thử thủ công |
 | 4 | P10-04 | At-Risk Deal Detection | `feature/p10-04-at-risk-deals` | P10-03, P7-X04 | Phát hiện thương vụ có nguy cơ sớm | Chờ duyệt |
 | 5 | P10-05 | Public Quote Link & Customer Acceptance | `feature/p10-05-public-quote-acceptance` | P10-02, P9-02 | Khách xem/chấp thuận báo giá trực tuyến | Chờ duyệt |
-| 6 | P11-01 | Product Catalog & Price Books | `feature/p11-01-product-price-books` | P5-X01, P10-02 | Giảm nhập dòng sản phẩm và sai giá | Chờ duyệt |
+| 6 | P11-01 | Product Catalog & Price Books | `feature/p11-01-product-price-books` | P5-X01, P10-02 | Giảm nhập dòng sản phẩm và sai giá | Hoàn tất triển khai — chờ kiểm thử thủ công |
 | 7 | P11-02 | Buying Committee & Stakeholder Map | `feature/p11-02-buying-committee` | P4-X01, P5-09 | Quản lý người quyết định trong deal B2B | Chờ duyệt |
 | 8 | P11-03 | Contract & Renewal Management | `feature/p11-03-contract-renewals` | P10-05, P11-01 | Theo dõi hợp đồng và tự tạo cơ hội gia hạn | Chờ duyệt |
 | 9 | P11-04 | Manager Forecast Review | `feature/p11-04-forecast-review` | P5-X04, P10-04, P7-X01 | Chốt forecast có giải trình và lịch sử | Chờ duyệt |

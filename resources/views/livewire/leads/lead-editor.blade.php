@@ -106,7 +106,7 @@
                     :ward-error="$errors->first('form.wardId')"
                 />
                 <flux:input wire:model.blur="form.country" label="Quốc gia" />
-                <flux:input wire:model.blur="form.estimatedValue" type="number" min="0" step="0.01" label="Giá trị dự kiến (VNĐ)" />
+                <x-forms.money-input model="form.estimatedValue" label="Giá trị dự kiến" />
             </div>
 
             @if ($leadId !== null && blank($form->provinceId) && ($form->province !== '' || $form->city !== ''))

@@ -122,7 +122,7 @@
                                     <div class="sm:col-span-2">
                                         <flux:input wire:model="convertOpportunityName" label="Tên Cơ hội bán hàng *" required />
                                     </div>
-                                    <flux:input wire:model="convertEstimatedValue" type="number" label="Giá trị dự kiến (VNĐ)" />
+                                    <x-forms.money-input model="convertEstimatedValue" label="Giá trị dự kiến" />
                                     @if (! empty($conversionPreview['pipelines']))
                                         <x-forms.smart-select wire:model.live="convertPipelineId" label="Quy trình bán hàng (Pipeline)">
                                             @foreach ($conversionPreview['pipelines'] as $pipe)

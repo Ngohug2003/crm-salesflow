@@ -316,7 +316,7 @@
 
                         <flux:field>
                             <flux:label>Giá trị Lead tối thiểu</flux:label>
-                            <flux:input type="number" wire:model="minEstimatedValue" placeholder="100.000.000 ₫" />
+                            <x-forms.money-input model="minEstimatedValue" label="Giá trị Lead tối thiểu" />
                             <flux:error name="minEstimatedValue" />
                         </flux:field>
                     </div>
