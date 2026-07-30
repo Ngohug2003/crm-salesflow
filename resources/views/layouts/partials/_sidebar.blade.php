@@ -107,6 +107,22 @@
                         <span x-show="sidebar">Quy trình bán hàng</span>
                     </a>
                 @endcan
+                @can('products.view')
+                    <a href="{{ route('products.index') }}" wire:navigate.hover
+                       class="nav-link"
+                       :class="path.startsWith('/products') && 'nav-link-active'">
+                        <flux:icon.squares-2x2 class="nav-icon" />
+                        <span x-show="sidebar">Danh mục sản phẩm</span>
+                    </a>
+                @endcan
+                @can('price-books.view')
+                    <a href="{{ route('price-books.index') }}" wire:navigate.hover
+                       class="nav-link"
+                       :class="path.startsWith('/price-books') && 'nav-link-active'">
+                        <flux:icon.currency-dollar class="nav-icon" />
+                        <span x-show="sidebar">Bảng giá</span>
+                    </a>
+                @endcan
                 @can('viewAny', \App\Models\Task::class)
                     <a href="{{ route('tasks.index') }}" wire:navigate.hover
                        class="nav-link"

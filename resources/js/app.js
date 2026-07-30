@@ -51,6 +51,26 @@ window.salesflow = {
     },
 };
 
+window.salesflowMoneyInput = (wire, model) => ({
+    display: '',
+    init() { this.display = this.toDisplay(wire.get(model)); },
+    sync(event) {
+        const raw = String(event.target.value ?? '').replace(/[^\d]/g, '');
+        wire.set(model, raw === '' ? '0' : raw);
+        this.display = this.toDisplay(raw);
+    },
+    format() { this.display = this.toDisplay(wire.get(model)); },
+    syncFromServer(event) {
+        if (event.detail.model === model) {
+            this.display = this.toDisplay(event.detail.value);
+        }
+    },
+    toDisplay(value) {
+        const raw = String(value ?? '').split('.')[0].replace(/[^\d]/g, '');
+        return raw === '' ? '' : new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(Number(raw));
+    },
+});
+
 window.salesflowRichTextEditor = (wire, model, placeholder) => ({
     editor: null,
 

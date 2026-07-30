@@ -30,11 +30,14 @@ final class QuoteItem extends Model
     /** @var list<string> */
     protected $fillable = [
         'quote_id',
+        'product_id',
+        'price_book_entry_id',
         'product_name',
         'sku',
         'quantity',
         'unit_price',
         'discount_percent',
+        'vat_percent',
         'total_price',
         'notes',
     ];
@@ -46,6 +49,7 @@ final class QuoteItem extends Model
             'quantity' => 'integer',
             'unit_price' => 'decimal:2',
             'discount_percent' => 'decimal:2',
+            'vat_percent' => 'decimal:2',
             'total_price' => 'decimal:2',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
@@ -56,5 +60,17 @@ final class QuoteItem extends Model
     public function quote(): BelongsTo
     {
         return $this->belongsTo(Quote::class, 'quote_id');
+    }
+
+    /** @return BelongsTo<Product, $this> */
+    public function product(): BelongsTo
+    {
+        return $this->belongsTo(Product::class);
+    }
+
+    /** @return BelongsTo<PriceBookEntry, $this> */
+    public function priceBookEntry(): BelongsTo
+    {
+        return $this->belongsTo(PriceBookEntry::class);
     }
 }

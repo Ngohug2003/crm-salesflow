@@ -9,6 +9,9 @@ use App\Models\Department;
 use App\Models\Opportunity;
 use App\Models\Pipeline;
 use App\Models\PipelineStage;
+use App\Models\PriceBook;
+use App\Models\PriceBookEntry;
+use App\Models\Product;
 use App\Models\User;
 use App\Services\OpportunityItemService;
 use Database\Seeders\RolePermissionSeeder;
@@ -82,5 +85,44 @@ final class OpportunityLineItemsTest extends TestCase
 
         $this->opportunity->refresh();
         $this->assertEquals(57000000.0, (float) $this->opportunity->amount);
+    }
+
+    public function test_first_product_selection_uses_the_selected_price_book_price(): void
+    {
+        $product = Product::query()->create([
+            'sku' => 'SF-ENTERPRISE',
+            'name' => 'Gói SalesFlow Enterprise',
+            'unit' => 'Gói',
+            'standard_price' => 500000000,
+            'vat_percent' => 10,
+            'is_active' => true,
+            'owner_id' => $this->superAdmin->id,
+            'department_id' => $this->dept->id,
+        ]);
+        $priceBook = PriceBook::query()->create([
+            'name' => 'Bảng giá Enterprise',
+            'currency_code' => 'VND',
+            'is_active' => true,
+            'owner_id' => $this->superAdmin->id,
+            'department_id' => $this->dept->id,
+        ]);
+        PriceBookEntry::query()->create([
+            'price_book_id' => $priceBook->id,
+            'product_id' => $product->id,
+            'unit_price' => 450000000,
+            'vat_percent' => 8,
+            'min_quantity' => 1,
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($this->superAdmin);
+
+        Livewire::test(LineItemsComponent::class, ['opportunityId' => $this->opportunity->id])
+            ->call('openCreate')
+            ->set('priceBookId', (string) $priceBook->id)
+            ->set('productId', (string) $product->id)
+            ->assertSet('unitPrice', '450000000.00')
+            ->assertSet('vatPercent', '8.00')
+            ->assertDispatched('salesflow-money-input-updated');
     }
 }
