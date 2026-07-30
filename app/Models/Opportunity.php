@@ -166,6 +166,12 @@ final class Opportunity extends Model
         return $this->morphMany(Task::class, 'subject');
     }
 
+    /** @return HasMany<OpportunityPlaybookRun, $this> */
+    public function playbookRuns(): HasMany
+    {
+        return $this->hasMany(OpportunityPlaybookRun::class);
+    }
+
     /**
      * @param  Builder<$this>  $query
      * @return Builder<$this>

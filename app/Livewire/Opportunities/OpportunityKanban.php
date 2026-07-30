@@ -7,6 +7,7 @@ namespace App\Livewire\Opportunities;
 use App\Data\OpportunityFilterData;
 use App\Exceptions\StaleOpportunityException;
 use App\Models\Opportunity;
+use App\Models\OpportunityPlaybookRun;
 use App\Models\Pipeline;
 use App\Models\PipelineStage;
 use App\Models\User;
@@ -144,11 +145,18 @@ final class OpportunityKanban extends Component
         );
 
         $opportunities = collect($service->list($actor, $filterData, perPage: 500)->items());
+        $runsByOpportunity = OpportunityPlaybookRun::query()
+            ->with('steps')
+            ->whereIn('opportunity_id', $opportunities->pluck('id'))
+            ->orderByDesc('id')
+            ->get()
+            ->groupBy('opportunity_id')
+            ->map->first();
 
         $stages = $pipeline->stages()->orderBy('position', 'asc')->get();
         $grouped = $opportunities->groupBy('stage_id');
 
-        return $stages->map(static function (PipelineStage $stage) use ($grouped) {
+        return $stages->map(static function (PipelineStage $stage) use ($grouped, $runsByOpportunity) {
             /** @var Collection<int, Opportunity> $opps */
             $opps = $grouped->get($stage->id, collect());
             $totalCount = $opps->count();
@@ -158,6 +166,16 @@ final class OpportunityKanban extends Component
             foreach ($opps as $opp) {
                 $totalAmount += (float) $opp->amount;
                 $totalWeightedValue += $opp->weighted_value;
+                $run = $runsByOpportunity->get($opp->id);
+                if ($run !== null && $run->pipeline_stage_id === $stage->id) {
+                    $totalSteps = $run->steps->count();
+                    $completedSteps = $run->steps->where('status', 'completed')->count();
+                    $opp->setAttribute('playbook_progress', [
+                        'completed' => $completedSteps,
+                        'total' => $totalSteps,
+                        'percent' => $totalSteps > 0 ? (int) round(($completedSteps / $totalSteps) * 100) : 0,
+                    ]);
+                }
             }
 
             return [

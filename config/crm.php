@@ -87,6 +87,13 @@ $permissionGroups = [
             'pipelines.manage' => 'Quản lý pipeline',
         ],
     ],
+    'sales-playbook' => [
+        'label' => 'Sales Playbook',
+        'permissions' => [
+            'sales-playbook.view' => 'Xem playbook và tiến độ thực hiện',
+            'sales-playbook.manage' => 'Cấu hình, phát hành và gán Sales Playbook',
+        ],
+    ],
     'activities' => [
         'label' => 'Hoạt động',
         'permissions' => [
@@ -160,6 +167,7 @@ return [
             'users.update',
             'users.delete',
             'quotes.manage-settings',
+            'sales-playbook.manage',
         ],
         'permission_groups' => $permissionGroups,
         /*
@@ -226,6 +234,7 @@ return [
                     'quotes.view', 'quotes.create', 'quotes.update', 'quotes.submit', 'quotes.approve',
                     'quotes.issue', 'quotes.download', 'quotes.void',
                     'pipelines.view',
+                    'sales-playbook.view', 'sales-playbook.manage',
                     'activities.view', 'activities.create', 'activities.update', 'activities.delete',
                     'tasks.view', 'tasks.view-all', 'tasks.create', 'tasks.update', 'tasks.delete', 'tasks.assign',
                     'reports.view', 'reports.export',
@@ -243,6 +252,7 @@ return [
                     'opportunities.delete', 'opportunities.change-stage', 'opportunities.close',
                     'quotes.view', 'quotes.create', 'quotes.update', 'quotes.submit', 'quotes.issue', 'quotes.download',
                     'pipelines.view',
+                    'sales-playbook.view',
                     'activities.view', 'activities.create', 'activities.update', 'activities.delete',
                     'tasks.view', 'tasks.create', 'tasks.update', 'tasks.delete',
                     'reports.view',
@@ -259,6 +269,7 @@ return [
                     'opportunities.view',
                     'quotes.view', 'quotes.download',
                     'pipelines.view',
+                    'sales-playbook.view',
                     'activities.view',
                     'tasks.view',
                     'reports.view',

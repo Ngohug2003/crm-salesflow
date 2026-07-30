@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Events\OpportunityStageUpdatedEvent;
 use App\Exceptions\StageRequirementsUnfulfilledException;
 use App\Exceptions\StaleOpportunityException;
+use App\Jobs\ActivateOpportunityPlaybookJob;
 use App\Models\Opportunity;
 use App\Models\OpportunityStageHistory;
 use App\Models\PipelineStage;
@@ -22,6 +23,7 @@ final readonly class OpportunityStageTransitionService
         private OpportunityRepository $opportunities,
         private DataScopeService $dataScope,
         private SystemAuditService $audit,
+        private OpportunityPlaybookService $playbooks,
     ) {}
 
     public function transitionStage(
@@ -54,6 +56,8 @@ final readonly class OpportunityStageTransitionService
                 ->where('pipeline_id', $opportunity->pipeline_id)
                 ->findOrFail($targetStageId);
 
+            $this->playbooks->validateExitCriteria($opportunity);
+            $this->playbooks->ensureCanEnterStage($actor, $targetStage->id);
             $this->validateStageRequirements($opportunity, $targetStage, $notes);
 
             $oldStageId = $opportunity->stage_id;
@@ -120,6 +124,13 @@ final readonly class OpportunityStageTransitionService
                 $targetStage->id,
                 $actor,
             );
+
+            ActivateOpportunityPlaybookJob::dispatch(
+                $actor->id,
+                $updatedOpportunity->id,
+                $targetStage->id,
+                $history->id,
+            )->afterCommit();
 
             return $updatedOpportunity;
         });

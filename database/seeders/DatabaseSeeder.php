@@ -78,6 +78,7 @@ class DatabaseSeeder extends Seeder
             DemoUserSeeder::class,
             DemoPipelineSeeder::class,
             FullDemoSeeder::class,
+            StandardSalesPlaybookSeeder::class,
         ]);
     }
 }

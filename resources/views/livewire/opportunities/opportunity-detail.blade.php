@@ -70,7 +70,12 @@
         </div>
     @enderror
 
-    <section class="crm-card space-y-4" aria-labelledby="opportunity-stage-title">
+    <section
+        class="crm-card space-y-4 transition-opacity duration-150"
+        aria-labelledby="opportunity-stage-title"
+        wire:loading.class="opacity-70"
+        wire:target="changeStage"
+    >
         <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
             <h2 id="opportunity-stage-title" class="text-base font-semibold text-slate-950 dark:text-white">Tiến trình: {{ $opportunity->pipeline?->name }}</h2>
             <span class="text-xs text-slate-500 dark:text-slate-400">Bấm vào giai đoạn để chuyển nhanh</span>
@@ -85,6 +90,8 @@
                 <button
                     type="button"
                     wire:click="changeStage({{ $stg->id }})"
+                    wire:loading.attr="disabled"
+                    wire:target="changeStage"
                     class="flex min-w-[150px] flex-1 flex-col gap-2 rounded-lg border p-3 text-left transition {{ $isCurrent ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/20' : ($isPassed ? 'border-emerald-200 bg-emerald-50/30 dark:border-emerald-900/50 dark:bg-emerald-950/10' : 'border-slate-200 bg-slate-50 hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900/50') }}"
                 >
                     <div class="flex items-center justify-between">
@@ -93,6 +100,10 @@
                         </span>
                         <span class="text-[10px] font-semibold text-slate-500">{{ $stg->probability }}%</span>
                     </div>
+
+                    @if ($isCurrent)
+                        <span wire:loading wire:target="changeStage" class="text-[10px] font-medium text-emerald-700 dark:text-emerald-300">Đang cập nhật...</span>
+                    @endif
 
                     <div class="h-1.5 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
                         <div class="h-full transition-all" style="width: {{ $stg->probability }}%; background-color: {{ $stg->color }};"></div>
@@ -106,6 +117,13 @@
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <!-- Left 2-Columns: Line Items, Tasks, Files & Timeline -->
         <div class="lg:col-span-2 space-y-6">
+            @can('sales-playbook.view')
+                <livewire:opportunities.opportunity-playbook-progress
+                    :opportunityId="$opportunity->id"
+                    :key="'opportunity-playbook-'.$opportunity->id.'-'.$opportunity->stage_id"
+                />
+            @endcan
+
             <!-- Danh mục Sản phẩm & Dịch vụ (Line Items) -->
             <livewire:opportunities.opportunity-line-items :opportunityId="$opportunity->id" />
 

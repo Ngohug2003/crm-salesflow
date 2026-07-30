@@ -2,7 +2,7 @@
 
 ## 1. Trạng thái tài liệu
 
-- Phiên bản: `2.3`
+- Phiên bản: `2.4`
 - Hiệu lực từ: `30/07/2026`
 - Trạng thái: **nguồn yêu cầu chuẩn của dự án (canonical source of truth)**
 - Phạm vi áp dụng: mọi feature từ `P3-09` trở đi và mọi phần code cũ được chỉnh sửa lại.
@@ -394,6 +394,19 @@ Upload → MIME/size check → Preview → Column mapping → Validate
 - Global search nhóm Lead/Company/Contact/Opportunity, debounce, keyboard navigation và permission-aware.
 - Attachment polymorphic, private, MIME/size check, tên server-generated, preview ảnh và progress.
 - Download/delete luôn authorize; production dùng S3/MinIO-compatible storage.
+
+### 7.11 Stage Automation & Sales Playbook — `REQ-STAGE-PLAYBOOK`
+
+- Playbook được cấu hình theo Pipeline Stage, gồm mục tiêu, câu hỏi qualification, trường bắt buộc, checklist, task, reminder và tài liệu gợi ý.
+- Phiên bản đã phát hành là bất biến; Opportunity giữ snapshot tên, phiên bản và từng bước tại thời điểm kích hoạt.
+- Exit criteria được cưỡng chế ở backend trên mọi đường chuyển stage, gồm Detail, Kanban, Won/Lost và Reopen.
+- Chính sách chạy lại gồm `once`, `every_entry` và `manual`; idempotency key ngăn job retry tạo trùng run hoặc Task.
+- Người có quyền cập nhật Opportunity được chạy lại Playbook thủ công; lượt cũ chuyển sang lịch sử và không bị xóa.
+- Automation kích hoạt bằng queued job sau commit; Horizon phải xử lý queue `automation` với retry/backoff hữu hạn.
+- Due date của Task/Reminder tự động tính theo ngày làm việc trong múi giờ `Asia/Ho_Chi_Minh`.
+- Task tự động tiếp tục tuân thủ `TaskPolicy`, subject visibility và data scope của actor.
+- Manager được xem tiến độ playbook trên Opportunity Detail/Kanban; Viewer chỉ đọc và backend từ chối hoàn tất step.
+- Template/run/step completion phải có audit và Request ID; xóa/lưu trữ template không làm mất lịch sử run.
 
 ## 8. Database và dữ liệu
 

@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Enums\ForecastCategory;
 use App\Events\OpportunityStageUpdatedEvent;
+use App\Jobs\ActivateOpportunityPlaybookJob;
 use App\Models\Opportunity;
 use App\Models\OpportunityStageHistory;
 use App\Models\PipelineStage;
@@ -22,6 +23,7 @@ final readonly class OpportunityCloseWorkflowService
         private OpportunityRepository $opportunities,
         private DataScopeService $dataScope,
         private SystemAuditService $audit,
+        private OpportunityPlaybookService $playbooks,
     ) {}
 
     public function closeWon(User $actor, int $opportunityId, ?string $notes = null): Opportunity
@@ -38,6 +40,8 @@ final readonly class OpportunityCloseWorkflowService
                 throw new InvalidArgumentException('Quy trình bán hàng này chưa được cấu hình Giai đoạn Thành công (Won).');
             }
 
+            $this->playbooks->validateExitCriteria($opportunity);
+            $this->playbooks->ensureCanEnterStage($actor, $wonStage->id);
             $oldStageId = $opportunity->stage_id;
             $oldStageName = $opportunity->stage?->name;
 
@@ -99,6 +103,8 @@ final readonly class OpportunityCloseWorkflowService
                 $actor,
             );
 
+            ActivateOpportunityPlaybookJob::dispatch($actor->id, $updatedOpportunity->id, $wonStage->id, $history->id)->afterCommit();
+
             return $updatedOpportunity;
         });
     }
@@ -122,6 +128,8 @@ final readonly class OpportunityCloseWorkflowService
                 throw new InvalidArgumentException('Quy trình bán hàng này chưa được cấu hình Giai đoạn Thất bại (Lost).');
             }
 
+            $this->playbooks->validateExitCriteria($opportunity);
+            $this->playbooks->ensureCanEnterStage($actor, $lostStage->id);
             $oldStageId = $opportunity->stage_id;
             $oldStageName = $opportunity->stage?->name;
 
@@ -190,6 +198,8 @@ final readonly class OpportunityCloseWorkflowService
                 $actor,
             );
 
+            ActivateOpportunityPlaybookJob::dispatch($actor->id, $updatedOpportunity->id, $lostStage->id, $history->id)->afterCommit();
+
             return $updatedOpportunity;
         });
     }
@@ -227,6 +237,8 @@ final readonly class OpportunityCloseWorkflowService
                 throw new InvalidArgumentException('Quy trình bán hàng này không có Giai đoạn đang mở phù hợp để khôi phục.');
             }
 
+            $this->playbooks->validateExitCriteria($opportunity);
+            $this->playbooks->ensureCanEnterStage($actor, $openStage->id);
             $oldStageId = $opportunity->stage_id;
             $oldStageName = $opportunity->stage?->name;
 
@@ -286,6 +298,8 @@ final readonly class OpportunityCloseWorkflowService
                 $openStage->id,
                 $actor,
             );
+
+            ActivateOpportunityPlaybookJob::dispatch($actor->id, $updatedOpportunity->id, $openStage->id, $history->id)->afterCommit();
 
             return $updatedOpportunity;
         });

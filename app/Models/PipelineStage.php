@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 final class PipelineStage extends Model
@@ -51,6 +52,12 @@ final class PipelineStage extends Model
     public function pipeline(): BelongsTo
     {
         return $this->belongsTo(Pipeline::class, 'pipeline_id');
+    }
+
+    /** @return HasOne<StagePlaybookAssignment, $this> */
+    public function playbookAssignment(): HasOne
+    {
+        return $this->hasOne(StagePlaybookAssignment::class, 'pipeline_stage_id');
     }
 
     /**

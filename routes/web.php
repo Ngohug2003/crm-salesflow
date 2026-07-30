@@ -43,6 +43,7 @@ use App\Livewire\Reports\FunnelReport;
 use App\Livewire\Reports\RevenueReport;
 use App\Livewire\Reports\SalesPerformanceReport;
 use App\Livewire\Roles\PermissionMatrixView;
+use App\Livewire\SalesPlaybooks\SalesPlaybookManager;
 use App\Livewire\Settings\SessionManager;
 use App\Livewire\Staff\StaffList;
 use App\Livewire\Tasks\TaskCalendar;
@@ -130,6 +131,9 @@ Route::middleware(['auth', 'request.context.authenticated', 'verified', 'account
         ->middleware('can:viewAny,'.Department::class)
         ->name('departments.index');
     Route::get('/settings/permission-matrix', PermissionMatrixView::class)->middleware('can:roles.manage')->name('roles.permission-matrix');
+    Route::get('/settings/sales-playbooks', SalesPlaybookManager::class)
+        ->middleware('can:sales-playbook.manage')
+        ->name('sales-playbooks.index');
     Route::get('/settings/audit-logs', [AuditLogController::class, 'index'])->middleware('can:audit-logs.view')->name('audit-logs.index');
     Route::get('/settings/system-console', SystemConsole::class)->middleware('can:system-console.view')->name('system-console.index');
     Route::get('/settings/system-console/health-api', SystemHealthCheckApiController::class)->middleware('can:system-console.view')->name('system-console.health-api');

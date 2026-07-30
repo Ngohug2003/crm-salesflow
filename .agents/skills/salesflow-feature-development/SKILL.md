@@ -60,6 +60,7 @@ Before editing, verify:
 - Validation and normalization boundary.
 - Transaction, row locking, idempotency, and after-commit needs.
 - Audit, history, event, queue, realtime, and file-storage needs.
+- For Opportunity stage changes, inspect Detail, Kanban, editor, Won/Lost and Reopen together; every mutation must pass the shared transition/exit-criteria boundary and trigger after-commit automation idempotently.
 - Existing Flux UI components and reusable project components.
 - Required loading, empty, error, processing, confirmation, responsive, dark, and keyboard states.
 - Database query and index justified by the use case.

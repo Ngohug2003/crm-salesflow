@@ -70,7 +70,6 @@ final class OpportunityDetail extends Component
 
             $this->reloadOpportunity();
             $this->transitionNotes = '';
-            $this->dispatch('attachment-updated');
             session()->flash('message', "Đã chuyển cơ hội sang '{$updated->stage?->name}'.");
         } catch (StaleOpportunityException $e) {
             $this->reloadOpportunity();
@@ -91,7 +90,6 @@ final class OpportunityDetail extends Component
             $updated = $workflow->closeWon($actor, $this->opportunityId);
             $this->reloadOpportunity();
             $this->showWonModal = false;
-            $this->dispatch('attachment-updated');
             session()->flash('message', "Đã CHỐT THÀNH CÔNG Cơ hội bán hàng '{$updated->title}'.");
         } catch (\Throwable $e) {
             $this->addError('stage_error', $e->getMessage());
@@ -116,7 +114,6 @@ final class OpportunityDetail extends Component
             $updated = $workflow->closeLost($actor, $this->opportunityId, $this->lostReason);
             $this->reloadOpportunity();
             $this->reset(['lostReason', 'showLostModal']);
-            $this->dispatch('attachment-updated');
             session()->flash('message', "Đã chuyển Cơ hội bán hàng '{$updated->title}' sang trạng thái Thất bại (Lost).");
         } catch (\Throwable $e) {
             $this->addError('stage_error', $e->getMessage());
@@ -134,7 +131,6 @@ final class OpportunityDetail extends Component
             $updated = $workflow->reopen($actor, $this->opportunityId);
             $this->reloadOpportunity();
             $this->showReopenModal = false;
-            $this->dispatch('attachment-updated');
             session()->flash('message', "Đã mở lại Cơ hội bán hàng '{$updated->title}'.");
         } catch (\Throwable $e) {
             $this->addError('stage_error', $e->getMessage());
