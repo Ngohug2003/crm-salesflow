@@ -47,11 +47,12 @@ RUN echo 'server {\
     location ~ \\.php$ { return 404; }\
 }' > /etc/nginx/sites-available/default
 
-RUN mkdir -p storage/framework/{cache/data,sessions,views} storage/logs bootstrap/cache \
+RUN ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default \
+    && mkdir -p storage/framework/{cache/data,sessions,views} storage/logs bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache \
     && php artisan package:discover --ansi
 
 EXPOSE 10000
 
-CMD php artisan storage:link --force ; php artisan migrate --force --seed ; php artisan config:clear ; php-fpm -D && nginx -g "daemon off;"
+CMD php artisan storage:link --force ; php artisan config:clear ; php-fpm -D && nginx -g "daemon off;"
