@@ -1,5 +1,5 @@
 <x-layouts.guest title="Đăng nhập — SalesFlow CRM">
-    <div class="mb-8 lg:hidden"><span class="grid size-10 place-items-center rounded-xl bg-emerald-400 font-black text-slate-950">SF</span></div>
+    <!-- <div class="mb-8 lg:hidden"><span class="grid size-10 place-items-center rounded-xl bg-emerald-400 font-black text-slate-950">SF</span></div> -->
     <p class="text-sm font-semibold text-emerald-600 dark:text-emerald-400">WELCOME BACK</p>
     <h1 class="mt-2 text-3xl font-semibold">Đăng nhập SalesFlow</h1>
     <p class="mt-2 text-sm text-slate-500">Dùng tài khoản được quản trị viên cấp.</p>

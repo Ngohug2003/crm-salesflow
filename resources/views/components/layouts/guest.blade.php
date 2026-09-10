@@ -13,7 +13,7 @@
     <main class="grid min-h-screen lg:grid-cols-2">
         <section class="hidden bg-slate-950 p-12 text-white lg:flex lg:flex-col lg:justify-between">
             <a href="/" class="flex items-center gap-3 font-semibold">
-                <span class="grid size-10 place-items-center rounded-xl bg-emerald-400 font-black text-slate-950">SF</span>
+                <!-- <span class="grid size-10 place-items-center rounded-xl bg-emerald-400 font-black text-slate-950">SF</span> -->
                 SalesFlow CRM
             </a>
             <div class="max-w-xl">
