@@ -16,34 +16,70 @@ RUN npm run build
 FROM php:8.5-fpm-bookworm AS runtime
 WORKDIR /var/www/html
 
-# Cài đặt Nginx và các extension PHP cần thiết
+# Cài đặt Nginx và các extension PHP cần thiết, bật OPcache
 RUN apt-get update && apt-get install -y --no-install-recommends \
         nginx curl git libicu-dev libjpeg62-turbo-dev libpng-dev libpq-dev libzip-dev procps unzip \
     && docker-php-ext-configure gd --with-jpeg \
     && docker-php-ext-install -j"$(nproc)" bcmath gd intl pcntl pdo_pgsql zip \
+    && docker-php-ext-enable opcache \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Cấu hình PHP & OPcache tối ưu cho production
+RUN { \
+    echo 'expose_php=Off'; \
+    echo 'memory_limit=256M'; \
+    echo 'upload_max_filesize=25M'; \
+    echo 'post_max_size=26M'; \
+    echo 'max_execution_time=60'; \
+    echo 'opcache.enable=1'; \
+    echo 'opcache.enable_cli=0'; \
+    echo 'opcache.memory_consumption=128'; \
+    echo 'opcache.interned_strings_buffer=16'; \
+    echo 'opcache.max_accelerated_files=10000'; \
+    echo 'opcache.validate_timestamps=1'; \
+    echo 'opcache.revalidate_freq=2'; \
+    echo 'opcache.save_comments=1'; \
+} > /usr/local/etc/php/conf.d/99-salesflow-production.ini
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 COPY --chown=www-data:www-data . .
 COPY --from=vendor --chown=www-data:www-data /app/vendor ./vendor
 COPY --from=assets --chown=www-data:www-data /app/public/build ./public/build
 
-# Cấu hình Nginx
+# Cấu hình Nginx với Gzip và Cache Static Assets
 RUN echo 'server {\
     listen 10000;\
     server_name _;\
     root /var/www/html/public;\
     index index.php;\
     client_max_body_size 25m;\
+\
+    gzip on;\
+    gzip_vary on;\
+    gzip_proxied any;\
+    gzip_comp_level 6;\
+    gzip_types text/plain text/css text/xml application/json application/javascript application/rss+xml application/atom+xml image/svg+xml;\
+\
     location / {\
         try_files $uri $uri/ /index.php?$query_string;\
     }\
+\
+    location ~* \\.(?:css|js|jpg|jpeg|gif|png|svg|ico|webp|woff2?)$ {\
+        expires 30d;\
+        add_header Cache-Control "public, no-transform, immutable";\
+        access_log off;\
+        try_files $uri /index.php?$query_string;\
+    }\
+\
     location ~ ^/index\\.php(/|$) {\
         fastcgi_pass 127.0.0.1:9000;\
         include fastcgi_params;\
         fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;\
         fastcgi_param PATH_INFO $fastcgi_path_info;\
         fastcgi_param HTTP_X_FORWARDED_PROTO $http_x_forwarded_proto;\
+        fastcgi_buffer_size 128k;\
+        fastcgi_buffers 4 256k;\
+        fastcgi_busy_buffers_size 256k;\
     }\
     location ~ \\.php$ { return 404; }\
 }' > /etc/nginx/sites-available/default
@@ -56,4 +92,4 @@ RUN ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default \
 
 EXPOSE 10000
 
-CMD php artisan storage:link --force ; php artisan config:clear ; php-fpm -D && nginx -g "daemon off;"
+CMD php artisan storage:link --force ; php artisan optimize ; php-fpm -D && nginx -g "daemon off;"
