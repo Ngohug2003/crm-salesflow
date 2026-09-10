@@ -46,9 +46,11 @@ it('keeps the searchable dropdown inside the Flux dialog top layer', function ()
         ->and($dropdown)->toBeLessThan($dialogEnd);
 });
 
-it('uses the modal-safe select in Lead assignment and routing dialogs', function (): void {
+it('uses the modal-safe select in crm dialogs', function (): void {
     $leadWorkflow = file_get_contents(resource_path('views/livewire/leads/lead-workflow.blade.php'));
     $leadRoutingRules = file_get_contents(resource_path('views/livewire/leads/lead-routing-rules.blade.php'));
+    $catalogSettings = file_get_contents(resource_path('views/livewire/products/product-catalog-settings.blade.php'));
+    $opportunityLineItems = file_get_contents(resource_path('views/livewire/opportunities/opportunity-line-items.blade.php'));
 
     expect($leadWorkflow)
         ->toContain('<x-forms.modal-searchable-select')
@@ -56,4 +58,13 @@ it('uses the modal-safe select in Lead assignment and routing dialogs', function
     expect($leadRoutingRules)
         ->toContain('<x-forms.modal-searchable-select')
         ->not->toContain('<x-searchable-select');
+    expect($catalogSettings)
+        ->toContain('wire:model="categoryParentId"')
+        ->toContain('<x-forms.modal-searchable-select')
+        ->not->toContain('<x-forms.smart-select wire:model="categoryParentId"');
+    expect($opportunityLineItems)
+        ->toContain('wire:model.live="productId"')
+        ->toContain('search-placeholder="Tìm theo SKU hoặc tên sản phẩm…"')
+        ->toContain('<x-forms.modal-searchable-select')
+        ->not->toContain('<x-forms.smart-select wire:model.live="productId"');
 });

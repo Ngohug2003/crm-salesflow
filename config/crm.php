@@ -205,6 +205,8 @@ return [
                 'quotes.documents.regenerate' => 'QuoteDocumentService and QuotePolicy@update',
                 'quotes.documents.download' => 'QuoteController and QuotePolicy@download with signed URL',
                 'price-books.show' => 'PriceBookDetail and PriceBookPolicy@view',
+                'products.show' => 'ProductDetail and ProductPolicy@view',
+                'products.edit' => 'ProductEditor and ProductPolicy@update',
                 'pipelines.show' => 'PipelinePolicy@view',
                 'pipelines.edit' => 'PipelinePolicy@update',
                 'tasks.show' => 'TaskPolicy@view',

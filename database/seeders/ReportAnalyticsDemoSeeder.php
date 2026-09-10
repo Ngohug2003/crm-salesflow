@@ -15,9 +15,13 @@ use App\Models\Contact;
 use App\Models\Lead;
 use App\Models\LeadSource;
 use App\Models\Opportunity;
+use App\Models\OpportunityItem;
 use App\Models\OpportunityStageHistory;
 use App\Models\Pipeline;
 use App\Models\PipelineStage;
+use App\Models\PriceBookEntry;
+use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -51,6 +55,11 @@ final class ReportAnalyticsDemoSeeder extends Seeder
 
         $companies = Company::query()->orderBy('id')->get();
         $contacts = Contact::query()->orderBy('id')->get();
+        $variants = ProductVariant::query()
+            ->with('product')
+            ->where('is_active', true)
+            ->orderBy('id')
+            ->get();
 
         DB::transaction(function () use (
             $pipeline,
@@ -62,6 +71,7 @@ final class ReportAnalyticsDemoSeeder extends Seeder
             $sources,
             $companies,
             $contacts,
+            $variants,
         ): void {
             foreach (range(1, self::SCENARIO_COUNT) as $index) {
                 $this->seedScenario(
@@ -75,6 +85,7 @@ final class ReportAnalyticsDemoSeeder extends Seeder
                     $sources,
                     $companies,
                     $contacts,
+                    $variants,
                 );
             }
         });
@@ -89,6 +100,7 @@ final class ReportAnalyticsDemoSeeder extends Seeder
      * @param  Collection<int, LeadSource>  $sources
      * @param  Collection<int, Company>  $companies
      * @param  Collection<int, Contact>  $contacts
+     * @param  Collection<int, ProductVariant>  $variants
      */
     private function seedScenario(
         int $index,
@@ -101,6 +113,7 @@ final class ReportAnalyticsDemoSeeder extends Seeder
         Collection $sources,
         Collection $companies,
         Collection $contacts,
+        Collection $variants,
     ): void {
         $createdAt = $this->scenarioDate($index);
         $owner = $users[($index - 1) % $users->count()];
@@ -150,7 +163,7 @@ final class ReportAnalyticsDemoSeeder extends Seeder
         $opportunity = Opportunity::query()->updateOrCreate(
             ['code' => "RPT-DEMO-{$suffix}"],
             [
-                'title' => "Cơ hội báo cáo {$suffix}",
+                'title' => "Dự án nội thất văn phòng {$suffix}",
                 'amount' => 25_000_000 + ($index * 8_250_000),
                 'pipeline_id' => $pipeline->id,
                 'stage_id' => $stage->id,
@@ -164,15 +177,51 @@ final class ReportAnalyticsDemoSeeder extends Seeder
                 'expected_close_date' => $expectedCloseDate->toDateString(),
                 'actual_close_date' => $closeDate?->toDateString(),
                 'lost_reason' => $isLost ? $this->lossReason($index) : null,
-                'notes' => 'Dữ liệu demo phục vụ kiểm tra Dashboard và báo cáo theo thời gian.',
+                'notes' => 'Dự án nội thất demo phục vụ kiểm tra Dashboard và báo cáo theo thời gian.',
                 'is_won' => $isWon,
                 'is_lost' => $isLost,
             ],
         );
         $this->setTimestamps($opportunity, $createdAt);
+        $this->seedOpportunityItem($index, $opportunity, $variants);
         $this->seedStageHistory($opportunity, $stage, $stages, $owner, $createdAt);
         $this->seedActivity($index, $suffix, $opportunity, $owner, $createdAt);
         $this->seedTask($index, $suffix, $opportunity, $owner, $createdAt);
+    }
+
+    /** @param Collection<int, ProductVariant> $variants */
+    private function seedOpportunityItem(int $index, Opportunity $opportunity, Collection $variants): void
+    {
+        /** @var ProductVariant $variant */
+        $variant = $variants[($index - 1) % $variants->count()];
+        /** @var Product $product */
+        $product = $variant->product;
+        $entries = PriceBookEntry::query()
+            ->where('product_id', $product->id)
+            ->where('is_active', true)
+            ->orderBy('min_quantity')
+            ->get();
+        $entry = $entries[($index - 1) % $entries->count()];
+        $quantity = str_starts_with($variant->sku, 'CHAIR-') ? 10 + ($index % 5) * 5 : 2 + ($index % 6);
+        $discount = $index % 4;
+        $total = $quantity * (float) $entry->unit_price * (1 - $discount / 100);
+
+        OpportunityItem::query()->where('opportunity_id', $opportunity->id)->delete();
+        OpportunityItem::query()->create([
+            'opportunity_id' => $opportunity->id,
+            'product_id' => $product->id,
+            'price_book_entry_id' => $entry->id,
+            'product_name' => $product->name.' — '.($variant->name ?: $variant->sku),
+            'sku' => $variant->sku,
+            'quantity' => $quantity,
+            'unit_price' => $entry->unit_price,
+            'discount_percent' => $discount,
+            'vat_percent' => $variant->vat_percent,
+            'total_price' => $total,
+            'notes' => 'Hạng mục nội thất demo cho báo cáo theo thời gian.',
+        ]);
+
+        $opportunity->forceFill(['amount' => round($total, -3)])->saveQuietly();
     }
 
     /**
@@ -219,7 +268,7 @@ final class ReportAnalyticsDemoSeeder extends Seeder
                 'activity_type' => ActivityType::cases()[($index - 1) % count(ActivityType::cases())],
                 'subject_type' => Opportunity::class,
                 'subject_id' => $opportunity->id,
-                'description' => 'Hoạt động demo phân bổ theo tháng phục vụ báo cáo.',
+                'description' => 'Hoạt động khảo sát, tư vấn vật liệu hoặc theo dõi báo giá nội thất.',
                 'user_id' => $owner->id,
                 'performed_at' => $createdAt->copy()->addHours(2),
                 'duration_minutes' => 15 + (($index % 4) * 15),
@@ -242,7 +291,7 @@ final class ReportAnalyticsDemoSeeder extends Seeder
         $task = Task::query()->updateOrCreate(
             ['title' => "Công việc báo cáo {$suffix}"],
             [
-                'description' => 'Công việc demo phục vụ thống kê hiệu suất.',
+                'description' => 'Theo dõi khảo sát mặt bằng, phối cảnh, báo giá hoặc kế hoạch lắp đặt.',
                 'status' => $completed ? TaskStatus::Completed : TaskStatus::InProgress,
                 'priority' => TaskPriority::cases()[($index - 1) % count(TaskPriority::cases())],
                 'due_date' => now()->subDays($index % 7)->addDays(1),
