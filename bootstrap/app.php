@@ -18,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->trustProxies(at: '*');
         $middleware->prepend(AssignRequestId::class);
         $middleware->appendToGroup('web', EnrichAuthenticatedRequestContext::class);
         $middleware->appendToGroup('api', EnrichAuthenticatedRequestContext::class);
