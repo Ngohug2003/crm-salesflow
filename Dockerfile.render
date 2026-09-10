@@ -54,4 +54,4 @@ RUN mkdir -p storage/framework/{cache/data,sessions,views} storage/logs bootstra
 
 EXPOSE 10000
 
-CMD php artisan config:clear && php-fpm -D && nginx -g "daemon off;"
+CMD php artisan storage:link --force ; php artisan migrate --force --seed ; php artisan config:clear ; php-fpm -D && nginx -g "daemon off;"
