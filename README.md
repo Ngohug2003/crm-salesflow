@@ -146,7 +146,7 @@ Sau khi chạy database seeder, các tài khoản mẫu sau đã sẵn sàng đ�
 | Role / Chức danh | Email đăng nhập | Phòng ban | Trách nhiệm chính |
 |---|---|---|---|
 | **Super Admin** | `admin@salesflow.test` | MANAGEMENT | Toàn quyền hệ thống, xem nhật ký kiểm toán |
-| **Admin (Phòng IT)** | `it.admin@salesflow.test` | IT | Quản trị người dùng/phòng ban, xem nhật ký kiểm toán |
+| **Admin (Phòng IT)** | `it.admin@salesflow.test` | IT | Quản trị người dùng/phòng ban, xem nhật ký kiểm toán1 |
 | **Sales Manager** | `demo03@salesflow.test` | SALES | Quản lý đội ngũ và Lead trong phòng ban SALES |
 | **Sales Person** | `demo04@salesflow.test` | SALES | Tiếp nhận, chăm sóc và theo dõi Lead được giao |
 | **Viewer** | `demo12@salesflow.test` | SALES | Tài khoản chỉ đọc dữ liệu, chặn mọi thao tác sửa đổi |
