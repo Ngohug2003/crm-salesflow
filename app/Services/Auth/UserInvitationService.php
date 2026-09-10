@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
@@ -50,7 +51,12 @@ final class UserInvitationService
             'invited_by' => $actor->id,
         ]);
 
-        Mail::to($invitation->email)->send(new UserInvitationMail($invitation));
+        try {
+            Mail::to($invitation->email)->send(new UserInvitationMail($invitation));
+        } catch (\Throwable $e) {
+            Log::error('Failed to send invitation email: ' . $e->getMessage(), ['exception' => $e]);
+            throw new UserOperationException('inviteEmail', 'Đã tạo lời mời nhưng gửi email thất bại: ' . $e->getMessage());
+        }
 
         return $invitation;
     }
@@ -72,7 +78,12 @@ final class UserInvitationService
             'expires_at' => Carbon::now()->addDays(7),
         ]);
 
-        Mail::to($invitation->email)->send(new UserInvitationMail($invitation));
+        try {
+            Mail::to($invitation->email)->send(new UserInvitationMail($invitation));
+        } catch (\Throwable $e) {
+            Log::error('Failed to resend invitation email: ' . $e->getMessage(), ['exception' => $e]);
+            throw new UserOperationException('invitation', 'Gửi lại email thất bại: ' . $e->getMessage());
+        }
     }
 
     /**
