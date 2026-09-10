@@ -54,8 +54,7 @@ final class UserInvitationService
         try {
             Mail::to($invitation->email)->send(new UserInvitationMail($invitation));
         } catch (\Throwable $e) {
-            Log::error('Failed to send invitation email: ' . $e->getMessage(), ['exception' => $e]);
-            throw new UserOperationException('inviteEmail', 'Đã tạo lời mời nhưng gửi email thất bại: ' . $e->getMessage());
+            Log::warning('Could not send invitation email via SMTP: ' . $e->getMessage(), ['exception' => $e]);
         }
 
         return $invitation;
@@ -81,8 +80,7 @@ final class UserInvitationService
         try {
             Mail::to($invitation->email)->send(new UserInvitationMail($invitation));
         } catch (\Throwable $e) {
-            Log::error('Failed to resend invitation email: ' . $e->getMessage(), ['exception' => $e]);
-            throw new UserOperationException('invitation', 'Gửi lại email thất bại: ' . $e->getMessage());
+            Log::warning('Could not resend invitation email via SMTP: ' . $e->getMessage(), ['exception' => $e]);
         }
     }
 

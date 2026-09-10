@@ -181,7 +181,15 @@
                                     </span>
                                 </flux:table.cell>
                                 <flux:table.cell align="end">
-                                    <div class="flex justify-end gap-2">
+                                    <div class="flex justify-end gap-2" x-data="{ copied: false }">
+                                        <flux:button
+                                            size="sm"
+                                            variant="subtle"
+                                            icon="clipboard"
+                                            @click="navigator.clipboard.writeText('{{ route('invitations.accept', ['token' => $invitation->token]) }}'); copied = true; setTimeout(() => copied = false, 2000)"
+                                        >
+                                            <span x-text="copied ? 'Đã sao chép' : 'Sao chép link'"></span>
+                                        </flux:button>
                                         <flux:button size="sm" variant="ghost" wire:click="resendInvitation({{ $invitation->id }})">Gửi lại</flux:button>
                                         <flux:button size="sm" variant="subtle" color="red" wire:click="revokeInvitation({{ $invitation->id }})">Hủy</flux:button>
                                     </div>

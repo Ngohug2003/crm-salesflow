@@ -156,7 +156,7 @@ final class UserList extends Component
                 'role' => $this->inviteRole,
             ]);
 
-            $this->notice = "Đã gửi email lời mời đến {$this->inviteEmail}.";
+            $this->notice = "Đã tạo lời mời thành công! Bạn có thể sao chép liên kết mời ở bảng bên dưới để gửi cho {$this->inviteEmail}.";
             $this->closeInviteModal();
             unset($this->pendingInvitations);
         } catch (UserOperationException $e) {
