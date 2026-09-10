@@ -17,6 +17,7 @@
         "league/flysystem-aws-s3-v3": "^3.0",
         "livewire/flux": "^2.0",
         "livewire/livewire": "^3.6",
+        "resend/resend-php": "^1.13",
         "spatie/laravel-activitylog": "^5.0",
         "spatie/laravel-permission": "^8.3",
         "williamug/searchable-select": "^3.0"
