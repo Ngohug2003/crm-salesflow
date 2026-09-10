@@ -11,7 +11,7 @@ use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-#[Layout('layouts.guest')]
+#[Layout('components.layouts.guest', ['title' => 'Kích hoạt tài khoản — SalesFlow CRM'])]
 final class AcceptInvitation extends Component
 {
     public string $token = '';

@@ -1,64 +1,78 @@
-<div class="mx-auto w-full max-w-md space-y-6">
-    <div class="text-center">
-        <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Kích hoạt tài khoản SalesFlow CRM</h1>
-        <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">
-            @if ($invitation)
-                Chào mừng <strong>{{ $invitation->name }}</strong>! Vui lòng thiết lập mật khẩu đăng nhập.
-            @else
-                Xác thực thông tin lời mời tham gia hệ thống.
-            @endif
-        </p>
-    </div>
-
-    @if ($errorMessage)
-        <div class="rounded-xl border border-red-200 bg-red-50 p-4 text-center dark:border-red-900 dark:bg-red-950/30">
-            <p class="text-sm font-medium text-red-800 dark:text-red-300">{{ $errorMessage }}</p>
-            <div class="mt-4">
-                <flux:button href="{{ route('login') }}" wire:navigate size="sm" variant="outline">Quay lại Đăng nhập</flux:button>
+<div class="w-full">
+    @if ($errorMessage && ! $invitation)
+        <div class="space-y-6 text-center">
+            <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-100 text-rose-600 dark:bg-rose-950/50 dark:text-rose-400">
+                <flux:icon.exclamation-triangle class="size-7" />
+            </div>
+            <div>
+                <h1 class="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">Không thể kích hoạt tài khoản</h1>
+                <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">{{ $errorMessage }}</p>
+            </div>
+            <div class="pt-2">
+                <flux:button href="{{ route('login') }}" wire:navigate variant="primary" class="w-full">
+                    Về trang Đăng nhập
+                </flux:button>
             </div>
         </div>
     @else
-        <form wire:submit="accept" class="crm-card space-y-4">
-            <div>
-                <label class="block text-xs font-semibold uppercase text-slate-500">Email đăng nhập</label>
-                <input type="text" value="{{ $invitation->email }}" disabled class="mt-1 w-full rounded-lg border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400" />
-            </div>
+        <div>
+            <p class="text-sm font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Tham gia workspace</p>
+            <h1 class="mt-2 text-3xl font-semibold tracking-tight text-slate-900 dark:text-white">Kích hoạt tài khoản</h1>
+            <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                Chào mừng <strong class="font-medium text-slate-800 dark:text-slate-200">{{ $invitation?->name }}</strong>! Vui lòng thiết lập mật khẩu để hoàn tất đăng ký tài khoản.
+            </p>
+        </div>
 
-            <div>
-                <label class="block text-xs font-semibold uppercase text-slate-500">Phòng ban & Vai trò</label>
-                <input type="text" value="{{ $invitation->department?->name ?: 'Chưa gán' }} — Vai trò: {{ $invitation->role }}" disabled class="mt-1 w-full rounded-lg border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400" />
+        @if ($invitation)
+            <div class="mt-6 flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-slate-50/70 p-3 text-xs text-slate-600 dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-400">
+                <span class="inline-flex items-center gap-1.5 font-medium text-slate-700 dark:text-slate-300">
+                    <flux:icon.envelope class="size-3.5 text-slate-400" />
+                    {{ $invitation->email }}
+                </span>
+                <span class="text-slate-300 dark:text-slate-700">•</span>
+                <span>Phòng ban: <strong>{{ $invitation->department?->name ?: 'Chưa phân bổ' }}</strong></span>
+                <span class="text-slate-300 dark:text-slate-700">•</span>
+                <flux:badge size="sm" color="emerald">{{ $invitation->role }}</flux:badge>
             </div>
+        @endif
 
-            <div>
-                <label for="password" class="block text-xs font-semibold uppercase text-slate-500">Mật khẩu mới</label>
-                <input
-                    id="password"
-                    type="password"
-                    wire:model="password"
-                    placeholder="Mật khẩu tối thiểu 8 ký tự"
-                    class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-white"
-                />
-                @error('password')
-                    <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                @enderror
-            </div>
+        <form wire:submit="accept" class="mt-6 space-y-5">
+            <flux:input
+                wire:model="password"
+                type="password"
+                label="Mật khẩu mới"
+                placeholder="Tối thiểu 8 ký tự"
+                required
+                autocomplete="new-password"
+                viewable
+                autofocus
+            />
 
-            <div>
-                <label for="passwordConfirmation" class="block text-xs font-semibold uppercase text-slate-500">Xác nhận mật khẩu</label>
-                <input
-                    id="passwordConfirmation"
-                    type="password"
-                    wire:model="passwordConfirmation"
-                    placeholder="Nhập lại mật khẩu mới"
-                    class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-white"
-                />
-            </div>
+            <flux:input
+                wire:model="passwordConfirmation"
+                type="password"
+                label="Xác nhận mật khẩu"
+                placeholder="Nhập lại mật khẩu mới"
+                required
+                autocomplete="new-password"
+                viewable
+            />
+
+            @if ($errorMessage)
+                <flux:callout variant="danger" heading="Không thể kích hoạt">
+                    {{ $errorMessage }}
+                </flux:callout>
+            @endif
 
             <div class="pt-2">
-                <flux:button type="submit" variant="primary" class="w-full">
+                <flux:button type="submit" variant="primary" class="w-full" wire:loading.attr="disabled" wire:target="accept">
                     Kích hoạt tài khoản & Đăng nhập
                 </flux:button>
             </div>
         </form>
+
+        <p class="mt-8 text-center text-xs text-slate-400 dark:text-slate-600">
+            Bằng việc tiếp tục, bạn đồng ý với các chính sách vận hành bảo mật của SalesFlow CRM.
+        </p>
     @endif
 </div>

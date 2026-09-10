@@ -13,7 +13,7 @@
 
     <!-- Scripts and Styles -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @fluxStyles
+    @fluxAppearance
 </head>
 <body class="h-full font-sans antialiased text-slate-900 dark:text-slate-100 bg-slate-50 dark:bg-slate-950">
     <div class="min-h-screen flex flex-col justify-between py-6 px-4 sm:px-6 lg:px-8">
