@@ -13,7 +13,7 @@ COPY resources ./resources
 COPY vite.config.js ./
 RUN npm run build
 
-FROM php:8.3-fpm-bookworm AS runtime
+FROM php:8.5-fpm-bookworm AS runtime
 WORKDIR /var/www/html
 
 # Cài đặt Nginx và các extension PHP cần thiết
@@ -49,8 +49,9 @@ RUN echo 'server {\
 
 RUN mkdir -p storage/framework/{cache/data,sessions,views} storage/logs bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache \
-    && chmod -R 775 storage bootstrap/cache
+    && chmod -R 775 storage bootstrap/cache \
+    && php artisan package:discover --ansi
 
 EXPOSE 10000
 
-CMD php-fpm -D && nginx -g "daemon off;"
+CMD php artisan config:clear && php-fpm -D && nginx -g "daemon off;"
