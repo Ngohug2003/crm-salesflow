@@ -54,20 +54,24 @@ final class UserInvitationService
         ]);
 
         // Sync or create Staff record so Staff and User modules stay consistent
-        $existingStaff = Staff::query()->where('email', $normalizedEmail)->first();
-        if ($existingStaff === null) {
-            app(StaffService::class)->saveStaff([
-                'full_name' => trim($data['name']),
-                'email' => $normalizedEmail,
-                'department_id' => $data['department_id'] ?: null,
-                'position' => 'Staff (Đã mời)',
-                'is_active' => true,
-            ]);
-        } else {
-            $existingStaff->update([
-                'full_name' => trim($data['name']),
-                'department_id' => $data['department_id'] ?: $existingStaff->department_id,
-            ]);
+        try {
+            $existingStaff = Staff::query()->where('email', $normalizedEmail)->first();
+            if ($existingStaff === null) {
+                app(StaffService::class)->saveStaff([
+                    'full_name' => trim($data['name']),
+                    'email' => $normalizedEmail,
+                    'department_id' => $data['department_id'] ?: null,
+                    'position' => 'Staff (Đã mời)',
+                    'is_active' => true,
+                ]);
+            } else {
+                $existingStaff->update([
+                    'full_name' => trim($data['name']),
+                    'department_id' => $data['department_id'] ?: $existingStaff->department_id,
+                ]);
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Could not sync staff profile during user invitation: ' . $e->getMessage(), ['exception' => $e]);
         }
 
         try {

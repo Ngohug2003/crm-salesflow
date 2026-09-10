@@ -34,12 +34,30 @@ final class StaffService
             }
         }
 
-        $count = Staff::query()
-            ->where('department_id', $departmentId)
+        $prefix = sprintf('NV-%s-', $deptCode);
+        $existingCodes = Staff::query()
             ->withTrashed()
-            ->count() + 1;
+            ->where('staff_code', 'like', $prefix . '%')
+            ->pluck('staff_code');
 
-        return sprintf('NV-%s-%04d', $deptCode, $count);
+        $maxNumber = 0;
+        foreach ($existingCodes as $existingCode) {
+            if (preg_match('/' . preg_quote($prefix, '/') . '(\d+)/', (string) $existingCode, $matches)) {
+                $num = (int) $matches[1];
+                if ($num > $maxNumber) {
+                    $maxNumber = $num;
+                }
+            }
+        }
+
+        $nextNumber = $maxNumber + 1;
+
+        do {
+            $candidate = sprintf('NV-%s-%04d', $deptCode, $nextNumber);
+            $nextNumber++;
+        } while (Staff::query()->withTrashed()->where('staff_code', $candidate)->exists());
+
+        return $candidate;
     }
 
     /**
@@ -77,10 +95,14 @@ final class StaffService
             $staffData['user_id'] = $existingUser->id;
         }
 
-        return Staff::query()->updateOrCreate(
-            ['id' => $staffId],
-            $staffData
-        );
+        if ($staffId !== null) {
+            $staff = Staff::query()->findOrFail($staffId);
+            $staff->update($staffData);
+
+            return $staff;
+        }
+
+        return Staff::query()->create($staffData);
     }
 
     /**
