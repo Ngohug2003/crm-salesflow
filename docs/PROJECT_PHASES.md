@@ -218,3 +218,24 @@ Tài liệu này là lộ trình và trạng thái checkpoint chính của dự 
 - [P10-04 — At-Risk Deal Detection](docs/checkpoints/P10/P10-04_AT_RISK_DEALS.md)
 - [P10-05 — Public Quote Link & Customer Acceptance](docs/checkpoints/P10/P10-05_PUBLIC_QUOTE_ACCEPTANCE.md)
 - [UI-T02 — Chuẩn hóa Smart Select](docs/checkpoints/technical/UI_T02_SMART_SELECT_STANDARDIZATION.md)
+
+---
+
+### Giai đoạn 11 — Commercial Catalog và triển khai nội thất B2B
+
+- **Mục tiêu**: Chuẩn hóa catalog nội thất từ mẫu sản phẩm, cấu hình bán được và nguồn cung; làm nền cho BOQ và dự án triển khai.
+- **Đặc tả**: [docs/FURNITURE_CATALOG_REQUIREMENTS.md](FURNITURE_CATALOG_REQUIREMENTS.md)
+
+| Mã | Feature | Branch | Phụ thuộc | Trạng thái |
+|---|---|---|---|---|
+| P11-F01 | Furniture catalog, category, supplier và variant | `feature/p11-f01-furniture-catalog` | P11-01 Product foundation | Hoàn tất triển khai — chờ kiểm thử thủ công |
+| P11-F02 | Opportunity BOQ và snapshot | `feature/p11-f02-opportunity-boq` | P11-F01 | ⏳ Chưa bắt đầu |
+| P11-F03 | Thiết kế, file và quote revision | `feature/p11-f03-design-quote-revision` | P11-F02 | ⏳ Chưa bắt đầu |
+| P11-F04 | Project triển khai sau Won | `feature/p11-f04-delivery-project` | P11-F03 | ⏳ Chưa bắt đầu |
+| P11-F05 | Nghiệm thu và bảo hành | `feature/p11-f05-acceptance-warranty` | P11-F04 | ⏳ Chưa bắt đầu |
+| P11-C01 | Public Product Catalog Client | branch hiện tại | P11-F01 | Hoàn tất triển khai — chờ kiểm thử thủ công |
+
+#### Checkpoint
+
+- [P11-F01 — Furniture catalog, category, supplier và variant](checkpoints/P11/P11-F01_FURNITURE_CATALOG.md)
+- [P11-C01 — Public Product Catalog Client](checkpoints/P11/P11-C01_PUBLIC_PRODUCT_CATALOG.md)

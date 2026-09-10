@@ -25,6 +25,9 @@ use App\Models\OpportunityItem;
 use App\Models\OpportunityStageHistory;
 use App\Models\Pipeline;
 use App\Models\PipelineStage;
+use App\Models\PriceBookEntry;
+use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Models\Province;
 use App\Models\Quote;
 use App\Models\QuoteItem;
@@ -59,10 +62,6 @@ final class FullDemoSeeder extends Seeder
 
     /** @var array<int, PipelineStage> */
     private array $stages = [];
-
-    private ?PipelineStage $wonStage = null;
-
-    private ?PipelineStage $lostStage = null;
 
     public function run(): void
     {
@@ -159,14 +158,6 @@ final class FullDemoSeeder extends Seeder
 
         foreach ($stageCollection as $stage) {
             $this->stages[] = $stage;
-
-            if ($stage->is_won) {
-                $this->wonStage = $stage;
-            }
-
-            if ($stage->is_lost) {
-                $this->lostStage = $stage;
-            }
         }
     }
 
@@ -178,16 +169,6 @@ final class FullDemoSeeder extends Seeder
         }
 
         return $users[$index % count($users)];
-    }
-
-    private function openStage(int $index): PipelineStage
-    {
-        $open = array_values(array_filter(
-            $this->stages,
-            fn (PipelineStage $s): bool => ! $s->is_won && ! $s->is_lost,
-        ));
-
-        return $open[$index % count($open)];
     }
 
     // ─────────────────────────────────────────────────────────────────
@@ -382,7 +363,7 @@ final class FullDemoSeeder extends Seeder
                     'priority' => $priorities[$i % count($priorities)],
                     'score' => 20 + ($i * 3 % 80),
                     'estimated_value' => (string) (15_000_000 + ($i * 8_000_000)),
-                    'notes' => 'Lead đến từ kênh '.($sources->isNotEmpty() ? $sources->values()[$i % $sources->count()]->name : 'Online').'. Quan tâm đến giải pháp CRM doanh nghiệp.',
+                    'notes' => 'Lead đến từ kênh '.($sources->isNotEmpty() ? $sources->values()[$i % $sources->count()]->name : 'Online').'. Quan tâm đến dự án nội thất văn phòng và cần tư vấn theo mặt bằng.',
                     'converted_at' => $status === LeadStatus::Converted ? $createdAt->addDays(5) : null,
                     'created_by' => $owner->id,
                     'updated_by' => $owner->id,
@@ -440,26 +421,26 @@ final class FullDemoSeeder extends Seeder
 
         $oppDefs = [
             // [title, amount, stage_code, is_won, is_lost, forecastCat, daysAgo, closeDayOffset, lostReason]
-            ['Triển khai CRM Doanh nghiệp cho Ánh Dương Tech', 280_000_000, 'closed-won', true, false, ForecastCategory::Closed, 45, -5, null],
-            ['Cung cấp Giải pháp ERP tích hợp cho Sao Việt Group', 520_000_000, 'negotiation', false, false, ForecastCategory::Commit, 30, 15, null],
-            ['Nâng cấp Hệ thống Quản lý Bán lẻ Đông Nam', 185_000_000, 'proposal-quote', false, false, ForecastCategory::BestCase, 20, 20, null],
-            ['Tư vấn Chuyển đổi Số cho Đại Phát Corp', 350_000_000, 'needs-analysis', false, false, ForecastCategory::Pipeline, 15, 30, null],
-            ['Triển khai Platform Học trực tuyến VieEdu', 240_000_000, 'closed-lost', false, true, ForecastCategory::Closed, 60, -10, 'Khách hàng chọn giải pháp nguồn mở chi phí thấp hơn'],
-            ['Dự án Tự động hóa Kho vận Nam Việt Logistics', 168_000_000, 'initial-contact', false, false, ForecastCategory::Pipeline, 7, 45, null],
-            ['Hệ thống BI và Phân tích Dữ liệu An Bình Fin', 420_000_000, 'proposal-quote', false, false, ForecastCategory::BestCase, 25, 18, null],
-            ['Triển khai LMS Quản lý Đào tạo Nội bộ Bảo An', 145_000_000, 'closed-won', true, false, ForecastCategory::Closed, 55, -8, null],
-            ['Giải pháp CRM Dược phẩm cho Thái Bình Dương', 310_000_000, 'negotiation', false, false, ForecastCategory::Commit, 18, 12, null],
-            ['Phần mềm Quản lý Bệnh viện Hưng Thịnh Med', 380_000_000, 'needs-analysis', false, false, ForecastCategory::Pipeline, 12, 35, null],
-            ['Nền tảng Thương mại Điện tử B2B Minh Long', 195_000_000, 'proposal-quote', false, false, ForecastCategory::BestCase, 22, 22, null],
-            ['Tích hợp API Thanh toán Sao Việt - VNPay', 85_000_000, 'closed-won', true, false, ForecastCategory::Closed, 40, -3, null],
-            ['Hệ thống Chăm sóc Khách hàng Đông Nam 360', 225_000_000, 'negotiation', false, false, ForecastCategory::Commit, 28, 10, null],
-            ['Dự án IoT Giám sát Dây chuyền Đại Phát', 460_000_000, 'needs-analysis', false, false, ForecastCategory::Pipeline, 10, 40, null],
-            ['Ứng dụng Di động Bán hàng Đại lý Toàn Cầu', 120_000_000, 'initial-contact', false, false, ForecastCategory::Pipeline, 5, 60, null],
-            ['Tư vấn An toàn Thông tin cho Ánh Dương Tech', 95_000_000, 'closed-lost', false, true, ForecastCategory::Closed, 50, -15, 'Ngân sách bị cắt giảm do tái cơ cấu nội bộ'],
-            ['Hệ thống Quản lý Tài sản Bảo An Construction', 340_000_000, 'proposal-quote', false, false, ForecastCategory::BestCase, 16, 25, null],
-            ['Platform Telehealth Hưng Thịnh - Giai đoạn 2', 285_000_000, 'negotiation', false, false, ForecastCategory::Commit, 35, 8, null],
-            ['Triển khai Zalo Mini App Bán hàng Nam Việt', 75_000_000, 'initial-contact', false, false, ForecastCategory::Pipeline, 3, 30, null],
-            ['Nâng cấp Data Warehouse An Bình Fin Q3/2026', 210_000_000, 'proposal-quote', false, false, ForecastCategory::BestCase, 14, 20, null],
+            ['Trang bị nội thất trụ sở Ánh Dương Tech', 280_000_000, 'closed-won', true, false, ForecastCategory::Closed, 45, -5, null],
+            ['Thiết kế văn phòng mới Sao Việt Group', 520_000_000, 'negotiation', false, false, ForecastCategory::Commit, 30, 15, null],
+            ['Cải tạo hệ thống cửa hàng Đông Nam Retail', 185_000_000, 'proposal-quote', false, false, ForecastCategory::BestCase, 20, 20, null],
+            ['Bố trí khu làm việc mở Đại Phát Corp', 350_000_000, 'needs-analysis', false, false, ForecastCategory::Pipeline, 15, 30, null],
+            ['Trang bị phòng đào tạo VieEdu', 240_000_000, 'closed-lost', false, true, ForecastCategory::Closed, 60, -10, 'Khách hàng chọn nhà cung cấp có tiến độ giao hàng ngắn hơn'],
+            ['Nội thất văn phòng điều hành Nam Việt Logistics', 168_000_000, 'initial-contact', false, false, ForecastCategory::Pipeline, 7, 45, null],
+            ['Cải tạo phòng giao dịch An Bình Finance', 420_000_000, 'proposal-quote', false, false, ForecastCategory::BestCase, 25, 18, null],
+            ['Nội thất văn phòng dự án Bảo An', 145_000_000, 'closed-won', true, false, ForecastCategory::Closed, 55, -8, null],
+            ['Trang bị 120 chỗ ngồi Thái Bình Dương Pharma', 310_000_000, 'negotiation', false, false, ForecastCategory::Commit, 18, 12, null],
+            ['Cải tạo khu tiếp đón Hưng Thịnh Med', 380_000_000, 'needs-analysis', false, false, ForecastCategory::Pipeline, 12, 35, null],
+            ['Nội thất showroom B2B Minh Long', 195_000_000, 'proposal-quote', false, false, ForecastCategory::BestCase, 22, 22, null],
+            ['Bàn ghế phòng họp Sao Việt', 85000000, 'closed-won', true, false, ForecastCategory::Closed, 40, -3, null],
+            ['Khu chăm sóc khách hàng Đông Nam 360', 225_000_000, 'negotiation', false, false, ForecastCategory::Commit, 28, 10, null],
+            ['Vách ngăn và tủ hồ sơ nhà máy Đại Phát', 460_000_000, 'needs-analysis', false, false, ForecastCategory::Pipeline, 10, 40, null],
+            ['Trang bị văn phòng đại lý Toàn Cầu', 120_000_000, 'initial-contact', false, false, ForecastCategory::Pipeline, 5, 60, null],
+            ['Cải tạo phòng giám đốc Ánh Dương Tech', 95000000, 'closed-lost', false, true, ForecastCategory::Closed, 50, -15, 'Ngân sách bị cắt giảm do tái cơ cấu nội bộ'],
+            ['Nội thất ban quản lý dự án Bảo An', 340_000_000, 'proposal-quote', false, false, ForecastCategory::BestCase, 16, 25, null],
+            ['Mở rộng khu khám dịch vụ Hưng Thịnh Med', 285_000_000, 'negotiation', false, false, ForecastCategory::Commit, 35, 8, null],
+            ['Khu pantry và tiếp khách Nam Việt', 75000000, 'initial-contact', false, false, ForecastCategory::Pipeline, 3, 30, null],
+            ['Cải tạo tầng làm việc An Bình Finance Q3/2026', 210_000_000, 'proposal-quote', false, false, ForecastCategory::BestCase, 14, 20, null],
         ];
 
         $opportunities = [];
@@ -569,42 +550,52 @@ final class FullDemoSeeder extends Seeder
     /** @param list<Opportunity> $opportunities */
     private function seedOpportunityItems(array $opportunities): void
     {
-        $productCatalog = [
-            ['name' => 'Phần mềm CRM SalesFlow Pro', 'sku' => 'CRM-PRO-001', 'price' => 45_000_000],
-            ['name' => 'Module Quản lý Lead & Pipeline', 'sku' => 'CRM-MOD-002', 'price' => 18_000_000],
-            ['name' => 'Module Báo cáo & Phân tích', 'sku' => 'CRM-MOD-003', 'price' => 22_000_000],
-            ['name' => 'Tích hợp Zalo OA / Chatbot', 'sku' => 'INT-ZALO-004', 'price' => 15_000_000],
-            ['name' => 'Dịch vụ Cài đặt & Cấu hình', 'sku' => 'SVC-SETUP-005', 'price' => 12_000_000],
-            ['name' => 'Đào tạo người dùng (10 buổi)', 'sku' => 'SVC-TRAIN-006', 'price' => 8_000_000],
-            ['name' => 'Hỗ trợ kỹ thuật 12 tháng', 'sku' => 'SVC-SUP-007', 'price' => 10_000_000],
-            ['name' => 'Module Marketing Automation', 'sku' => 'CRM-MOD-008', 'price' => 30_000_000],
-            ['name' => 'Tích hợp ERP / Kế toán', 'sku' => 'INT-ERP-009', 'price' => 25_000_000],
-            ['name' => 'Hosting Cloud 1 năm', 'sku' => 'INFRA-HOST-010', 'price' => 6_000_000],
-        ];
+        $variants = ProductVariant::query()
+            ->with('product')
+            ->where('is_active', true)
+            ->orderBy('id')
+            ->get();
 
         foreach ($opportunities as $i => $opp) {
             OpportunityItem::query()->where('opportunity_id', $opp->id)->delete();
-
             $itemCount = 2 + ($i % 3); // 2, 3 or 4 items
+            $opportunityTotal = 0.0;
 
             for ($j = 0; $j < $itemCount; $j++) {
-                $product = $productCatalog[($i + $j) % count($productCatalog)];
-                $qty = 1 + ($j % 2);
-                $discount = $j === 0 ? 0 : (5 + ($i % 10));
-                $unitPrice = $product['price'];
+                /** @var ProductVariant $variant */
+                $variant = $variants[($i * 2 + $j) % $variants->count()];
+                /** @var Product $product */
+                $product = $variant->product;
+                $priceEntries = PriceBookEntry::query()
+                    ->where('product_id', $product->id)
+                    ->where('is_active', true)
+                    ->orderBy('min_quantity')
+                    ->get();
+                $priceEntry = $priceEntries[($i + $j) % $priceEntries->count()];
+                $qty = str_starts_with($variant->sku, 'CHAIR-')
+                    ? 8 + (($i + $j) % 4) * 4
+                    : (str_starts_with($variant->sku, 'SERVICE-') ? 1 : 2 + (($i + $j) % 4));
+                $discount = $j === 0 ? 0 : 3 + ($i % 5);
+                $unitPrice = (float) $priceEntry->unit_price;
                 $totalPrice = $qty * $unitPrice * (1 - $discount / 100);
+                $opportunityTotal += $totalPrice;
 
                 OpportunityItem::query()->create([
                     'opportunity_id' => $opp->id,
-                    'product_name' => $product['name'],
-                    'sku' => $product['sku'],
+                    'product_id' => $product->id,
+                    'price_book_entry_id' => $priceEntry->id,
+                    'product_name' => $product->name.' — '.($variant->name ?: $variant->sku),
+                    'sku' => $variant->sku,
                     'quantity' => $qty,
                     'unit_price' => $unitPrice,
                     'discount_percent' => $discount,
+                    'vat_percent' => $variant->vat_percent,
                     'total_price' => $totalPrice,
-                    'notes' => $j === 0 ? 'Hạng mục chính theo yêu cầu khách hàng.' : null,
+                    'notes' => $j === 0 ? 'Hạng mục chính theo phương án bố trí đã khảo sát.' : null,
                 ]);
             }
+
+            $opp->forceFill(['amount' => round($opportunityTotal, -3)])->saveQuietly();
         }
     }
 
@@ -647,11 +638,18 @@ final class FullDemoSeeder extends Seeder
             $createdAt = $this->now->subDays(max(1, (int) ($opp->created_at?->diffInDays($this->now) ?? 5) - 3));
             $validUntil = $createdAt->addDays(30)->toDateString();
 
-            $subtotal = (float) $opp->amount * 0.92;
+            $items = OpportunityItem::query()
+                ->where('opportunity_id', $opp->id)
+                ->orderBy('id')
+                ->limit(2 + ($i % 2))
+                ->get();
+            $subtotal = $items->sum(fn (OpportunityItem $item): float => $item->quantity * (float) $item->unit_price);
+            $lineTotal = $items->sum(fn (OpportunityItem $item): float => (float) $item->total_price);
+            $discountAmt = $subtotal - $lineTotal;
+            $taxAmount = $items->sum(fn (OpportunityItem $item): float => (float) $item->total_price * (float) $item->vat_percent / 100);
+            $totalAmount = $lineTotal + $taxAmount;
             $taxPercent = 10.0;
-            $taxAmount = $subtotal * $taxPercent / 100;
-            $discountAmt = (float) $opp->amount * 0.05;
-            $totalAmount = $subtotal + $taxAmount - $discountAmt;
+            $discountPercent = $subtotal > 0 ? $discountAmt / $subtotal * 100 : 0;
 
             $quote = Quote::query()->create([
                 'quote_number' => sprintf('QUO-%04d', $quoteNum++),
@@ -664,36 +662,28 @@ final class FullDemoSeeder extends Seeder
                 'tax_percent' => $taxPercent,
                 'tax_amount' => $taxAmount,
                 'discount_amount' => $discountAmt,
+                'discount_percent' => $discountPercent,
                 'total_amount' => $totalAmount,
-                'notes' => "Báo giá chính thức gửi đến {$contact->full_name}. Giá đã bao gồm thuế GTGT 10%.",
+                'notes' => "Báo giá nội thất gửi đến {$contact->full_name}. Giá gồm sản phẩm, VAT và điều kiện bảo hành theo từng hạng mục.",
                 'created_by' => $opp->owner_id,
                 'updated_by' => $opp->owner_id,
             ]);
 
             $quote->forceFill(['created_at' => $createdAt, 'updated_at' => $createdAt])->saveQuietly();
 
-            // Quote items (2-3 items)
-            $products = [
-                ['name' => 'Phần mềm CRM SalesFlow Pro', 'sku' => 'CRM-PRO-001', 'price' => 45_000_000, 'qty' => 1, 'disc' => 0],
-                ['name' => 'Dịch vụ Cài đặt & Cấu hình', 'sku' => 'SVC-SETUP-005', 'price' => 12_000_000, 'qty' => 1, 'disc' => 5],
-                ['name' => 'Hỗ trợ kỹ thuật 12 tháng', 'sku' => 'SVC-SUP-007', 'price' => 10_000_000, 'qty' => 1, 'disc' => 10],
-            ];
-
-            $itemCount = 2 + ($i % 2);
-
-            for ($j = 0; $j < $itemCount; $j++) {
-                $p = $products[$j % count($products)];
-                $lineTotal = $p['qty'] * $p['price'] * (1 - $p['disc'] / 100);
-
+            foreach ($items as $item) {
                 QuoteItem::query()->create([
                     'quote_id' => $quote->id,
-                    'product_name' => $p['name'],
-                    'sku' => $p['sku'],
-                    'quantity' => $p['qty'],
-                    'unit_price' => $p['price'],
-                    'discount_percent' => $p['disc'],
-                    'total_price' => $lineTotal,
-                    'notes' => null,
+                    'product_id' => $item->product_id,
+                    'price_book_entry_id' => $item->price_book_entry_id,
+                    'product_name' => $item->product_name,
+                    'sku' => $item->sku,
+                    'quantity' => $item->quantity,
+                    'unit_price' => $item->unit_price,
+                    'discount_percent' => $item->discount_percent,
+                    'vat_percent' => $item->vat_percent,
+                    'total_price' => $item->total_price,
+                    'notes' => $item->notes,
                 ]);
             }
         }
@@ -748,7 +738,7 @@ final class FullDemoSeeder extends Seeder
                     'activity_type' => $type,
                     'subject_type' => Opportunity::class,
                     'subject_id' => $opp->id,
-                    'description' => "Trao đổi chi tiết giải pháp cho đại diện {$opp->company?->name}. Thống nhất yêu cầu kỹ thuật.",
+                    'description' => "Trao đổi phương án bố trí, vật liệu và tiến độ với đại diện {$opp->company?->name}.",
                     'user_id' => $owner->id,
                     'performed_at' => $this->now->subDays(max(1, $i % 6))->setTime(14, 0),
                     'duration_minutes' => 45,
@@ -794,10 +784,10 @@ final class FullDemoSeeder extends Seeder
         $taskTemplates = [
             // Opportunity tasks
             ['Gửi báo giá chi tiết đến khách hàng', 'Chuẩn bị và gửi báo giá đầy đủ với danh sách sản phẩm, điều khoản thanh toán, và điều kiện bảo hành.', TaskPriority::High, 'opp'],
-            ['Lên lịch demo sản phẩm với đội kỹ thuật', 'Phối hợp SA và presales chuẩn bị kịch bản demo 60 phút, bao gồm use case thực tế của khách hàng.', TaskPriority::Medium, 'opp'],
+            ['Lên lịch khảo sát mặt bằng', 'Phối hợp thiết kế và kỹ thuật đo đạc mặt bằng, lối vận chuyển và vị trí lắp đặt.', TaskPriority::Medium, 'opp'],
             ['Soạn thảo điều khoản hợp đồng', 'Chuẩn bị draft hợp đồng bao gồm SLA, điều kiện thanh toán, và phạm vi dịch vụ theo yêu cầu đã thống nhất.', TaskPriority::High, 'opp'],
-            ['Follow-up sau demo với khách hàng', 'Liên hệ sau buổi demo để thu thập phản hồi, giải đáp thắc mắc, và đề xuất bước tiếp theo.', TaskPriority::Medium, 'opp'],
-            ['Chuẩn bị hồ sơ năng lực kỹ thuật', 'Tổng hợp tài liệu kỹ thuật: kiến trúc hệ thống, tài liệu tích hợp API, và checklist bảo mật.', TaskPriority::Low, 'opp'],
+            ['Follow-up sau khi gửi phối cảnh', 'Thu thập phản hồi về bố trí, màu sắc, vật liệu và đề xuất bước tiếp theo.', TaskPriority::Medium, 'opp'],
+            ['Chuẩn bị hồ sơ vật liệu và mẫu màu', 'Tổng hợp catalogue, mẫu bề mặt, chứng chỉ vật liệu và điều kiện bảo hành.', TaskPriority::Low, 'opp'],
             ['Xác nhận ngân sách và quyết định mua hàng', 'Trao đổi với CFO/CEO khách hàng về ngân sách phê duyệt và quy trình phê duyệt nội bộ.', TaskPriority::Urgent, 'opp'],
             ['Chuẩn bị kế hoạch triển khai chi tiết', 'Soạn project plan, phân công team, và timeline từng milestone triển khai.', TaskPriority::High, 'opp'],
             ['Kiểm tra điều kiện ký kết hợp đồng', 'Xem xét lại tất cả điều khoản pháp lý, xác nhận người ký và thủ tục công chứng nếu cần.', TaskPriority::Medium, 'opp'],
@@ -952,11 +942,11 @@ final class FullDemoSeeder extends Seeder
     private function leadNoteContent(int $i, string $name): string
     {
         $notes = [
-            "Đã gọi điện lần đầu, {$name} quan tâm đến module quản lý pipeline. Hẹn gặp tuần tới.",
-            "Lead từ sự kiện Tech Expo. {$name} đang tìm giải pháp thay thế Excel. Rất tiềm năng.",
-            "Gửi email giới thiệu, {$name} phản hồi muốn xem demo. Đặt lịch thứ 4 tuần này.",
-            "Cuộc gọi tư vấn 20 phút. {$name} ngân sách 200-300 triệu, muốn triển khai trong Q3.",
-            "Lead từ referral của khách hàng cũ. {$name} đã dùng giải pháp cũ 3 năm, muốn nâng cấp.",
+            "Đã gọi điện lần đầu, {$name} cần bố trí khoảng 50 chỗ ngồi và một phòng họp. Hẹn khảo sát tuần tới.",
+            "Lead từ triển lãm Vietbuild. {$name} đang tìm đơn vị thiết kế và cung cấp nội thất trọn gói.",
+            "Đã gửi catalogue, {$name} muốn xem mẫu vật liệu và ghế công thái học vào thứ 4.",
+            "Cuộc gọi tư vấn 20 phút. {$name} có ngân sách 200–300 triệu, cần bàn giao trong quý 3.",
+            "Lead từ giới thiệu của khách hàng cũ. {$name} đang mở rộng thêm một tầng văn phòng.",
         ];
 
         return $notes[$i % count($notes)];
@@ -966,10 +956,10 @@ final class FullDemoSeeder extends Seeder
     {
         $notes = [
             "Cơ hội đến từ chiến dịch marketing tháng 7. {$companyName} có ngân sách phê duyệt sẵn.",
-            "Referral từ đối tác tích hợp. Đội kỹ thuật {$companyName} đã review tài liệu kỹ thuật.",
-            "Khách hàng cũ mở rộng scope. {$companyName} hài lòng với giai đoạn 1, ký thêm gói nâng cao.",
+            "Referral từ đối tác thiết kế. Ban dự án {$companyName} đã gửi mặt bằng và yêu cầu vật liệu.",
+            "Khách hàng cũ mở rộng phạm vi. {$companyName} hài lòng với giai đoạn 1 và cần thêm 60 chỗ ngồi.",
             "Cold outreach qua LinkedIn. {$companyName} đang so sánh 3 nhà cung cấp, cần thuyết phục thêm.",
-            "Lead chuyển đổi từ hội thảo. {$companyName} đặt ưu tiên cao cho tích hợp với hệ thống ERP hiện có.",
+            "Lead chuyển đổi từ hội thảo. {$companyName} ưu tiên tiến độ, bảo hành và khả năng thi công ngoài giờ.",
         ];
 
         return $notes[$i % count($notes)];
@@ -978,10 +968,10 @@ final class FullDemoSeeder extends Seeder
     private function activityDesc(ActivityType $type, string $name, string $company): string
     {
         return match ($type) {
-            ActivityType::Call => "Gọi điện tư vấn với {$name} từ {$company}. Trao đổi về nhu cầu hiện tại và ngân sách dự kiến.",
-            ActivityType::Meeting => "Cuộc họp trực tiếp với {$name}. Trình bày roadmap sản phẩm và thảo luận yêu cầu tùy chỉnh.",
-            ActivityType::Email => "Gửi email cho {$name}: tài liệu kỹ thuật, case study ngành và đề xuất báo giá sơ bộ.",
-            ActivityType::Demo => "Demo sản phẩm 60 phút cho team của {$name} tại {$company}. Tập trung vào pipeline management và reporting.",
+            ActivityType::Call => "Gọi điện với {$name} từ {$company}. Trao đổi số chỗ ngồi, ngân sách và thời hạn bàn giao.",
+            ActivityType::Meeting => "Khảo sát trực tiếp với {$name}. Đo mặt bằng và thống nhất phong cách, vật liệu, màu sắc.",
+            ActivityType::Email => "Gửi email cho {$name}: catalogue nội thất, mẫu màu và báo giá sơ bộ.",
+            ActivityType::Demo => "Trình bày phối cảnh và mẫu vật liệu cho đội dự án của {$name} tại {$company}.",
             default => "Hoạt động tương tác với {$name} từ {$company}.",
         };
     }

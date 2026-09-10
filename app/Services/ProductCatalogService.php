@@ -26,10 +26,10 @@ final readonly class ProductCatalogService
             if ($product !== null && Product::query()->where('sku', $data['sku'])->whereKeyNot($product->id)->exists()) {
                 throw ValidationException::withMessages(['sku' => 'SKU đã tồn tại.']);
             }
-            $before = $product?->only(['sku', 'name', 'standard_price', 'vat_percent', 'is_active']) ?? [];
+            $before = $product?->only(['sku', 'name', 'model', 'product_category_id', 'product_brand_id', 'standard_price', 'vat_percent', 'warranty_months', 'commercial_status', 'specifications', 'is_active']) ?? [];
             $product ??= new Product(['owner_id' => $actor->id, 'department_id' => $actor->department_id, 'created_by' => $actor->id]);
             $product->fill([...$data, 'updated_by' => $actor->id])->save();
-            $this->audit->record($actor, $product, $before === [] ? 'created' : 'updated', "Cập nhật sản phẩm {$product->sku}", $before, $product->only(['sku', 'name', 'standard_price', 'vat_percent', 'is_active']), ['module' => 'products']);
+            $this->audit->record($actor, $product, $before === [] ? 'created' : 'updated', "Cập nhật sản phẩm {$product->sku}", $before, $product->only(['sku', 'name', 'model', 'product_category_id', 'product_brand_id', 'standard_price', 'vat_percent', 'warranty_months', 'commercial_status', 'specifications', 'is_active']), ['module' => 'products']);
 
             return $product;
         });

@@ -75,9 +75,11 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $this->call([
+            FurnitureCatalogSeeder::class,
             DemoUserSeeder::class,
             DemoPipelineSeeder::class,
             FullDemoSeeder::class,
+            ReportAnalyticsDemoSeeder::class,
             StandardSalesPlaybookSeeder::class,
         ]);
     }

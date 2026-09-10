@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace App\Livewire\Products;
 
 use App\Models\Product;
-use App\Models\User;
+use App\Models\ProductCategory;
+use App\Models\ProductSupplier;
 use App\Repositories\EloquentProductCatalogRepository;
-use App\Services\ProductCatalogService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -17,70 +18,58 @@ final class ProductList extends Component
 {
     use WithPagination;
 
+    #[Url(as: 'q', except: '')]
     public string $search = '';
 
-    public bool $showEditor = false;
+    #[Url(as: 'category', except: '')]
+    public string $categoryId = '';
 
-    public ?int $editingId = null;
+    #[Url(as: 'supplier', except: '')]
+    public string $supplierId = '';
 
-    public string $sku = '';
-
-    public string $name = '';
-
-    public string $description = '';
-
-    public string $unit = 'Đơn vị';
-
-    public string $standardPrice = '0';
-
-    public string $vatPercent = '10';
-
-    public bool $isActive = true;
+    #[Url(except: '')]
+    public string $status = '';
 
     public function updatedSearch(): void
     {
         $this->resetPage();
     }
 
-    public function openCreate(): void
+    public function updatedCategoryId(): void
     {
-        $this->reset(['editingId', 'sku', 'name', 'description', 'standardPrice']);
-        $this->unit = 'Đơn vị';
-        $this->vatPercent = '10';
-        $this->isActive = true;
-        $this->showEditor = true;
+        $this->resetPage();
     }
 
-    public function openEdit(int $id): void
+    public function updatedSupplierId(): void
     {
-        $product = Product::query()->findOrFail($id);
-        $this->authorize('update', $product);
-        $this->editingId = $id;
-        $this->sku = $product->sku;
-        $this->name = $product->name;
-        $this->description = $product->description ?? '';
-        $this->unit = $product->unit;
-        $this->standardPrice = (string) $product->standard_price;
-        $this->vatPercent = (string) $product->vat_percent;
-        $this->isActive = $product->is_active;
-        $this->showEditor = true;
+        $this->resetPage();
     }
 
-    public function save(ProductCatalogService $service): void
+    public function updatedStatus(): void
     {
-        $this->validate(['sku' => ['required', 'string', 'max:80'], 'name' => ['required', 'string', 'max:255'], 'unit' => ['required', 'string', 'max:50'], 'standardPrice' => ['required', 'numeric', 'min:0'], 'vatPercent' => ['required', 'numeric', 'min:0', 'max:100']]);
-        /** @var User $actor */ $actor = Auth::user();
-        $service->save($actor, $this->editingId ? Product::query()->findOrFail($this->editingId) : null, ['sku' => strtoupper(trim($this->sku)), 'name' => trim($this->name), 'description' => $this->description ?: null, 'unit' => trim($this->unit), 'standard_price' => $this->standardPrice, 'vat_percent' => $this->vatPercent, 'is_active' => $this->isActive]);
-        $this->showEditor = false;
-        session()->flash('success', 'Đã lưu sản phẩm.');
+        $this->resetPage();
     }
 
-    public function render(EloquentProductCatalogRepository $products): View
+    public function resetFilters(): void
+    {
+        $this->reset(['search', 'categoryId', 'supplierId', 'status']);
+        $this->resetPage();
+    }
+
+    public function render(EloquentProductCatalogRepository $repository): View
     {
         $this->authorize('viewAny', Product::class);
-        $productPage = $products->paginateVisible(Auth::user(), trim($this->search));
 
-        return view('livewire.products.product-list', ['products' => $productPage])
-            ->layout('layouts.app', ['title' => 'Danh mục sản phẩm']);
+        return view('livewire.products.product-list', [
+            'products' => $repository->paginateVisible(
+                Auth::user(),
+                trim($this->search),
+                $this->categoryId !== '' ? (int) $this->categoryId : null,
+                $this->supplierId !== '' ? (int) $this->supplierId : null,
+                $this->status,
+            ),
+            'categories' => ProductCategory::query()->where('is_active', true)->orderBy('sort_order')->get(),
+            'suppliers' => ProductSupplier::query()->where('is_active', true)->orderBy('name')->get(),
+        ])->layout('layouts.app', ['title' => 'Danh mục nội thất']);
     }
 }

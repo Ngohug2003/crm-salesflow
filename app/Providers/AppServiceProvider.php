@@ -35,6 +35,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         RateLimiter::for('public-quote', static fn (Request $request): Limit => Limit::perMinute(30)->by($request->ip()));
+        RateLimiter::for('public-catalog', static fn (Request $request): Limit => Limit::perMinute(120)->by($request->ip()));
 
         // Event listeners in app/Listeners are discovered automatically by Laravel.
         Event::listen(ConnectionEstablished::class, static function (ConnectionEstablished $event): void {

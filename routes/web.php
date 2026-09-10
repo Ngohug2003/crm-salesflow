@@ -7,6 +7,7 @@ use App\Http\Controllers\ExportDownloadController;
 use App\Http\Controllers\ImportExport\ExportHistoryController;
 use App\Http\Controllers\ImportExport\ImportHistoryController;
 use App\Http\Controllers\LeadController;
+use App\Http\Controllers\ProductMediaController;
 use App\Http\Controllers\QuoteController;
 use App\Http\Controllers\RoleGuideController;
 use App\Http\Controllers\UserController;
@@ -16,6 +17,8 @@ use App\Livewire\Companies\CompanyDetail;
 use App\Livewire\Companies\CompanyEditor;
 use App\Livewire\Companies\CompanyList;
 use App\Livewire\Companies\Customer360;
+use App\Livewire\Client\Products\ProductDetail as ClientProductDetail;
+use App\Livewire\Client\Products\ProductList as ClientProductList;
 use App\Livewire\Contacts\ContactDetail;
 use App\Livewire\Contacts\ContactEditor;
 use App\Livewire\Contacts\ContactList;
@@ -37,10 +40,13 @@ use App\Livewire\Pipelines\PipelineDetail;
 use App\Livewire\Pipelines\PipelineEditor;
 use App\Livewire\Pipelines\PipelineList;
 use App\Livewire\Platform\SystemConsole;
-use App\Livewire\Public\PublicQuoteViewer;
-use App\Livewire\Products\ProductList;
-use App\Livewire\PriceBooks\PriceBookList;
 use App\Livewire\PriceBooks\PriceBookDetail;
+use App\Livewire\PriceBooks\PriceBookList;
+use App\Livewire\Products\ProductCatalogSettings;
+use App\Livewire\Products\ProductDetail;
+use App\Livewire\Products\ProductEditor;
+use App\Livewire\Products\ProductList;
+use App\Livewire\Public\PublicQuoteViewer;
 use App\Livewire\Quotes\ApprovalInbox;
 use App\Livewire\Quotes\QuoteSettings;
 use App\Livewire\Reports\DataQualityDashboard;
@@ -63,8 +69,8 @@ use App\Models\Department;
 use App\Models\Lead;
 use App\Models\Opportunity;
 use App\Models\Pipeline;
-use App\Models\Product;
 use App\Models\PriceBook;
+use App\Models\Product;
 use App\Models\Quote;
 use App\Models\Task;
 use App\Models\User;
@@ -74,6 +80,15 @@ Route::redirect('/', '/dashboard');
 Route::get('/register/invitation/{token}', AcceptInvitation::class)->name('invitations.accept');
 Route::get('/q/{token}', PublicQuoteViewer::class)->middleware('throttle:public-quote')->name('quotes.public-show');
 Route::get('/q/{token}/pdf', [QuoteController::class, 'downloadPublicPdf'])->middleware('throttle:public-quote')->name('quotes.public-pdf');
+Route::get('/catalog/products', ClientProductList::class)->middleware('throttle:public-catalog')->name('client.products.index');
+Route::get('/catalog/products/{productId}/media/{mediaId}', [ProductMediaController::class, 'publicShow'])
+    ->whereNumber(['productId', 'mediaId'])
+    ->middleware('throttle:public-catalog')
+    ->name('client.products.media');
+Route::get('/catalog/products/{productId}', ClientProductDetail::class)
+    ->whereNumber('productId')
+    ->middleware('throttle:public-catalog')
+    ->name('client.products.show');
 
 Route::middleware(['auth', 'request.context.authenticated', 'verified', 'account.active'])->group(function (): void {
     Route::get('/dashboard', DashboardOverview::class)->middleware('can:reports.view')->name('dashboard');
@@ -121,6 +136,13 @@ Route::middleware(['auth', 'request.context.authenticated', 'verified', 'account
         ->middleware('signed')
         ->name('quotes.documents.download');
     Route::get('/products', ProductList::class)->middleware('can:viewAny,'.Product::class)->name('products.index');
+    Route::get('/products/create', ProductEditor::class)->middleware('can:create,'.Product::class)->name('products.create');
+    Route::get('/products/catalog-settings', ProductCatalogSettings::class)->middleware('can:products.update')->name('products.catalog-settings');
+    Route::get('/products/{productId}/media/{mediaId}', [ProductMediaController::class, 'show'])
+        ->whereNumber(['productId', 'mediaId'])
+        ->name('products.media.show');
+    Route::get('/products/{productId}', ProductDetail::class)->whereNumber('productId')->name('products.show');
+    Route::get('/products/{productId}/edit', ProductEditor::class)->whereNumber('productId')->name('products.edit');
     Route::get('/price-books', PriceBookList::class)->middleware('can:viewAny,'.PriceBook::class)->name('price-books.index');
     Route::get('/price-books/{priceBookId}', PriceBookDetail::class)->whereNumber('priceBookId')->name('price-books.show');
 

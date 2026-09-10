@@ -100,12 +100,21 @@
                             <option value="{{ $priceBook->id }}">{{ $priceBook->name }}</option>
                         @endforeach
                     </x-forms.smart-select>
-                    <x-forms.smart-select wire:model.live="productId" label="Sản phẩm từ catalog">
-                        <option value="">Nhập thủ công</option>
-                        @foreach ($products as $product)
-                            <option value="{{ $product->id }}">{{ $product->sku }} — {{ $product->name }}</option>
-                        @endforeach
-                    </x-forms.smart-select>
+                    <flux:field>
+                        <flux:label>Sản phẩm từ catalog</flux:label>
+                        <x-forms.modal-searchable-select
+                            wire:model.live="productId"
+                            placeholder="Nhập thủ công"
+                            search-placeholder="Tìm theo SKU hoặc tên sản phẩm…"
+                            empty-message="Không tìm thấy sản phẩm phù hợp."
+                        >
+                            <option value="">Nhập thủ công</option>
+                            @foreach ($products as $product)
+                                <option value="{{ $product->id }}">{{ $product->sku }} — {{ $product->name }}</option>
+                            @endforeach
+                        </x-forms.modal-searchable-select>
+                        <flux:error name="productId" />
+                    </flux:field>
                 </div>
                 <div class="grid gap-4 sm:grid-cols-2">
                     <flux:input wire:model="productName" label="Tên sản phẩm / Dịch vụ *" placeholder="Ví dụ: Gói giải pháp SalesFlow Pro" required />
