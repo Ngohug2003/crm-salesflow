@@ -7,7 +7,7 @@
         </div>
         @can('create', \App\Models\User::class)
             <div class="flex items-center gap-2">
-                <flux:button variant="filled" icon="envelope" wire:click="openInviteModal">Mời thành viên</flux:button>
+                <flux:button variant="filled" icon="envelope" wire:click="$dispatch('open-invite-modal')">Mời thành viên</flux:button>
                 <flux:button variant="primary" icon="plus" wire:click="openCreate">Tạo người dùng</flux:button>
             </div>
         @endcan
@@ -19,41 +19,7 @@
         </div>
     @endif
 
-    <flux:modal name="user-invite-modal" class="w-full" style="width: 36rem; max-width: 95vw;" wire:close="closeInviteModal">
-        @if ($showInviteModal)
-            <div class="space-y-6">
-                <div>
-                    <flux:heading size="lg">Mời thành viên mới tham gia CRM</flux:heading>
-                    <flux:subheading class="mt-1">
-                        Hệ thống sẽ gửi email chứa liên kết bảo mật để thành viên tự tạo mật khẩu.
-                    </flux:subheading>
-                </div>
-
-                <form wire:submit="sendInvitation" class="space-y-4">
-                    <flux:input wire:model.blur="inviteName" label="Họ và tên" placeholder="Ví dụ: Trần Văn Nam" required />
-                    <flux:input wire:model.blur="inviteEmail" type="email" label="Email nhận lời mời" placeholder="nam@salesflow.test" required />
-
-                    <x-forms.smart-select wire:model="inviteDepartmentId" label="Phòng ban" placeholder="Chưa gán phòng ban">
-                        <option value="">Chưa gán phòng ban</option>
-                        @foreach ($this->departmentOptions as $dept)
-                            <option value="{{ $dept->id }}">{{ $dept->name }} ({{ $dept->code }})</option>
-                        @endforeach
-                    </x-forms.smart-select>
-
-                    <x-forms.smart-select wire:model="inviteRole" label="Vai trò">
-                        @foreach ($this->roleOptions as $roleKey => $roleLabel)
-                            <option value="{{ $roleKey }}">{{ $roleLabel }}</option>
-                        @endforeach
-                    </x-forms.smart-select>
-
-                    <div class="flex justify-end gap-3 pt-4">
-                        <flux:button variant="ghost" wire:click="closeInviteModal">Hủy</flux:button>
-                        <flux:button type="submit" variant="primary" icon="paper-airplane">Gửi email lời mời</flux:button>
-                    </div>
-                </form>
-            </div>
-        @endif
-    </flux:modal>
+    <livewire:users.invite-member-modal />
 
     <flux:modal name="user-form" class="w-full" style="width: 56rem; max-width: 95vw;" wire:close="cancelForm">
         @if ($showForm)

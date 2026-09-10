@@ -40,7 +40,7 @@ it('protects the user list and shows its navigation to authorized users', functi
     $this->actingAs($admin)
         ->get('/dashboard')
         ->assertOk()
-        ->assertSee('Người dùng');
+        ->assertSee('Tài khoản người dùng');
 });
 
 it('searches and filters users by department role and status', function (): void {

@@ -6,7 +6,7 @@
             <p class="mt-2 max-w-2xl text-slate-500">Quản lý thông tin nhân sự, phòng ban, địa bàn làm việc và tài khoản CRM liên kết.</p>
         </div>
         <div class="flex flex-wrap items-center gap-2">
-            <flux:button variant="ghost" icon="envelope" wire:click="openInviteModal">Mời nhân viên</flux:button>
+            <flux:button variant="ghost" icon="envelope" wire:click="$dispatch('open-invite-modal')">Mời nhân viên</flux:button>
             <flux:button variant="primary" icon="plus" wire:click="openCreate">Tạo hồ sơ nhân viên</flux:button>
         </div>
     </div>
@@ -241,56 +241,5 @@
         </form>
     </flux:modal>
 
-    <flux:modal name="staff-invite-modal" wire:model="showInviteModal" class="w-full" style="width: 36rem; max-width: 95vw;">
-        <form wire:submit.prevent="sendInvitation" class="space-y-6">
-            <div>
-                <flux:heading size="lg">Mời nhân viên</flux:heading>
-                <flux:subheading class="mt-1">Gửi email mời tham gia CRM và tạo hồ sơ nhân viên tương ứng.</flux:subheading>
-            </div>
-
-            <div class="space-y-4">
-                <flux:field>
-                    <flux:label>Họ và tên *</flux:label>
-                    <flux:input wire:model="inviteName" placeholder="Trần Văn Nam" />
-                    <flux:error name="inviteName" />
-                </flux:field>
-
-                <flux:field>
-                    <flux:label>Email *</flux:label>
-                    <flux:input type="email" wire:model="inviteEmail" placeholder="nam.tran@salesflow.test" />
-                    <flux:error name="inviteEmail" />
-                </flux:field>
-
-                <div class="grid gap-4 md:grid-cols-2">
-                    <flux:field>
-                        <flux:label>Phòng ban</flux:label>
-                        <x-forms.modal-searchable-select
-                            wire:model="inviteDepartmentId"
-                            :options="$departments"
-                            option-value="id"
-                            option-label="name"
-                            placeholder="Chưa gán phòng ban"
-                            search-placeholder="Tìm phòng ban…"
-                        />
-                        <flux:error name="inviteDepartmentId" />
-                    </flux:field>
-
-                    <flux:field>
-                        <flux:label>Vai trò hệ thống</flux:label>
-                        <flux:select wire:model="inviteRole">
-                            <option value="sales">Nhân viên kinh doanh</option>
-                            <option value="sales-manager">Quản lý kinh doanh</option>
-                            <option value="viewer">Chỉ xem</option>
-                        </flux:select>
-                        <flux:error name="inviteRole" />
-                    </flux:field>
-                </div>
-            </div>
-
-            <div class="flex items-center justify-end gap-3 border-t border-slate-200 pt-4 dark:border-slate-800">
-                <flux:button variant="ghost" wire:click="$set('showInviteModal', false)">Hủy</flux:button>
-                <flux:button type="submit" variant="primary" wire:loading.attr="disabled" wire:target="sendInvitation">Gửi lời mời</flux:button>
-            </div>
-        </form>
-    </flux:modal>
+    <livewire:users.invite-member-modal />
 </div>

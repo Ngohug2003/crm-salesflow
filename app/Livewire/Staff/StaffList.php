@@ -12,6 +12,7 @@ use App\Services\StaffService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -55,17 +56,6 @@ final class StaffList extends Component
     public bool $isActive = true;
 
     public string $notes = '';
-
-    // Modal state for Invite
-    public bool $showInviteModal = false;
-
-    public string $inviteName = '';
-
-    public string $inviteEmail = '';
-
-    public ?int $inviteDepartmentId = null;
-
-    public string $inviteRole = 'sales';
 
     public function mount(): void
     {
@@ -153,41 +143,11 @@ final class StaffList extends Component
         session()->flash('success', 'Đã lưu hồ sơ Nhân viên thành công.');
     }
 
-    public function openInviteModal(): void
+    #[On('invitation-created')]
+    public function handleInvitationCreated(?string $message = null): void
     {
-        Gate::authorize('users.create');
-
-        $this->inviteName = '';
-        $this->inviteEmail = '';
-        $this->inviteDepartmentId = null;
-        $this->inviteRole = 'sales';
-        $this->showInviteModal = true;
-    }
-
-    public function sendInvitation(StaffService $staffService): void
-    {
-        Gate::authorize('users.create');
-
-        $this->validate([
-            'inviteName' => ['required', 'string', 'max:255'],
-            'inviteEmail' => ['required', 'email', 'max:255'],
-            'inviteDepartmentId' => ['nullable', 'integer', 'exists:departments,id'],
-            'inviteRole' => ['required', 'string'],
-        ]);
-
-        $user = Auth::user();
-        if ($user !== null) {
-            $staffService->inviteStaff(
-                $this->inviteName,
-                $this->inviteEmail,
-                $this->inviteDepartmentId,
-                $this->inviteRole,
-                $user
-            );
-        }
-
-        $this->showInviteModal = false;
-        session()->flash('success', "Đã gửi email mời và tạo hồ sơ Nhân viên cho {$this->inviteEmail}.");
+        session()->flash('success', $message ?? 'Đã tạo lời mời và đồng bộ hồ sơ Nhân viên.');
+        $this->resetPage();
     }
 
     public function deleteStaff(int $staffId): void

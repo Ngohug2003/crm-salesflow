@@ -6,8 +6,10 @@ namespace App\Services\Auth;
 
 use App\Exceptions\UserOperationException;
 use App\Mail\UserInvitationMail;
+use App\Models\Staff;
 use App\Models\User;
 use App\Models\UserInvitation;
+use App\Services\StaffService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -50,6 +52,23 @@ final class UserInvitationService
             'expires_at' => Carbon::now()->addDays(7),
             'invited_by' => $actor->id,
         ]);
+
+        // Sync or create Staff record so Staff and User modules stay consistent
+        $existingStaff = Staff::query()->where('email', $normalizedEmail)->first();
+        if ($existingStaff === null) {
+            app(StaffService::class)->saveStaff([
+                'full_name' => trim($data['name']),
+                'email' => $normalizedEmail,
+                'department_id' => $data['department_id'] ?: null,
+                'position' => 'Staff (Đã mời)',
+                'is_active' => true,
+            ]);
+        } else {
+            $existingStaff->update([
+                'full_name' => trim($data['name']),
+                'department_id' => $data['department_id'] ?: $existingStaff->department_id,
+            ]);
+        }
 
         try {
             Mail::to($invitation->email)->send(new UserInvitationMail($invitation));
@@ -134,6 +153,10 @@ final class UserInvitationService
 
             $invitation->update([
                 'accepted_at' => Carbon::now(),
+            ]);
+
+            Staff::query()->where('email', $user->email)->update([
+                'user_id' => $user->id,
             ]);
 
             Auth::login($user);

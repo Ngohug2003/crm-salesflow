@@ -19,6 +19,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -42,16 +43,6 @@ final class UserList extends Component
     public string $status = 'all';
 
     public bool $showForm = false;
-
-    public bool $showInviteModal = false;
-
-    public string $inviteName = '';
-
-    public string $inviteEmail = '';
-
-    public ?int $inviteDepartmentId = null;
-
-    public string $inviteRole = 'sales';
 
     public ?string $notice = null;
 
@@ -114,54 +105,12 @@ final class UserList extends Component
             ->get();
     }
 
-    public function openInviteModal(): void
+    #[On('invitation-created')]
+    public function handleInvitationCreated(?string $message = null): void
     {
-        Gate::authorize('create', User::class);
-
-        $this->resetValidation();
-        $this->notice = null;
-        $this->inviteName = '';
-        $this->inviteEmail = '';
-        $this->inviteDepartmentId = null;
-        $this->inviteRole = 'sales';
-        $this->showInviteModal = true;
-        $this->dispatch('modal-show', name: 'user-invite-modal');
-    }
-
-    public function closeInviteModal(): void
-    {
-        $this->showInviteModal = false;
-        $this->dispatch('modal-close', name: 'user-invite-modal');
-    }
-
-    public function sendInvitation(): void
-    {
-        Gate::authorize('create', User::class);
-
-        $this->validate([
-            'inviteName' => ['required', 'string', 'max:255'],
-            'inviteEmail' => ['required', 'email', 'max:255'],
-            'inviteRole' => ['required', 'string'],
-        ], [
-            'inviteName.required' => 'Vui lòng nhập họ tên người được mời.',
-            'inviteEmail.required' => 'Vui lòng nhập email.',
-            'inviteEmail.email' => 'Định dạng email không hợp lệ.',
-        ]);
-
-        try {
-            app(UserInvitationService::class)->createInvitation($this->currentUser(), [
-                'name' => $this->inviteName,
-                'email' => $this->inviteEmail,
-                'department_id' => $this->inviteDepartmentId,
-                'role' => $this->inviteRole,
-            ]);
-
-            $this->notice = "Đã tạo lời mời thành công! Bạn có thể sao chép liên kết mời ở bảng bên dưới để gửi cho {$this->inviteEmail}.";
-            $this->closeInviteModal();
-            unset($this->pendingInvitations);
-        } catch (UserOperationException $e) {
-            $this->addError('inviteEmail', $e->getMessage());
-        }
+        $this->notice = $message ?? 'Đã tạo lời mời thành công.';
+        unset($this->pendingInvitations);
+        unset($this->users);
     }
 
     public function resendInvitation(int $invitationId): void

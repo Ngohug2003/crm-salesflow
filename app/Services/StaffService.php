@@ -8,6 +8,7 @@ use App\Models\Department;
 use App\Models\Staff;
 use App\Models\User;
 use App\Models\UserInvitation;
+use App\Services\Auth\UserInvitationService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
@@ -87,22 +88,13 @@ final class StaffService
      */
     public function inviteStaff(string $name, string $email, ?int $departmentId, string $role, User $inviter): Staff
     {
-        UserInvitation::query()->create([
-            'email' => $email,
+        app(UserInvitationService::class)->createInvitation($inviter, [
             'name' => $name,
+            'email' => $email,
             'department_id' => $departmentId,
             'role' => $role,
-            'token' => Str::random(40),
-            'expires_at' => now()->addDays(7),
-            'invited_by' => $inviter->id,
         ]);
 
-        return $this->saveStaff([
-            'full_name' => $name,
-            'email' => $email,
-            'department_id' => $departmentId,
-            'position' => 'Staff (Đã mời)',
-            'is_active' => true,
-        ]);
+        return Staff::query()->where('email', mb_strtolower(trim($email)))->firstOrFail();
     }
 }
